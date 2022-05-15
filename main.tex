@@ -32,6 +32,12 @@
 \usepackage{cmap}
 \usepackage[T1]{fontenc}
 \pagestyle{plain}
+\usepackage{url, doi}
+\usepackage{hyperref}
+
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{algorithm, algorithmic}
+\usepackage{booktabs}
 
 %% This bit allows you to either specify only the files which you wish to
 %% process, or `all' to process all files which you \include.
@@ -41,20 +47,67 @@
 \def\all{all}
 \ifx\files\all \typeout{Including all files.} \else %\typeout{Including only \files.} \includeonly{\files} \fi
 
-\begin{document}
+\usepackage{subcaption}
+\usepackage{tikz}
+\usetikzlibrary{bayesnet, plotmarks, calc}
+\usepackage{pgfplots}
+\usepgfplotslibrary{groupplots, statistics}
+\pgfplotsset{
+	compat=1.15,
+	only if/.style args={entry of #1 is #2}{
+		/pgfplots/boxplot/data filter/.code={
+			\edef\tempa{\thisrow{#1}}
+			\edef\tempb{#2}
+			\ifx\tempa\tempb
+			\else
+			\def\pgfmathresult{}
+			\fi
+		}
+	}
+}
+% Tables
+\newcommand{\rowgroup}[1]{\hspace{-1em}#1}
+% Variables
+\newcommand{\vsym}{r}
+\newcommand{\tsym}{t}
+\newcommand{\msym}{m}
+\newcommand{\graph}{G}
+% Operators
+\DeclareMathOperator{\argmax}{\arg\max}
+\DeclareMathOperator{\nhood}{ne}
+\DeclareMathOperator{\mrr}{mrr}
+\newcommand{\init}{\msym_0}
+\newcommand{\curr}{c}
+\newcommand{\ival}{\vsym_0}
+\newcommand{\itime}{\tsym_0}
+\newcommand{\msg}[2]{\msym_{#1 \rightarrow #2}}
+\newcommand{\mval}[2]{\vsym_{#1 \rightarrow #2}}
+\newcommand{\mtime}[2]{\tsym_{#1 \rightarrow #2}}
+\newcommand{\reach}{\msym}
+\newcommand{\estreach}{\hat{\msym}}
+\newcommand{\card}[1]{\left\vert #1 \right\vert}
+% Sets
+\newcommand{\contacts}{\mathcal{C}}
+\newcommand{\rscores}{\mathcal{R}}
+\newcommand{\scores}{\mathcal{S}}
+\newcommand{\edges}{\mathcal{E}}
+\newcommand{\variables}{\mathcal{V}}
+\newcommand{\factors}{\mathcal{F}}
+\newcommand{\actors}{\mathcal{G}}
+\newcommand{\simpath}{\mathcal{P}}
 
+\begin{document}
 \include{cover}
-% Some departments (e.g. 5) require an additional signature page.  See
-% signature.tex for more information and uncomment the following line if
-% applicable.
-% \include{signature}
 \pagestyle{plain}
 \include{contents}
-\include{chap1}
-\include{chap2}
+\include{ch1}
+\include{ch2}
+\include{ch3}
+\include{ch4}
+\include{ch5}
 \appendix
-\include{appa}
-\include{appb}
+%\include{appa}
+%\include{appb}
 \include{biblio}
 \end{document}
 

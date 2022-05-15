@@ -1,0 +1,119 @@
+\chapter{Proposed Scheme}\label{sec:risk-prop}
+
+\section{Preliminaries}
+
+\par We assume a system model in which each user owns a smart mobile device that has device-proximity detectability (e.g., Bluetooth). Furthermore, we assume that proximal interactions between user devices subsequently allow their devices, or a digital proxy thereof, to exchange messages over several days.
+
+\par In risk propagation, the computation of infection risk is an inference problem in which the task is to estimate user MPPI. The prior probability of infection is derived from user symptoms \cite{Menni2020}, so we shall refer to it, along with the timestamp of its computation, as a \emph{symptom score}. Because the posterior probability of infection also considers direct and indirect contact with other users, we call it an \emph{exposure score}. In general, a \emph{risk score} $(\vsym, \tsym)$ is a timestamped probability of infection where $\vsym \in \mathbb{R}_{[0, 1]}$ is the \emph{value} of the risk score and $\tsym \in \mathbb{R}_{\geq 0}$ is the \emph{time} of its computation.
+
+\par Computing the full joint probability distribution is intractable as it scales exponentially with the number of users. To circumvent this challenge, risk propagation uses message passing on a factor graph to efficiently compute the MPPI. Formally, let $\graph = (\variables, \factors, \edges)$ be a factor graph where $\variables$ is the set of variables, $\factors$ is the set of factors, and $\edges$ is the set of edges incident between the sets $\variables$ and $\factors$ \cite{Kschischang2001}. A factor $f(u, v)$ represents contact between two users $u, v \in \variables$ (i.e., variables), such that $f(u, v)$ is adjacent to $u, v$. Note that in risk propagation, the aim is to maximize individual MPPIs \cite{Ayday2021}. This contrasts with belief propagation in which the objective is to maximize the full joint distribution \cite{Bishop2006}.
+
+\par A \emph{message} $\msg{u}{v} = \{(\vsym, \tsym),\ldots\}$ sent from some user $u$ to another user $v$ is a nonempty set of risk scores. We assume that contact with others has a non-decreasing effect on the probability of contracting the disease. Thus, risk propagation is similar to the max-sum algorithm in that each user maintains the value of the maximum risk score it receives \cite{Bishop2006}. 
+
+\par The only purpose of a factor is to compute and relay messages between users. Thus, we can apply one-mode projection onto users such that $u, v \in \variables$ are adjacent if there exists a factor $f(u, v) \in \factors$ \cite{Zhou2007}. Upon receiving a message from a neighbor, a user first updates its current value. It then uses the details of its \emph{other} contacts to compute and propagate the message. This modification differs from the distributed extension that \cite{Ayday2021} proposes in that we do not send duplicate messages to factors. By storing the contact time between users on the edge incident to them, this modified topology is identical to the \emph{contact sequence} representation of a temporal graph or contact network, $\contacts = \{(u, v, t) \mid u, v \in \variables; u \neq v; t \in \mathbb{R}_{\geq 0}\}$, where a triple $(u, v, t)$ is called a \emph{contact} \cite{Holme2012}. In the context of risk propagation, $\tsym$ is the starting time at which users $u, v$ \emph{most recently} came in contact.
+
+\par Our usage of a temporal graph differs from its typical usage in epidemiology, which focuses on modeling and analyzing the spreading dynamics of disease \cite{Riolo2001, Danon2011, Lokhov2014, Craft2015, Pastor-Satorras2015, Koher2019, Zino2021}. In contrast, we use a temporal graph to infer user MPPI. As a result, we introduce a new form of reachability that synthesizes message-passing and the temporal dynamics of the graph in Section \ref{sec:reachability}. As noted by \cite{Holme2012}, the transmission graph provided by \cite{Riolo2001} ``cannot handle edges where one vertex manages to not catch the disease.'' Notably, our usage of a temporal graph allows for such cases by modeling the possibility of infection as a continuous outcome.
+
+\par We utilize the actor model to achieve scalable performance \cite{Baker1977, Agha1986}. Let $K \in \mathbb{N}_{>0}$ be the number of actors, where each actor is a subgraph $\graph_k \in \actors$ of users that is induced by a partitioning algorithm \cite{Buluc2016} or a clustering algorithm \cite{Aggarwal2010}. Formally, we apply a surjective function $\sigma: \variables \rightarrow \actors$ that maps each user to exactly one subgraph or actor. Actors communicate with each other via message passing. Typically, inter-actor communication is slower than intra-actor communication, so using an algorithm that minimizes communication overhead between actors is key to maximizing performance.
+
+\par We associate with each actor a unique identifier, its \emph{mailing address}, and a buffer, its \emph{remote mailbox}, for storing messages received from other actors. In practice, each actor also has a separate \emph{local mailbox} that it is uses to manage communication between its own users. This local mailbox incurs less overhead than the remote mailbox since the latter typically involves the usage of concurrent primitives (e.g., a lock). To send a message, we must know the mailing address of the receiving actor and the identity of the receiving user. If the mailing address of the sending actor is the same as the receiving actor, then the message is placed in its local mailbox. Otherwise, the message is placed in the remote mailbox of the receiving actor. In addition to maintaining the state of all of the users in its subgraph, an actor also keeps a mapping between mailing addresses and remote mailboxes for all other actors. We do not know \emph{a priori} which actors will need to communicate with each other before partitioning the graph, so we allow an actor the ability to communicate with all other actors.
+
+\section{Algorithms}\label{sec:algorithms}
+
+\par Algorithm \ref{alg:rp-main} defines the main message-passing procedure. We constrain the set of initial risk scores $\scores = \{(\vsym, \tsym) \mid \tsym_{\text{now}} - \tsym \leq L\}$ to those that were computed within the last $L = 14$ days, which assumes that a risk score has finite relevance. We constrain the set of contacts $\contacts$ similarly. Note that the initial risk scores of a user $u$, denoted $\scores(u)$, includes the exposure scores from the last $L$ days and its most recently computed symptom score.
+\begin{algorithm}[tb]
+	\begin{enumerate}
+		\item Create the graph $\graph$: for each contact $(u, v, \tsym) \in \contacts$, add an edge between users $u, v$ and store the contact time $\tsym$.
+		\item Partition $\graph$ into $K$ disjoint subgraphs (actors) w.r.t. a partitioning/clustering function $\sigma(\cdot)$.
+		\item Partition the initial risk scores $\scores$ w.r.t. $\sigma(\graph)$.
+		\item Send $\scores_k$ to $\graph_k$ for each $k \in \mathbb{N}_{[1, K]}$.
+		\item Collect all exposure scores $\rscores \equiv \cup_{k} \rscores_k$.
+	\end{enumerate}
+	\caption{Risk Propagation, Main.}
+	\label{alg:rp-main}
+\end{algorithm}
+
+\par Algorithm \ref{alg:rp-actor} describes the behavior of an actor. As in \cite{Ayday2021}, we assume that risk transmission is incomplete by applying a transmission rate of $\alpha = 0.8 \in \mathbb{R}_{(0, 1)}$ \cite{Hamner2020}. Step \ref{alg:rp-actor}.\ref{item:on-next} (i.e., step \ref{item:on-next} of Algorithm \ref{alg:rp-actor}) follows from belief propagation in that we marginalize over the factor $f(u, v)$. Because message passing is concurrent, we cannot rely on a global iteration as a stopping criterion, as used by \cite{Ayday2021}. While convenient, such a criterion requires a synchronization barrier when used in concurrent settings, which can degrade performance \cite{Han2015}.
+\begin{algorithm}[tb]
+	\begin{enumerate}
+		\item Upon receiving $\scores_k$, for each user $u \in \graph_k$, let \label{item:attrs}
+		\begin{enumerate}
+			\item $\init(u) = (\ival(u), \itime(u))$ be the initial message; the maximum risk score of $u$, scaled by $\alpha$; and
+			\item $\curr(u)$ be the current value; initially, $\max\left(\scores(u)\right)$.
+		\end{enumerate}
+		\item For each user $u \in \graph_k$, compute and send the message $\msg{u}{v}$ using $\scores(u)$, for each neighbor $v \in \nhood(u)$. \label{item:init-msg}
+		\item While a message has been received within $T$ seconds, \label{item:while}
+		\begin{enumerate}
+			\item Receive $\msg{v}{u}$ s.t. $u \in \graph_k$ and $v \in \nhood(u)$.
+			\item Update user $u$: $\curr(u) \leftarrow \max(\mval{v}{u}, \curr(u))$ \label{item:on-initial}.
+			\item For each $v' \in \nhood(u) \setminus v$, compute and send $\msg{u}{v'}$.\label{item:on-next}
+		\end{enumerate}
+		\item Collect exposure scores: $\rscores_k \equiv \{(\curr(u), t_{\text{now}}) \mid u \in \graph_k\}$.
+	\end{enumerate}
+	\caption{Risk Propagation, Actor (Main).}
+	\label{alg:rp-actor}
+\end{algorithm}
+
+\par Algorithm \ref{alg:rp-msg} describes how we compute and send a message. As indicated by step \ref{alg:rp-actor}.\ref{item:init-msg}, the message $\msg{v}{u}$ in step \ref{alg:rp-msg}.\ref{item:filter} is initially the risk scores of user $u$. Thus, $u = v$ only when sending the first message to each neighbor $v'$. For all subsequent messages, $u \neq v$ and $\msg{v}{u}$ is a singleton that contains the risk score sent from neighbor $v$. For a singleton message $\msg{v}{u}$, we refer to the value and time of the contained score as $\mval{v}{u}$ and $\mtime{v}{u}$, respectively.
+
+\par In step \ref{alg:rp-msg}.\ref{item:filter}, we include a time buffer $B \in \mathbb{R}_{\geq 0}$ of 2 days to account for the possibility that the onset of infection precedes symptoms. We assume that all risk scores with a time later than the buffered time of contact are irrelevant. Assuming that we run risk propagation at least every $B$ days, it is not necessary to persist contacts (i.e., edges) that are older than $B$ days. For a given user $u$ and neighbor $v$, it is impossible for $u$ to send $v$ a risk score higher in value than what it previously sent if it has been more than $B$ days after their most recent time of contact. In other words, the MPPI of user $v$ will already account for any risk score of user $u$ after $B$ days of coming in contact. In this way, we can further improve the efficiency of risk propagation by reducing the communication overhead.
+
+\par The final aspect of Algorithm \ref{alg:rp-msg} is to determine if we should send a computed message. Because we only use contact time as a filter to determine which risk scores to consider, we only need to compare the most recent contact time in step \ref{alg:rp-msg}.\ref{item:filter}. That is, given two times of contact $\tsym_1, \tsym_2$ such that $\tsym_1 \leq \tsym_2$, then any risk score with time $\tsym \leq \tsym_1 + B$ also satisfies $\tsym \leq \tsym_2 + B$. This avoids comparing multiple contact times, as suggested by \cite{Ayday2021}. 
+
+\par The following approach differs from \cite{Ayday2021} in that we allow no message to be sent, as opposed to sending a ``null'' message with a risk score value of 0. Avoiding ineffective messages helps lower the communication overhead. The purpose of sending a message is to possibly update the value of some other user in the graph. Sending a risk score with a lower value than the current value of the receiving user will not change its value. However, depending on its time, the receiving user may still propagate a message which subsequently results in an update to some other reachable user in the graph. Because we scale the value of a sent risk score by $\alpha$, it exponentially decreases as it propagates through the graph with a rate constant $\log(\alpha)$. Furthermore, due to how we filter in step \ref{alg:rp-msg}.\ref{item:filter}, it is possible that a risk score with a lower value than what a user previously sent can update the value of another user, if it is sufficiently old.
+
+\par We combine both of these aspects into a heuristic that allows us to parametrize the trade-off between completeness and efficiency. Let $\gamma \in \mathbb{R}_{[0, 1]}$ be the \emph{send tolerance} such that we only send a message $\msg{u}{v}$ if $\mval{u}{v} \geq \gamma \cdot \ival(u)$. In addition to comparing the value, we must also compare the time to the initial message. Assuming a message satisfies the value condition, then a newer message is less likely to be propagated. Hence, it is only useful to send a message if it is at least as old as the initial message. This send condition is expressed in step \ref{alg:rp-msg}.\ref{item:send-condition}. If $\gamma > 0$, this send condition will eventually cause actors to stop passing messages.
+\begin{algorithm}[tb]
+	\begin{enumerate}
+		\item Consider only the risk scores in the message $\msg{v}{u}$ that may have been transmitted: \label{item:filter}
+		\begin{displaymath}
+			\msg{v}{u}' \leftarrow \left\{(\vsym, \tsym) \mid \tsym \leq \tsym_{uv} + B \right\}.
+		\end{displaymath}
+		\item Compute the time difference for each remaining score: \label{item:delta}
+		\begin{displaymath}
+			\Delta \leftarrow \{(\vsym, \tsym, \delta) \mid \delta = \min(\tsym - \tsym_{uv}, 0)\}.
+		\end{displaymath}
+		\item Compute the maximum weighted message: \label{item:argmax}
+		\begin{displaymath}
+			\msg{u}{v'} \leftarrow \underset{\msym \in \Delta}{\argmax} \left\{\log(\vsym) + \delta / \tau \right\}.
+		\end{displaymath}
+		\item Scale by the transmission rate: $\mval{u}{v'} \leftarrow \alpha \cdot \mval{u}{v'}$.
+		\item Send $\msg{u}{v'}$ if $\mval{u}{v'} \geq \gamma \cdot \ival(u)$ and $\mtime{u}{v'} \leq \itime(u)$. \label{item:send-condition}
+	\end{enumerate}
+	\caption{Risk Propagation, Actor (Message).}
+	\label{alg:rp-msg}
+\end{algorithm}
+
+\section{Message Reachability}\label{sec:reachability}
+
+\par A fundamental concept in reachability analysis on a temporal graph is a \emph{time-respecting path}, which is defined as a contiguous sequence of contacts with non-decreasing time. Thus, node $v$ is \emph{temporally reachable} \cite{Moody2002} from node $u$ if there exists a time-respecting path from $u$ to $v$.
+\par In risk propagation, message passing operates on a looser constraint than temporal reachability. In this way, we can define \emph{message reachability} (MR) to be the reachability of an initial risk score for a given user $u$, denoted $\reach(u)$. Using the Heaviside step function,
+\begin{displaymath}
+	H(x) := 
+	\begin{cases} 
+		1, & x \geq 0 \\  
+		0, & x < 0
+	\end{cases},
+\end{displaymath}
+\begin{equation}\label{eq:reach}
+	\reach(u) := \underset{\simpath}{\max} \sum_{(i, j) \in \simpath} H_c(u, i, j) \cdot H_{\vsym}(u, i) \cdot H_{\tsym}(u, i)
+\end{equation}
+where $\simpath$ is the set of edges along the simple path $u \rightarrow v$ such that the users are enumerated as $0, 1, \ldots, \card{\simpath} - 1$,
+\begin{equation}
+	H_c(u, i, j) := H(\tsym_{ij} + B - \itime(u)) \label{eq:contact-const}
+\end{equation}
+is the contact-time constraint in step \ref{alg:rp-msg}.\ref{item:filter}, and
+\begin{align}
+	H_r(u, i) &:= H(\alpha^i \cdot \ival(u) - \gamma \cdot \ival(i)) \label{eq:val-const}\\
+	H_t(u, i) &:= H(\itime(i) - \itime(u)) \label{eq:time-const}
+\end{align}
+are the respective value and time constraints in step \ref{alg:rp-msg}.\ref{item:send-condition}.
+
+\par A user $v$ is \emph{message reachable} from user $u$ if there exists a path $u \rightarrow v$ such that $\reach(u) > 0$. Because we constrain risk scores to be at most $L \geq B$ days old, $\reach(u) \geq 1$ for any non-isolated $u$. We can find the value of \eqref{eq:reach} by applying an augmented shortest-path algorithm \cite{Johnson1977} such that we start at user $u$ and iteratively propagate its initial message $\init(u)$.
+\par By relaxing \eqref{eq:contact-const} and \eqref{eq:time-const}, we can define an upper bound on \eqref{eq:reach}. For some reachable user $v$, the \emph{estimated message reachability} of a user $u$ is bounded by
+\begin{equation}\label{eq:estreach}
+	\estreach(u) \leq 1 + \log_{\alpha}\left(\gamma \cdot \frac{\ival(v)}{\ival(u)} \right),
+\end{equation}
+where $\estreach(u) = 0$ if $\ival(u) = 0$ and $\estreach(u) = \infty$ if $\ival(v) = 0$.
+
+\par MR is a measure for estimating the size of the induced subgraph (i.e., set of users) that can be impacted by the risk of a user. From the perspective of efficiency, it indicates that a lower send tolerance will generally result in higher MR, at the cost of computing and passing ineffective messages. MR also allows us to quantify the effect of the transmission rate. Unlike send tolerance, the transmission rate is intended to be derived from epidemiology to quantify disease infectivity. Thus, MR allows us to characterize the propagation of risk as a dynamic process on a temporal graph \cite{Barrat2013}.

@@ -220,10 +220,10 @@
 %	into 1in margin.
 %  Draft mode brings the header back down.
 
-\setlength{\oddsidemargin}{0.25in}	% 1.25in left margin 
-\setlength{\evensidemargin}{0.25in}	% 1.25in left margin (even pages)
+\setlength{\oddsidemargin}{0.5in}	% 1.5in left margin 
+\setlength{\evensidemargin}{0.5in}	% 1.5in left margin (even pages)
 \setlength{\topmargin}{0.0in}		% 1in top margin
-\setlength{\textwidth}{6.0in}		% 6.0in text - 1.25in rt margin
+\setlength{\textwidth}{5.5in}		% 5.5in text - 1.5in rt margin
 \setlength{\textheight}{9in}		% Body ht for 1in margins
 \addtolength{\topmargin}{-\headheight}	% No header, so compensate
 \addtolength{\topmargin}{-\headsep}	% for header height and separation
@@ -467,16 +467,17 @@ at the
 \@degreemonth\ \@degreeyear
 \par
 \@copyrightnotice
-\par
-\vskip 3\baselineskip
-\signature{Author}{\@department \\ \@thesisdate}
-\par
 \vfill
-\unvbox\@titlesupervisor
-\par
-\vfill
-\signature{Accepted by}{\@chairmanname \\ \@chairmantitle}
-\vfill
+%\par
+%\vskip 3\baselineskip
+%\signature{Author}{\@department \\ \@thesisdate}
+%\par
+%\vfill
+%\unvbox\@titlesupervisor
+%\par
+%\vfill
+%\signature{Accepted by}{\@chairmanname \\ \@chairmantitle}
+%\vfill
 \end{titlepage}}
 
 % this environment should probably be called abstract,
@@ -511,7 +512,7 @@ requirements for the \@degreeword\ of \\
 % paragraph skip is infinitely stretchable, so if you leave a blank line
 % between lines that you want space between, the space will stretch so
 % that the title page fills up the entire page.
-\def\titlepage{\cleardoublepage\centering
+\def\titlepage{\centering
   \thispagestyle{empty}
   \parindent 0pt \parskip 10pt plus 1fil minus 1fil
   \def\baselinestretch{1}\@normalsize\vbox to \vsize\bgroup\vbox to 9in\bgroup}
