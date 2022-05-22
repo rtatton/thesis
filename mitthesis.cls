@@ -128,7 +128,7 @@
 %% The spaces will be adjusted to fill the entire page.  The dotted
 %% lines for the signatures are made with the \signature command.
 %
-%% The abstractpage environment sets up everything on the page except
+%% The page environment sets up everything on the page except
 %% the text itself.  The title and other header material are put at the
 %% top of the page, and the supervisors are listed at the bottom.  A
 %% new page is begun both before and after.  Of course, an abstract may
@@ -343,7 +343,7 @@
    \@afterindentfalse		% Suppresses indent in first paragraph.  Change
    \secdef\@chapter\@schapter}	% to \@afterindenttrue to have indent.
 \else
-\def\chapter{\cleardoublepage	% Starts new page.
+\def\chapter{\newpage	% Starts new page.
    \thispagestyle{plain}	% Page style of chapter page is 'plain'
    \global\@topnum\z@		% Prevents figures from going at top of page.
    \@afterindentfalse		% Suppresses indent in first paragraph.  Change
@@ -483,7 +483,7 @@ at the
 % this environment should probably be called abstract,
 % but we want people to also be able to get at the more
 % basic abstract environment
-\def\abstractpage{\cleardoublepage
+\def\abstractpage{\newpage
 \begin{center}{\large{\bf \@title} \\
 by \\
 \@author \\[\baselineskip]}
@@ -501,7 +501,7 @@ requirements for the \@degreeword\ of \\
 %% page.
 %% Krishna Sethuraman (1990)
 \def\endabstractpage{\end{abstract}\noindent
- \unvcopy\@abstractsupervisor \newpage}
+ \unvcopy\@abstractsupervisor}
 
 %% This counter is used to save the page number for the second copy of
 %% the abstract.
@@ -517,7 +517,7 @@ requirements for the \@degreeword\ of \\
   \parindent 0pt \parskip 10pt plus 1fil minus 1fil
   \def\baselinestretch{1}\@normalsize\vbox to \vsize\bgroup\vbox to 9in\bgroup}
 % The \kern0pt pushes any depth into the height.  Thanks to Richard Stone.
-\def\endtitlepage{\par\kern 0pt\egroup\vss\egroup\newpage}
+\def\endtitlepage{\par\kern 0pt\egroup\vss\egroup}
 
 \def\CWRU{CASE WESTERN RESERVE UNIVERSITY}
 \def\Cwru{Case Western Reserve University}
