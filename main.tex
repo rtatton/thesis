@@ -25,15 +25,20 @@
 %% Page Intentionally Left Blank'', use the ``leftblank'' option, as
 %% above. 
 
-\documentclass[12pt,vi,twoside]{mitthesis}
+\documentclass[12pt,twoside]{mitthesis}
 \usepackage{lgrind}
 %% These have been added at the request of the MIT Libraries, because
 %% some PDF conversions mess up the ligatures.  -LB, 1/22/2014
 \usepackage{cmap}
+\usepackage{color}
+
 \usepackage[T1]{fontenc}
+
 \pagestyle{plain}
 \usepackage{url, doi}
 \usepackage{hyperref}
+% Uncomment to find unused references
+%\usepackage{refcheck}
 
 \usepackage{amsmath,amssymb,amsfonts}
 \usepackage{algorithm, algorithmic}
@@ -49,11 +54,13 @@
 
 \usepackage{subcaption}
 \usepackage{tikz}
+\graphicspath{{./anc/}}
 \usetikzlibrary{bayesnet, plotmarks, calc}
 \usepackage{pgfplots}
 \usepgfplotslibrary{groupplots, statistics}
 \pgfplotsset{
 	compat=1.15,
+	table/search path={./anc/},
 	only if/.style args={entry of #1 is #2}{
 		/pgfplots/boxplot/data filter/.code={
 			\edef\tempa{\thisrow{#1}}
@@ -65,6 +72,32 @@
 		}
 	}
 }
+
+\definecolor{deepblue}{rgb}{0,0,0.75}
+\definecolor{deepred}{rgb}{0.6,0,0}
+\definecolor{deepgreen}{rgb}{0,0.5,0}
+
+\usepackage{listings}
+\lstdefinestyle{mystyle}{%
+	basicstyle=\ttfamily\small,
+	language=Python,
+	morekeywords={self},
+	keywordstyle=\color{deepblue},
+	emph={BaseMonitor,BaseDriver},
+	emphstyle=\color{deepred},
+	stringstyle=\color{deepgreen},
+	columns=flexible,
+	breakatwhitespace=false,
+	breaklines=true,
+	captionpos=b,
+	frame=tb,
+	keepspaces=true,
+	showspaces=false,
+	showstringspaces=false,
+	showtabs=false,
+	tabsize=1}
+\lstset{style=mystyle}
+
 % Tables
 \newcommand{\rowgroup}[1]{\hspace{-1em}#1}
 % Variables
@@ -97,17 +130,22 @@
 \newcommand{\simpath}{\mathcal{P}}
 
 \begin{document}
+% Uncomment to find unnused references
+% \nocite{*}
+\pagenumbering{roman}
 \include{cover}
 \pagestyle{plain}
 \include{contents}
-\include{ch1}
-\include{ch2}
-\include{ch3}
-\include{ch4}
-\include{ch5}
-\appendix
-%\include{appa}
-%\include{appb}
-\include{biblio}
+\pagenumbering{arabic}
+%\include{introduction}
+%\include{background}
+%\include{proposed-scheme}
+\include{cache-tmp}
+\include{evaluation}
+%\include{conclusions}
+%\appendix
+%\include{reachability}
+%\include{implementation}
+%\include{biblio}
 \end{document}
 
