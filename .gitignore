@@ -1,3 +1,6 @@
+# draw.io backups:
+*.bkp
+
 ## Core latex/pdflatex auxiliary files:
 *.aux
 *.lof
