@@ -1,0 +1,207 @@
+\chapter{Evaluation}\label{sec:evaluation}
+
+\section{Experimental Design}
+
+\par Risk propagation requires a partitioning or clustering algorithm, as described in Algorithm \ref{alg:rp-main}. We configured the METIS graph partitioning algorithm \cite{Karypis1998} to use $k$-way partitioning with a load imbalance factor of 0.2, to attempt contiguous partitions that have minimal inter-partition connectivity, to apply 10 iterations of refinement during each stage of the uncoarsening process, and to use the best of 3 cuts.
+
+\subsection{Synthetic Graphs}\label{sec:synthetic-eval}
+
+\par We evaluate the scalability and efficiency of risk propagation on three types of graphs: a random geometric graph (RGG) \cite{Dall2002}, a benchmark graph (LFRG) \cite{Lancichinetti2008}, and a clustered scale-free graph (CSFG) \cite{Holme2002}. Together, these graphs demonstrate some aspects of community structure \cite{Fortunato2010} which allows us to more accurately measure the performance of risk propagation. When constructing a RGG, we set the radius to $r(n) = \min \left(1, 0.25^{\log_{10}(n) - 1}\right)$, where $n$ is the number of users. This allows us to scale the size of the graph while maintaining reasonable density. We use the following parameter values to create LFRGs: mixing parameter $\mu = 0.1$, degree power-law exponent $\gamma = 3$, community size power-law exponent $\beta = 2$, degree bounds $(k_{\min}, k_{\max}) = (3, 50)$, and community size bounds $(s_{\min}, s_{\max}) = (10, 100)$. Our choices align with the suggestions by \cite{Lancichinetti2008} in that $\gamma \in \mathbb{R}_{[2, 3]}$,  $\beta \in \mathbb{R}_{[1, 2]}$, $k_{\min} < s_{\min}$, and $k_{\max} < s_{\max}$. To build CSFGs, we add $m = 2$ edges for each new user and use a triad formulation probability of $P_t = 0.95$. For all graphs, we remove self-loops and isolated users.
+
+\par The following defines our data generation process. Let $p$ be the probability of a user being ``high risk'' (i.e., $r \geq 0.5$) Then, with probability $p = 0.2$, we sample $L + 1$ values from the uniform distribution $\mathbb{U}_{[0.5, 1)}$. Otherwise, we sample from $\mathbb{U}_{[0, 0.5)}$. This assumes symptom scores and exposure scores are computed daily and includes the present day. We generate the times of these risk scores by sampling a time offset $t_{\text{off}} \sim \mathbb{U}_{[0\text{s}; 86,400\text{s}]}$ for each user such that $t_d = t_{\text{now}} + t_{\text{off}} - d~\text{days}$, where $d \in \mathbb{N}_{[0, L]}$. To generate a contact times, we follow the same procedure for risk scores, except that we randomly sample one of the $L + 1$ times and use that as the contact time.
+
+\par We evaluate various transmission rates and send tolerances:
+\begin{displaymath}
+	(\gamma, \alpha) \in \{0.1, 0.2, \ldots, 1\} \times \{0.1, 0.2, \ldots, 0.9\}.
+\end{displaymath}
+For all $\gamma, \alpha$, we set $n = 5,000$ and $K = 2$.
+
+\par To measure the scalability of risk propagation, we consider $n \in \mathbb{N}_{[10^2, 10^4]}$ users in increments of 100 and collect 10 iterations for each $n$. The number of actors we use depends on $n$ such that $K(n) = 1$ if $n < 10^3$ and $K(n) = 2$ otherwise. Increasing $K$ for our choice of $n$ did not offer improved performance due to the communication overhead.
+
+\subsection{Real-World Graphs}
+
+\par We analyze the efficiency of risk propagation on three real-world contact networks that were collected through the SocioPatterns collaboration. Specifically, we use contact data in the setting of a high school (Thiers13) \cite{Fournet2014}, a workplace (InVS15), and a scientific conference (SFHH) \cite{Genois2018}. Because of limited availability of large-scale contact networks, we do not use real-world contact networks to measure the scalability of risk propagation. 
+
+\par To ensure that all risk scores are initially propagated, we shift all contact times forward by $t_{\text{now}}$ and use ($t_{\text{now}} - 1$ day) when generating risk scores times. In this way, we ensure the most recent risk score is still older than the first contact time. Risk score values are generated in the same manner as described in Section \ref{sec:synthetic-eval} with the exception that we only generate one score. Lastly, we perform 10 iterations over each data set to obtain an average performance.
+
+\section{Results}
+\subsection{Efficiency}
+
+\par Prior to measuring scalability and real-world performance, we observed the effects of send tolerance and transmission rate on the efficiency of risk propagation. As ground truth, we used the maximum update count for a given transmission rate. Fig. \ref{fig:efficiency} indicates that a send tolerance of $\gamma = 0.6$ permits 99\% of the possible updates. Beyond $\gamma = 0.6$, however, the transmission rate has considerable impact, regardless of the graph. As noted in Section \ref{sec:reachability}, send tolerance quantifies the trade-off between completeness and efficiency. Thus, $\gamma = 0.6$ optimizes for both criteria.
+
+\par Unlike the update count, Fig. \ref{fig:efficiency} shows a more variable relationship with respect to runtime and message count. While, in general, transmission rate (send tolerance) has a direct (resp. inverse) relationship with runtime and message count, the graph topology seems to have an impact on this fact. Namely, the LFRG displayed less variability across send tolerance and transmission rate than the RGG and CSFG, which is the cause for the large interquartile ranges. Therefore, it is useful to consider the lower quartile $Q_1$, the median $Q_2$, and the upper quartile $Q_3$. For $\alpha = 0.8 $ and $\gamma = 0.6$, risk propagation is more efficient with $(Q_{1}, Q_{2}, Q_{3}) = (0.13, 0.13, 0.46)$ normalized runtime and $(Q_{1}, Q_{2}, Q_{3}) = (0.13, 0.15, 0.44)$ normalized message count.
+\begin{figure}[htbp]
+	\centering
+	\begin{tikzpicture}
+		\begin{groupplot}[
+			group style={
+				group size=1 by 3,
+				xlabels at=edge bottom,
+				ylabels at=edge left
+			},
+			boxplot,
+			table/col sep=comma,
+			boxplot/draw direction=y,
+			xtick distance=1,
+			scaled x ticks={base 10:-1},
+			width=\textwidth,
+			height=0.3\textheight,
+			ymin=-0.1,
+			xmin=0.25, 
+			xmax=10.75,
+			ytick distance=0.2,
+			xtick scale label code/.code={},
+			xlabel={Send tolerance}
+			]
+			\nextgroupplot[
+			table/y=NormalizedUpdates,
+			ylabel={Normalized update count}
+			]
+			\foreach \t in {1,...,10} {
+				\addplot[color=black] table[only if={entry of SendTolerance is \t}]
+				{tolerance-updates.csv};
+			}
+			\nextgroupplot[
+			table/y=NormalizedRuntimeInSeconds,
+			ylabel={Normalized runtime}
+			]
+			\foreach \t in {1,...,10} {
+				\addplot[color=black] table[only if={entry of SendTolerance is \t}]
+				{tolerance-runtime.csv};
+			}
+			\nextgroupplot[
+			table/y=NormalizedMessages,
+			ylabel={Normalized message count}
+			]
+			\foreach \t in {1,...,10} {
+				\addplot[color=black] table[only if={entry of SendTolerance is \t}]
+				{tolerance-messages.csv};
+			}
+		\end{groupplot}%
+	\end{tikzpicture}%
+	\caption[Effects of send tolerance on efficiency]{Effects of send tolerance on efficiency. All dependent variables are normalized across graphs and transmission rates.}
+	\label{fig:efficiency}
+\end{figure}
+
+\subsection{Message Reachability}
+
+\par To validate the accuracy of \eqref{eq:estreach}, we collected values of \eqref{eq:reach} and \eqref{eq:estreach} for real-world and synthetic graphs. For the latter set of graphs, we observed reachability while sweeping across values of $\gamma$ and $\alpha$.
+
+\par To measure the accuracy of \eqref{eq:estreach}, let the \emph{message reachability ratio} (MRR) be defined as
+\begin{equation}\label{eq:mrr}
+	\mrr(u) := \frac{\reach(u)}{\estreach(u)}.
+\end{equation}
+Overall, \eqref{eq:estreach} is a good estimator of \eqref{eq:reach}. Across all synthetic graphs, \eqref{eq:estreach} modestly underestimated \eqref{eq:reach} with quartiles $(Q_1, Q_2, Q_3) = (0.71, 0.84, 0.98)$ for the \eqref{eq:mrr}. For $\alpha = 0.8$ and $\gamma = 0.6$, the quartiles of \eqref{eq:mrr} were $(Q_1, Q_2, Q_3) = (0.52, 0.77, 1.12)$ and $(Q_1, Q_2, Q_3) = (0.79, 0.84, 0.93)$, respectively. Table \ref{tab:reachability} provides mean values of \eqref{eq:mrr} for both synthetic and real-world graphs. Fig. \ref{fig:ratio} indicates that moderate values of $\gamma$ tend to result in a more stable MRR, with lower (higher) $\gamma$ underestimating (resp. overestimating) \eqref{eq:reach}. With regard to transmission rate, \eqref{eq:mrr} tends to decrease with increasing $\alpha$, but also exhibits larger interquartile ranges.
+
+\par Because \eqref{eq:estreach} does not account for the temporality constraints \eqref{eq:contact-const} and \eqref{eq:time-const}, it does not perfectly estimate \eqref{eq:reach}. With lower $\gamma$ and higher $\alpha$, \eqref{eq:estreach} suggests higher MR. However, because a message is only passed under certain conditions (see Algorithm \ref{alg:rp-msg}), this causes \eqref{eq:estreach} to overestimate \eqref{eq:reach}. While \eqref{eq:estreach} theoretically is an upper bound on \eqref{eq:reach}, it is possible for \eqref{eq:estreach} to underestimate \eqref{eq:reach} if the specified value of $\ival(v)$ overestimates the true value of $\ival(v)$. When computing \eqref{eq:mrr} for Fig. \ref{fig:ratio}, we used the mean $\ival(v)$ across all users $v$, so $\mrr(u) > 1$ in some cases.
+\begin{figure}[htbp]
+	\centering
+	\begin{subfigure}[b]{\textwidth}
+		\begin{tikzpicture}
+			\begin{axis}[
+				boxplot,
+				table/col sep=comma,
+				boxplot/draw direction=y,
+				ylabel={Message reachability ratio},
+				xtick distance=5,
+				scaled x ticks={base 10:-1},
+				width=\textwidth,
+				height=0.3\textheight,
+				ytick distance=0.5,
+				xtick distance=1,
+				table/y=RatioValue,
+				xlabel={Send tolerance},
+				xmin=0.25, 
+				xmax=10.75,
+				xtick scale label code/.code={}
+				]
+				\foreach \t in {1,...,10} {
+					\addplot[color=black] table[only if={entry of SendTolerance is \t}]
+					{ratio-tolerance.csv};}
+			\end{axis}
+		\end{tikzpicture}
+	\end{subfigure}	\\
+	\begin{subfigure}[b]{\textwidth}
+		\begin{tikzpicture}
+			\begin{axis}[
+				boxplot,
+				table/col sep=comma,
+				boxplot/draw direction=y,
+				ylabel={Message reachability ratio},
+				xtick distance=5,
+				scaled x ticks={base 10:-1},
+				width=\textwidth,
+				height=0.3\textheight,
+				ytick distance=0.5,
+				xtick distance=1,
+				table/y=RatioValue,
+				xlabel={Transmission rate},
+				xmin=0.25,
+				xmax=9.75,
+				xtick scale label code/.code={}
+				]
+				\foreach \t in {1,...,9} {
+					\addplot[color=black] table[only if={entry of Transmission is \t}]
+					{ratio-transmission.csv};}
+			\end{axis}
+		\end{tikzpicture}
+	\end{subfigure}	
+	\caption[Effects of send tolerance and transmission rate on the message reachability ratio]{Effects of send tolerance and transmission rate on the message reachability ratio. Independent variables are grouped across graphs.}
+	\label{fig:ratio}
+\end{figure}
+\begin{table}[htbp]
+	\centering
+	\begin{tabular}{lc}
+		\toprule
+		\bfseries Setting & $\mrr(u) \pm 1.96 \cdot \text{SE}$\\
+		\midrule
+		\rowgroup{\itshape Synthetic} \\
+		LFR & $0.88 \pm 0.14$\\
+		RGG & $0.74 \pm 0.12$\\
+		CSFG & $0.90 \pm 0.14$\\
+		& $\boldsymbol{0.85 \pm 0.08}$ \\
+		\midrule
+		\rowgroup{\itshape Real-world} \\
+		Thiers13 & $0.58 \pm 0.01$\\
+		InVS15 & $0.63 \pm 0.01$\\
+		SFHH & $0.60 \pm 0.01$\\
+		& $\boldsymbol{0.60 \pm 0.01}$ \\
+		\bottomrule
+	\end{tabular}
+	\caption[Message reachability ratio for synthetic and real-world graphs]{Message reachability ratio for synthetic and real-world graphs ($\alpha = 0.8$, $\gamma = 0.6$). Synthetic (real-world) ratios are averaged across parameter combinations (resp. runs).}
+	\label{tab:reachability}
+\end{table}
+
+\subsection{Scalability}
+\par Fig. \ref{fig:runtime} describes the runtime behavior of risk propagation. The runtime of CSFGs requires further investigation. A linear regression fit explains ($R^2 = 0.52$) the runtime of LFRGs and RGGs with a slope $m = (1.1 \pm 0.1) \cdot 10^{-3}$ s/contact and intercept $b = 4.3 \pm 1.6$s ($\pm 1.96 \cdot \text{SE}$).
+
+\begin{figure}[htbp]
+	\centering
+	\begin{tikzpicture}
+		\begin{axis}[
+			width=\textwidth,
+			height=0.3\textheight,
+			xlabel={Number of contacts},
+			ylabel={Runtime (minutes)},
+			ytick distance = 60,
+			scaled y ticks={real:60},
+			ytick scale label code/.code={}
+			]
+			\addplot[
+			scatter,
+			only marks,
+			scatter src=explicit symbolic,
+			scatter/classes={
+				1={mark=x,blue},
+				2={mark=+,orange},
+				3={mark=o,draw=green}% no comma
+			},
+			mark size=2pt
+			] table [col sep=comma,x=Edges,y=RuntimeInSeconds,meta=Graph]
+			{scalability.csv};
+			\legend{LFRG,CSFG,RGG}
+		\end{axis}%
+	\end{tikzpicture}%
+	\caption[Runtime of risk propagation]{Runtime of risk propagation on synthetic graphs containing 100--10,000 users and approximately 200--38,000 contacts.}
+	\label{fig:runtime}
+\end{figure}
