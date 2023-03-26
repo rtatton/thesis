@@ -10,13 +10,16 @@ In risk propagation, computing infection risk is an inference problem in which t
 
 \footnotetext{While previous work on ShareTrace \cite{Ayday2021} defines a \emph{contact} as a contiguous 15 minutes in which the devices of two users are proximal, the Centers for Disease Control and Prevention technically considers these 15 minutes \emph{over a 24-hour time window} \cite{CDC2021}.}
 
-Computing the full joint probability distribution is intractable as it scales exponentially with the number of users. To circumvent this challenge, risk propagation uses a variation of message passing on a factor graph. Formally, let $\vGraph = (\vVariables, \vFactors, \vEdges)$ be a factor graph where $\vVariables$ is the set of variable vertices, $\vFactors$ is the set of factor vertices, and $\vEdges$ is the set of edges incident between them \cite{Kschischang2001}. A \define{variable vertex} $\vVariable{i}$ is a random variable such that $\vVariable{i}: \Omega \rightarrow \{0, 1\}$, where the sample space is $\Omega = \{\text{healthy}, \text{infected}\}$ and
+\newcommand{\eventspace}{\Omega}
+\newcommand{\event}{\omega}
+
+Computing the full joint probability distribution is intractable as it scales exponentially with the number of users. To circumvent this challenge, risk propagation uses a variation of message passing on a factor graph. Formally, let $\vGraph = (\vVariables, \vFactors, \vEdges)$ be a factor graph where $\vVariables$ is the set of variable vertices, $\vFactors$ is the set of factor vertices, and $\vEdges$ is the set of edges incident between them \cite{Kschischang2001}. A \define{variable vertex} $\vVariable{i}$ is a random variable such that $\vVariable{i}: \eventspace \rightarrow \{0, 1\}$, where the sample space is $\eventspace = \{\var{healthy}, \var{infected}\}$ and
 %
 \begin{equation*}
-    \vVariable{i}(\omega) =
+    \vVariable{i}(\event) =
         \begin{cases}
-            0 & \text{if $\omega = \text{healthy}$} \\
-            1 & \text{if $\omega = \text{infected}$.}
+            0 & \text{if } \event = \var{healthy}} \\
+            1 & \text{if } \event = \var{infected}.}
         \end{cases}
 \end{equation*}
 %
