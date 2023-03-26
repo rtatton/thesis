@@ -1,0 +1,26 @@
+\chapter{Data Structures}
+
+\newcommand{\set}{S}
+
+Let a \define{dynamic set} $\set$ be a mutable collection of distinct elements,
+and a \define{dictionary} be a dynamic set that supports insertion, deletion,
+and membership querying. Each element of $\set$ is represented as an object
+$\vCacheItem$ with attributes such that $\aCacheItemKey$ is a unique identifier
+for the object $\vCacheItem$ \cite[p. 249]{Cormen2022}. The operations
+\cSearch, \cInsert, \cDelete, \cMinimum, and \cMaximum{} are mostly consistent
+with \cite[p. 250]{Cormen2022} and are provided below for completeness.
+\begin{itemize}
+    \item $\cSearch[S, k]$ returns a pointer $\vCacheItem$ to an element in the
+    set $\set$ such that $\aCacheItemKey \equals k$, or $\nil$ if no such
+    element belongs to $\set$.
+    \item $\cInsert[\set, \vCacheItem]$ adds the element pointed to by
+    $\vCacheItem$ to the set $\set$.
+    \item $\cDelete[\set, \vCacheItem]$ removes the element pointed to by
+    $\vCacheItem$ from the set $\set$.
+    \item $\cMinimum[\set]$ and $\cMaximum[\set]$ return a pointer
+    $\vCacheItem$ to the minimum and maximum element, respectively, of the
+    totally ordered set $\set$, or $\nil$ if $\set$ is empty. Reference
+    \cite{Cormen2022} only considers the \emph{key} attribute of the pointers
+    when finding the minimum or maximum element of $\set$. This work, however,
+    will allow other attributes to be used.
+\end{itemize}

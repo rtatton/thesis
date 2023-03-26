@@ -1,0 +1,415 @@
+\ProvidesPackage{thesis}
+
+% GENERAL
+
+\usepackage[utf8]{inputenc}
+
+\usepackage[margin=1.5in]{geometry}
+
+% Adjust line spacing
+\usepackage{setspace}
+\doublespacing
+
+%% microtype not supported by TexpadTeX typesetter
+%% Uncomment this comment block for final formatting
+%
+%% Improve typesetting presentation
+%\usepackage{microtype}
+%\microtypesetup{
+%activate={true,nocompatibility},
+%final,
+%tracking=true,
+%kerning=true,
+%spacing=true,
+%factor=1000,
+%stretch=20,
+%shrink=20
+%}
+%
+%% Custom stretching for pseudocode function names (microtype)
+%\SetTracking{encoding={*}, shape=sc}{25}
+
+% Math symbols and fonts
+\usepackage{amsmath,amssymb,amsfonts}
+
+% Convenience commands for proper bracket formatting
+\usepackage{braket}
+
+% Customize itemize and enumerate environments 
+\usepackage{enumitem}
+
+% Add appendices to the table of contents
+\usepackage[titletoc]{appendix}
+
+% Citations and cross-referencing
+\usepackage[hidelinks]{hyperref}
+
+ % Bibliography citations
+\usepackage[sort&compress]{natbib}
+
+% Uncomment to find unused references
+%\usepackage{refcheck}
+
+% Format URLs
+\usepackage{url}
+
+% Unified cross-referencing for figures, tables, and equations
+\usepackage[nameinlink,noabbrev]{cleveref}
+\newcommand\crefconjunction{\textendash}
+\crefformat{equation}{(#2#1#3)}
+
+% SI unit formatting
+\usepackage{siunitx}
+
+% Specifies how to format key terms in text
+\newcommand{\define}[1]{\emph{#1}}
+
+% ALGORITHM AND PSEUDOCODE
+
+\usepackage[plain]{algorithm}
+
+% Provides good formatting and \Call command
+\usepackage[noend]{algpseudocode}
+
+% Ensures proper hyperlinking of pseudocode procedures
+\usepackage{hypcap}
+
+%  Allow \Call to be nested
+\MakeRobust{\Call}
+
+\let\Algorithm\algorithm
+\renewcommand\algorithm[1][]{\Algorithm[#1]\setstretch{1.5}}
+
+% Remove "do" from for loop and "then" from if-else statements.
+\newbox\fixbox
+\renewcommand{\algorithmicdo}{\setbox\fixbox\hbox{\ {} }\hskip-\wd\fixbox}
+\renewcommand{\algorithmicthen}{\setbox\fixbox\hbox{\ {} }\hskip-\wd\fixbox}
+
+% For-each loop construct
+\algnewcommand\algorithmicforeach{\textbf{for each}}
+\algdef{S}[FOR]{ForEach}[1]{\algorithmicforeach\ #1\ \algorithmicdo}
+
+% Boolean-operator keywords
+\algnewcommand{\OR}{\textbf{ or }}
+\algnewcommand{\AND}{\textbf{ and }}
+
+% Math-mode pseudocode variants
+\algnewcommand{\mIf}[1]{\If{$#1$}}
+\algnewcommand{\mFor}[1]{\For{$#1$}}
+\algnewcommand{\mWhile}[1]{\While{$#1$}}
+\algnewcommand{\mForEach}[1]{\ForEach{$#1$}}
+\algnewcommand{\mState}[1]{\State $#1$}
+\algnewcommand{\mReturn}[1]{\State \Return $#1$}
+
+% Pseudocode variable
+\algnewcommand{\var}{\mathit}
+
+% Pseudocode object attribute
+\algnewcommand{\attr}[2]{#1.\mathit{#2}}
+
+% Assignment and equality
+\newcommand{\assign}{\leftarrow}
+\newcommand{\equals}{=}
+\newcommand{\notEquals}{\neq}
+
+% Constants
+\newcommand{\nil}{\textsc{nil}}
+\newcommand{\true}{\textsc{true}}
+\newcommand{\false}{\textsc{false}}
+
+% Usage:
+%	\begin{function}[position]{title}[args]
+%	...
+%	\end{function}
+\usepackage{xparse}
+\newcommand{\Title}[2]{\item[$\Call{#1}{#2}$]}
+\NewDocumentEnvironment{function}{O{ht!} m O{}}{
+	\begin{algorithm}[#1]
+   	\label{#1}
+	\capstart
+    \captionlistentry{\Call{#2}{}}
+   	\begin{algorithmic}[1]
+   	\Title{#2}{#3}
+}{
+	\end{algorithmic}
+	\end{algorithm}
+}
+
+\usepackage{listings}
+\usepackage{color}
+\definecolor{deepblue}{rgb}{0,0,0.75}
+\definecolor{deepred}{rgb}{0.6,0,0}
+\definecolor{deepgreen}{rgb}{0,0.5,0}
+\lstdefinestyle{pyStyle}{%
+	basicstyle=\ttfamily\small,
+	language=Python,
+	morekeywords={self},
+	keywordstyle=\color{deepblue},
+	emph={BaseMonitor,BaseDriver},
+	emphstyle=\color{deepred},
+	stringstyle=\color{deepgreen},
+	columns=flexible,
+	breakatwhitespace=false,
+	breaklines=true,
+	captionpos=b,
+	keepspaces=true,
+	showspaces=false,
+	showstringspaces=false,
+	showtabs=false,
+	tabsize=1}
+\lstset{style=pyStyle}
+
+% TABLES AND FIGURES
+\usepackage{booktabs}
+
+\usepackage{multirow}
+
+\newcommand{\rowgroup}[1]{\hspace{-1em}#1}
+
+\usepackage{subcaption}
+\captionsetup{labelfont=bf}
+
+\usepackage{tikz}
+\graphicspath{{assets/}}
+\usetikzlibrary{bayesnet,plotmarks,calc,angles,quotes}
+
+\usepackage{pgfplots}
+\usepgfplotslibrary{groupplots,statistics}
+\pgfplotsset{
+	compat=1.15,
+	table/search path={./assets/},
+	only if/.style args={entry of #1 is #2}{
+		/pgfplots/boxplot/data filter/.code={
+			\edef\tempa{\thisrow{#1}}
+			\edef\tempb{#2}
+			\ifx\tempa\tempb
+			\else
+			\def\pgfmathresult{}
+			\fi
+		}
+	}
+}
+
+% Table of contents
+\usepackage[nottoc,notlot,notlof]{tocbibind}
+\renewcommand{\listalgorithmname}{List of Functions}
+
+% PSEUDOCODE and MATH SYMBOLS
+
+% Variables
+\newcommand{\vActorIndex}{k}
+\newcommand{\vActors}{G}
+\newcommand{\vActor}{A}
+\newcommand{\vAhead}[1]{#1_a}
+\newcommand{\vBack}[1]{#1_b}
+\newcommand{\vCacheItem}{x}
+\newcommand{\vCache}{C}
+\newcommand{\vContacts}{C}
+\newcommand{\vContact}{c}
+\newcommand{\vEdges}{E}
+\newcommand{\vExpScores}{S}
+\newcommand{\vFactors}{F}
+\newcommand{\vGraph}{G}
+\newcommand{\vInfluenceSet}{I}
+\newcommand{\vMsg}{m}
+\newcommand{\vNew}[1]{#1_{\textit{new}}}
+\newcommand{\vOldest}{\var{oldest}}
+\newcommand{\vOld}[1]{#1_{\textit{old}}}
+\newcommand{\vPathSet}{P}
+\newcommand{\vReachRatio}{f}
+\newcommand{\vScoreValue}{r}
+\newcommand{\vScore}{s}
+\newcommand{\vSentScore}{s'}
+\newcommand{\vSourceSet}{S}
+\newcommand{\vSymScores}{S}
+\newcommand{\vThreshold}{\var{threshold}}
+\newcommand{\vTimer}{x}
+\newcommand{\vTime}{t}
+\newcommand{\vVariables}{V}
+
+\newcommand{\vOldCacheItem}{\vOld{\vCacheItem}}
+\newcommand{\vNewCacheItem}{\vNew{\vCacheItem}}
+\newcommand{\vScoreTime}{\vTime}
+
+\newcommand{\vCurrScoreTime}{\vScoreTime}
+\newcommand{\vCurrScoreValue}{\vScoreValue}
+\newcommand{\vEstMsgReach}{\hat{\vMsgReach}}
+\newcommand{\vInitMsg}{\vMsg_0}
+\newcommand{\vInitScoreTime}{\vScoreTime_0}
+\newcommand{\vInitScoreValue}{\vScoreValue_0}
+\newcommand{\vMsgInfluenceSet}{\vInfluenceSet_\vMsg}
+\newcommand{\vMsgReachRatio}{\vReachRatio_\vMsg}
+\newcommand{\vMsgReach}{\vMsg}
+\newcommand{\vMsgSourceSet}{\vSourceSet_\vMsg}
+\newcommand{\vPath}[2]{#1 \rightarrow #2}
+\newcommand{\vScoreMsgTime}[2]{\vScoreTime_{#1 \rightarrow #2}}
+\newcommand{\vScoreMsgValue}[2]{\vScoreValue_{#1 \rightarrow #2}}
+\newcommand{\vScoreMsg}[2]{\vMsg_{#1 \rightarrow #2}}
+\newcommand{\vVariable}[1]{v_{#1}}
+\newcommand{\vFactor}[1]{f_{#1}}
+\newcommand{\vFactorMsg}[3]{\vScoreMsg{\vFactor{#1}}{\vVariable{#2}}^{(#3)}}
+\newcommand{\vVariableMsg}[3]{\vScoreMsg{\vVariable{#1}}{\vFactor{#2}}^{(#3)}}
+
+% Parameters
+\newcommand{\pCacheLookAhead}{\vAhead{\pDuration}}
+\newcommand{\pCacheLookBack}{\vBack{\pDuration}}
+\newcommand{\pCacheNumIntervals}{N}
+\newcommand{\pCacheNumLookAhead}{\vAhead{\pCacheNumIntervals}}
+\newcommand{\pCacheNumLookBack}{\vBack{\pCacheNumIntervals}}
+\newcommand{\pCacheRefreshPeriod}{T}
+\newcommand{\pDuration}{{\Delta}t}
+\newcommand{\pNumActors}{K}
+\newcommand{\pSendCoeff}{\gamma}
+\newcommand{\pTimeBuffer}{\beta}
+\newcommand{\pTimeout}{T}
+\newcommand{\pTransRate}{\alpha}
+\newcommand{\pTtl}{\pDuration}
+
+\newcommand{\pContactTtl}{\pTtl_\vContact}
+\newcommand{\pScoreTtl}{\pTtl_\vScore}
+
+% Attribute names
+\newcommand{\nCacheAttr}{cache}
+\newcommand{\nContactsAttr}{contacts}
+\newcommand{\nContactAttr}{contact}
+\newcommand{\nEndAttr}{end}
+\newcommand{\nKeyAttr}{key}
+\newcommand{\nNameAttr}{name}
+\newcommand{\nRefreshAttr}{refresh}
+\newcommand{\nScoreAttr}{score}
+\newcommand{\nSenderAttr}{sender}
+\newcommand{\nStartAttr}{start}
+\newcommand{\nThresholdAttr}{threshold}
+\newcommand{\nTimeAttr}{t}
+\newcommand{\nValueAttr}{value}
+
+% Attributes
+\newcommand{\aCache}[1]{\attr{#1}{\nCacheAttr}}
+\newcommand{\aContacts}[1]{\attr{#1}{\nContactsAttr}}
+\newcommand{\aContact}[1]{\attr{#1}{\nContactAttr}}
+\newcommand{\aEnd}[1]{\attr{#1}{\nEndAttr}}
+\newcommand{\aKey}[1]{\attr{#1}{\nKeyAttr}}
+\newcommand{\aName}[1]{\attr{#1}{\nNameAttr}}
+\newcommand{\aRefresh}[1]{\attr{#1}{\nRefreshAttr}}
+\newcommand{\aScore}[1]{\attr{#1}{\nScoreAttr}}
+\newcommand{\aSender}[1]{\attr{#1}{\nSenderAttr}}
+\newcommand{\aStart}[1]{\attr{#1}{\nStartAttr}}
+\newcommand{\aThreshold}[1]{\attr{#1}{\nThresholdAttr}}
+\newcommand{\aTime}[1]{\attr{#1}{\nTimeAttr}}
+\newcommand{\aValue}[1]{\attr{#1}{\nValueAttr}}
+
+\newcommand{\aActorCache}{\aCache{\vActor}}
+\newcommand{\aActorContacts}{\aContacts{\vActor}}
+\newcommand{\aActorName}{\aName{\vActor}}
+\newcommand{\aActorScoreValue}{\aValue{\aScore{\vActor}}}
+\newcommand{\aActorScore}{\aScore{\vActor}}
+\newcommand{\aCacheEnd}{\aEnd{\vCache}}
+\newcommand{\aCacheItemKey}{\aKey{\vCacheItem}}
+\newcommand{\aCacheItemTime}{\aTime{\vCacheItem}}
+\newcommand{\aCacheRefresh}{\aRefresh{\vCache}}
+\newcommand{\aCacheStart}{\aStart{\vCache}}
+\newcommand{\aContactKey}{\aKey{\vContact}}
+\newcommand{\aContactName}{\aName{\vContact}}
+\newcommand{\aContactThreshold}{\aThreshold{\vContact}}
+\newcommand{\aContactTime}{\aTime{\vContact}}
+\newcommand{\aScoreSender}{\aSender{\vScore}}
+\newcommand{\aScoreTime}{\aTime{\vScore}}
+\newcommand{\aScoreValue}{\aValue{\vScore}}
+\newcommand{\aSentScoreSender}{\aSender{\vSentScore}}
+\newcommand{\aSentScoreTime}{\aTime{\vSentScore}}
+\newcommand{\aSentScoreValue}{\aValue{\vSentScore}}
+\newcommand{\aTimerKey}{\aKey{\vTimer}}
+\newcommand{\aTimerName}{\aName{\vTimer}}
+
+% Function names
+\newcommand{\nBecome}{Become}
+\newcommand{\nCacheInsert}{Cache-Insert}
+\newcommand{\nCacheKey}{Cache-Key}
+\newcommand{\nCacheMax}{Cache-Max}
+\newcommand{\nCacheRefresh}{Cache-Refresh}
+\newcommand{\nContactTtl}{Contact-Ttl}
+\newcommand{\nCreateActor}{Create-Actor}
+\newcommand{\nCreateName}{Create-Name}
+\newcommand{\nCreate}{Create}
+\newcommand{\nDefaultScore}{Default-Risk-Score}
+\newcommand{\nDelete}{Delete}
+\newcommand{\nGetTime}{Get-Time}
+\newcommand{\nHandleContactMessage}{Handle-Contact-Message}
+\newcommand{\nHandleContactsRefreshTimer}{Handle-Contacts-Refresh-
+Timer}
+\newcommand{\nHandleScoreMessage}{Handle-Risk-Score-Message}
+\newcommand{\nHandleScoreRefreshTimer}{Handle-Score-Refresh-Timer}
+\newcommand{\nHandleStartThresholdTimer}{Handle-Threshold-Timer}
+\newcommand{\nInsert}{Insert}
+\newcommand{\nMaximum}{Maximum}
+\newcommand{\nMerge}{Merge}
+\newcommand{\nMinimum}{Minimum}
+\newcommand{\nPropagate}{Propagate}
+\newcommand{\nScoreTtl}{Score-Ttl}
+\newcommand{\nSearch}{Search}
+\newcommand{\nSendCurrentOrCached}{Send-Current-Or-Cached}
+\newcommand{\nSend}{Send}
+\newcommand{\nShouldReceive}{Should-Receive}
+\newcommand{\nStartContactsRefreshTimer}{Start-Contacts-Refresh-
+Timer}
+\newcommand{\nStartScoreRefreshTimer}{Start-Score-Refresh-Timer}
+\newcommand{\nStartThresholdTimer}{Start-Threshold-Timer}
+\newcommand{\nStartTimer}{Start-Timer}
+\newcommand{\nUpdateThreshold}{Update-Threshold}
+\newcommand{\nPredicate}{Predicate}
+
+% Function calls
+\newcommand{\cBecome}[1][]{\Call{\nBecome}{#1}}
+\newcommand{\cCacheInsert}[1][]{\Call{\nCacheInsert}{#1}}
+\newcommand{\cCacheKey}[1][]{\Call{\nCacheKey}{#1}}
+\newcommand{\cCacheMax}[1][]{\Call{\nCacheMax}{#1}}
+\newcommand{\cCacheRefresh}[1][]{\Call{\nCacheRefresh}{#1}}
+\newcommand{\cContactTtl}[1][]{\Call{\nContactTtl}{#1}}
+\newcommand{\cCreateActor}[1][]{\Call{\nCreateActor}{#1}}
+\newcommand{\cCreateName}[1][]{\Call{\nCreateName}{#1}}
+\newcommand{\cCreate}[1][]{\Call{\nCreate}{#1}}
+\newcommand{\cDefaultScore}[1][]{\Call{\nDefaultScore}{#1}}
+\newcommand{\cDelete}[1][]{\Call{\nDelete}{#1}}
+\newcommand{\cGetTime}[1][]{\Call{\nGetTime}{#1}}
+\newcommand{\cHandleContactMessage}[1][]{\Call{\nHandleContactMessage}{#1}}
+\newcommand{\cHandleContactsRefreshTimer}[1][]{\Call
+{\nHandleContactsRefreshTimer}{#1}}
+\newcommand{\cHandleScoreMessage}[1][]{\Call{\nHandleScoreMessage}{#1}}
+\newcommand{\cHandleScoreRefreshTimer}[1][]{\Call{\nHandleScoreRefreshTimer}{#1
+}}
+\newcommand{\cHandleStartThresholdTimer}[1][]{\Call{\nHandleStartThresholdTimer
+}{#1}}
+\newcommand{\cInsert}[1][]{\Call{\nInsert}{#1}}
+\newcommand{\cMaximum}[1][]{\Call{\nMaximum}{#1}}
+\newcommand{\cMerge}[1][]{\Call{\nMerge}{#1}}
+\newcommand{\cMinimum}[1][]{\Call{\nMinimum}{#1}}
+\newcommand{\cPropagate}[1][]{\Call{\nPropagate}{#1}}
+\newcommand{\cScoreTtl}[1][]{\Call{\nScoreTtl}{#1}}
+\newcommand{\cSearch}[1][]{\Call{\nSearch}{#1}}
+\newcommand{\cSendCurrentOrCached}[1][]{\Call{\nSendCurrentOrCached}{#1}}
+\newcommand{\cSend}[1][]{\Call{\nSend}{#1}}
+\newcommand{\cShouldReceive}[1][]{\Call{\nShouldReceive}{#1}}
+\newcommand{\cStartContactsRefreshTimer}[1][]{\Call{\nStartContactsRefreshTimer
+}{#1}}
+\newcommand{\cStartScoreRefreshTimer}[1][]{\Call{\nStartScoreRefreshTimer}{#1}}
+\newcommand{\cStartThresholdTimer}[1][]{\Call{\nStartThresholdTimer}{#1}}
+\newcommand{\cStartTimer}[1][]{\Call{\nStartTimer}{#1}}
+\newcommand{\cUpdateThreshold}[1][]{\Call{\nUpdateThreshold}{#1}}
+\newcommand{\cPredicate}[1][]{\Call{\nPredicate}{#1}}
+
+% Standard number sets
+\newcommand{\naturals}{\mathbb{N}} 
+
+% Math functions
+\DeclareMathOperator{\aeMsgReachRatio}{mrr}
+\DeclareMathOperator{\argmax}{\arg\max}
+\DeclareMathOperator{\hav}{hav}
+\DeclareMathOperator{\vers}{vers}
+\newcommand{\card}[1]{\left\vert #1 \right\vert}
+\newcommand{\ceil}[1]{\left\lceil #1 \right\rceil}
+\newcommand{\floor}[1]{\left\lfloor #1 \right\rfloor}
+\newcommand{\neighbors}{N}
+\newcommand{\scaledsetbuilder}[2]{\left\{ #1 \,\middle| \, #2 \right\}}
+\newcommand{\setbuilder}[2]{\set{ #1 | #2}}
+\newcommand{\Setbuilder}[2]{\Set{ #1 | #2}}
+\newcommand{\ltwodots}{\mathinner {\ldotp \ldotp}}

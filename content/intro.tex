@@ -1,0 +1,113 @@
+\chapter{Introduction}
+
+\section{Contact Tracing}
+Since the beginning of the COVID-19 pandemic, there has been a copious amount
+of research in mobile contact tracing solutions, most notably being the joint
+effort by Apple and Google \cite{AppleGoogle}. External reviews and surveys
+provide extensive comparison of existing solutions through the lenses of
+privacy, security, ethics, adversarial models, data management, scalability,
+interoperability, and more. References \cite{Ahmed2020} and \cite{Martin2020}
+provide thorough reviews of existing mobile contact tracing solutions with
+discussion of the techniques, privacy, security, and adversarial models. The
+former offers additional detail on the system architecture (i.e., centralized,
+decentralized, and hybrid), data management, and user concerns of existing
+solutions. Other notable reviews with similar discussion include \cite{Wen2020,
+Raskar2020, Cho2020, Dar2020, Lucivero2020}. Reference \cite{Kuhn2021} provides
+a formal framework for defining aspects of privacy for proximity-based contact
+tracing.
+
+A number of online surveys have been conducted that examine user preferences
+of different aspects of contact tracing \cite{Simko2020, Altmann2020, Li2020}.
+A common finding across these surveys is that privacy and security continue to
+be of top concern for users, but contains some interesting nuance. For example,
+\cite{Altmann2020} surveyed over 10,000 individuals and found that there was
+over a 60-percent willingness to install a contact tracing mobile application.
+In a longitudinal study, \cite{Simko2020} found that user preferences regarding
+privacy were stable over time. Moreover, they found that users had fewer
+privacy concerns for proximity-based contact tracing, in comparison to
+location-based contact tracing, but that there was security concerns for
+proximity-based tracking. Contrary to much of the developed techniques that
+emphasize a decentralized approach, \cite{Li2020} observed that mobile contact
+tracing applications that implement a centralized design are significantly more
+likely to be installed at the country level. Additionally, they found that
+individuals are generally more comfortable with their location data and
+identity information accessible to health-, state-, and federal-level
+authorities, compared to application developers, and the general
+public.
+
+\section{ShareTrace}
+Two prior works on ShareTrace are available \cite{Ayday2020, Ayday2021}. The
+former is the original white paper, which focuses on the motivation, design,
+and engineering details. Exlusive to \cite{Ayday2020} is a discussion on
+privacy, network roaming, protocol interoperability, and the usage of
+geolocation data. Furthermore, it includes more detail on the system model and
+data flow than \cite{Ayday2021}. The latter work formalizes risk propagation in
+a centralized setting and compares its efficacy to the Apple-Google framework
+\cite{AppleGoogle}. A concise reiteration of the system model and deployment
+model is also provided.
+
+This work is not intended to be a complete reference of ShareTrace. While many
+of the concepts will be reiterated in this work, it is assumed that the reader
+has read \cite{Ayday2020, Ayday2021}. This work offers the following
+contributions to the ShareTrace project and, more generally, to the development
+of next-generation applications that utilize self-soverign technologies to
+empower individuals take ownership of their personal data:
+	\begin{itemize}
+		\item a distributed, asynchronous formulation of risk propagation that utilizes the actor model to achieve scalable performance;
+		\item a novel form of reachability that accounts for the dynamics of message
+passing on a temporal network; and
+		\item a serverless architecture for privacy-preserving computing.
+	\end{itemize}
+
+ShareTrace is a digital contact-tracing solution that provides individuals
+their risk of infection. The two main advantages that ShareTrace offers over
+other digital contact-tracing approaches is its use of personal data stores
+that provide privacy by architectual design and its use of the contact network
+to infer the infection risk from indirect contact. While this thesis covers
+many aspects of ShareTrace, it is not comprehensive. The focus of this work
+is
+
+Designing, implementing, and analyzing the distributed extension of risk
+propagation as first proposed in [CITE]
+Presenting a search algorithm for extracting contacts from spatio-temporal
+data
+Contextualizing risk propagation as a novel usage of a temporal graph
+
+%%%%%%% Old
+ShareTrace is a privacy-preserving contact-tracing solution \cite{Ayday2021}.
+Unlike other approaches that rely on device proximity to detect human
+interaction, ShareTrace executes iterative message passing on a factor graph to
+estimate a user's marginal posterior probability of infection (MPPI). To
+indicate its similarity to belief propagation, we refer to the ShareTrace
+algorithm as \emph{risk propagation}. By considering both direct and indirect
+contact, \cite{Ayday2021} demonstrates that risk propagation is more effective
+than other proximity-based methods that only consider former.
+
+Building upon the efforts by \cite{Ayday2021}, we provide an efficient and
+scalable formulation of risk
+propagation\footnote{\url{https://github.com/share-trace}} that utilizes
+asynchronous, concurrent message passing on a temporal graph \cite{Holme2012,
+Holme2015}. While message passing has been studied under specific
+epidemiological models \cite{Karrer2010, Li2021}, our formulation allows us to
+contextualize risk propagation as a novel usage of a temporal graph that does
+not require such assumptions to infer the transmission of disease. As a result,
+we introduce a form of reachability that can uniquely characterize the dynamics
+of message passing on a temporal graph. Our formulation of risk propagation
+aligns with its distributed extension, as introduced by \cite{Ayday2021}, which
+has connections to the actor model of concurrent computing \cite{Baker1977,
+Agha1986} and the ``think-like-a-vertex'' model of graph algorithms
+\cite{McCune2015}.
+
+Our evaluation aims to (1) describe the efficiency of risk propagation on both
+synthetic and real-world temporal graphs; (2) validate the accuracy of our new
+form of reachability on both synthetic and real-world graphs; (3) and briefly
+quantify the scalability of this implementation of risk propagation on
+synthetic graphs. To keep the scope of this work focused, we defer to
+\cite{Ayday2021} on the privacy and security aspects of ShareTrace.
+
+\section{Actor Model}
+% Informal description of concepts and terminology (no formal semantics)
+% Properties and laws
+% Actor model vs Akka
+% Why Akka?
+% Software agents

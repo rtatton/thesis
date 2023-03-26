@@ -1,0 +1,296 @@
+\section{Mobile Crowdsensing}
+\subsection{Mobile crowdsensing: current state and future challenges}
+\bibentry{Ganti2011}
+\subsubsection*{Summary}
+``We survey existing crowdsensing (both participatory and opportunisitc) applications, identify unique characteristics of MCS [mobile crowdsensing] applications, and discuss the research challenges they face, their solutions, and trade-offs. The research challenges we discuss include \emph{localized analytics}; \emph{resource limitations}; \emph{privacy, security, and data integrity}; \emph{aggregate analytics}; and \emph{architecture}'' (pp. 32--33). This article has a very similar scope to \cite{Lane2010}, but does provide a clearer presentation of the challenges related to crowdsensing.
+\subsubsection*{Notes}
+\begin{itemize}
+\item The authors frame mobile crowdsensing (MCS) as the next-gen of IoT with the rise of ubiquitous mobile devices (somewhat dated now, but still relevant): ``An emerging category of edge devices that we believe will result in the evolution of the IoT are consumer-centric mobile sensing and computing devices, which are connected to the Internet'' (p. 32).
+\item MCS application categorization:
+	\begin{itemize}
+	\item \emph{Personal and community}. ``Based on the type of phenomena being monitored,'' \emph{personal sensing} focuses on ``phenomena [that] pertain to an individual,'' while \emph{community sensing} ``pertains to the monitoring of large-scale phenomena that cannot easily be measured by a single individual.'' Community sensing is further classified as \emph{participatory sensing} and \emph{opportunistic sensing}. The former ``requires active involvement to contribute sensor data{\ldots}related to large scale-phenomenon.'' The latter ``is more autonomous, and user involvement is minimal.'' \emph{Mobile crowdsensing} is a refers to ``a broad range of community sensing paradiagms'' (p. 32).
+	\item \emph{Environmental, infrastructure, and social}. ``In environmental MCS applications, the phenomena are those of the natural environment{\ldots}Infrastructure applications involve the measurement of large-scale phenomena related to public infrastructure{\ldots}The third category is social applications, where individuals share sensed information among themselves'' (pp. 33--34).
+	\end{itemize}
+\item \emph{ShareTrace is definitely a social MCS, but lies somewhere between opportunisitc and participatory. ShareTrace is opportunistic because it device sensing and subsequent actor communication is autonomous. ShareTrace is also participatory because users provide personal data to compute symptom scores. If frame ShareTrace as an application for sensing \emph{infection spread}, then it is both opportunistic and participatory. But if ShareTrace is considered an application for sensing \emph{human interaction}, then it is exclusively opportunistic.}
+\item ``Participating individuals (devices) may incur energy by the owner of the device for snesing, processing, and communicating desired data. Unless there are strong enough incentives, the owners may not be willing to contribute their resources. For MCS applications to succeed, there have to be appropriate incentive mechanisms to recruit, engage, and retain human participants'' (p. 35).
+	\begin{itemize}
+	\item \emph{Decentralized applications (dApps) seem like a perfect fit!}
+	\end{itemize}
+\item Challenges:
+	\begin{itemize}
+	\item \emph{Localized analytics}. ``Many times, some \emph{local analytics} performing certain primitive processing of the raw data on the device are needed. They produce intermediate results, which are sent to the back-end for furthe processing and consumption{\ldots}The motivation of such local analytics are twofold. First, the kind of processing performed leads to appopriately summarized data, thus consuming less energy and bandwidth than transmitting the raw sensor readings{\ldots}Second, it reduces the amount of processing that the back-end has to perform{\ldots}The main challenge in local analytics is finding heuristics and designing algorithms to achieve the desired functions. One category of functions is \emph{data mediation}, such as filtering of outliers, elimination of noise, or filling in data gaps{\ldots}Another common category of functions is \emph{context inference}'' (p. 35).
+		\begin{itemize}
+		\item \emph{For ShareTrace, computing the symptom scores locally and filtering Bluetooth EphIDs would be considered data mediation. For the latter, we would only want to send EphIDs that occurred over a sufficient period of time (e.g., 15 minutes).}
+		\end{itemize}
+	\item \emph{Privacy, security, and data integrity}. ``A problem that arises from the opt-in nature of crowdsensing applications is when malicious individuals contribute erroneous sensor data{\ldots}; hence maintaing the integrity of sensor data collected is an important problem{\ldots}We believe that \emph{data pertubation} based approaches, which add noise to sensor data before sharing it with the community to preserve the privacy of an individual, are appropriate''
+		\begin{itemize}
+		\item \emph{Could local differential privacy be applied here?}
+		\item \emph{Evaluating the ability to reconstruct the exposure score distribution from noisy symptom scores would be interesting. If so, consider reading [12] and [13] of this paper.}
+		\end{itemize}
+	\item \emph{Architecture}. ``Currently, a typical MCS application has two application specific components, one on the evice (for sensor data collection and propagation) and the second in the backend (or cloud) for the analysis of the snsor data to drive the MCS application{\ldots}We refer to this as \emph{application silos} because each application is built ground-up and independent from each other{\ldots}Such an architecture hinders the development and deployment of MCS applications in several aways. First, it is hard to \emph{program} an application. To write a new program, the developer has to address challenges in energy, privacy, and data quality in na ad hoc manner{\ldots}Second, this approach is \emph{inefficient}. Applications performaning sensing andprocessing activities independently without understanding the consequences on each other will result in low efficiency on an already resource constrained platform{\ldots}Finally, the current architecture is not \emph{scalable}'' (pp. 37--38).
+		\begin{itemize}
+		\item \emph{Dataswift PDAs seem to provide the ``unifying architecture'' that the authors describe.} Furthermore, it would address the issues of resource constraints and heterogeneous devices that would need to be addressed if running MCS applications on-device.
+		\end{itemize}
+	\end{itemize}
+\end{itemize}
+
+\subsection{A survey of mobile phone sensing}
+\bibentry{Lane2010}
+\subsubsection*{Summary}
+``In this article we survey existing mobile phone sensing algorithms, applications, and systems. We discuss the emerging sensing paradigms, and formulate an architectural framework for discussing a number of the open issues and challenges emerging in the new area of mobile phone sensing research'' (p. 140). The authors discuss the current (at the time of publication) sensors and application domains of crowdsensing applications, the sensing scales and paradigms, and their reference architecture (sense, learn, inform/share/persuasion).
+
+\subsubsection*{Notes}
+\begin{itemize}
+\item Similar to \cite{Ganti2011}, this article positions new smartphone technology as the catalyst for new types of mobile applications that utilize the on-phone sensor data. Sensors ``represent a significant opportunity to gather data about people and their environments'' (p. 141).
+\item Cite [15] and [17] when defining participatory and opportunistic sensing.
+\item Applications:
+	\begin{itemize}
+		\item Application domains: transportation, social networking, environmental monitoring, and health.
+		\item Interesting validation question: ``What is the best way to collect ground-truth data to assess the accuracy of algorithms that intercept sensor data?'' (p. 143)
+	\end{itemize}
+\item Sensing scale:
+	\begin{itemize}
+		\item ``\emph{Personal sensing} applications are designed for a single individual, and are often focused on data collection and analysis{\ldots}Typically, personal sensing applications generate data for the sole consumption of the user and are not shared with others'' (p. 143).
+		\item ``Individuals who participate in sensing applications that share a common goal, concern, or interest collectively represent a group. These \emph{group sensing} applications are likely to be popular and reflect the growing interest in social networks or connected groups{\ldots}who may want to share sensing information freely with privacy protection. There is an element of trust in group sensing applications that simplify otherwise difficult problems, such as attesting that the collected sensor data is correct or reduing the degree to which aggregated data must protect the individual (p. 143).
+		\item ``Most examples of \emph{community sensing} only become useful once they have a large number of people participating; for example, tracking the spread of disease across a city{\ldots} To achieve scale implicitly requires the cooperation of strangers who will not trust each other. This increases the need for community sensing systems with strong privacy protection and low commitment levels from users'' (pp. 143--144).
+	\end{itemize}
+\item Sensing paradigms (participatory and opportunistic):
+	\begin{itemize}
+	\item ``One of the main challenges of using opportunistic sensing is the phone context problem'' (i.e., only sensing under the right circumstances).
+		\begin{itemize}
+		\item \emph{For ShareTrace, the context is that the user has the device with them, not just lying around.}
+		\end{itemize}
+	\end{itemize}
+\item Mobile phone sensing architecture
+	\begin{itemize}
+	\item ``There is little to no consensus on the sening architecture for the phone and the cloud'' (p. 144).
+	\item \emph{Sense}. ``Individual mobile phones collect raw sensor data from sensors embedded in the phone'' (p. 144).
+	\item \emph{Learn}. ``Information is extracted from the sensor data by applying machine learning and data mining techniques. These operations occur either directly on the phone , in the mobile cloud, or with some partitioning between the phone and the cloud. Where these components run could be governed by various architectural considerations, such as privacy, providing user real-time feedback, reducing communication cost between the phone and the cloud, available computing resources, and sensor fusion requirements'' (pp. 144-145).
+	\item \emph{Inform, share, persuasion}.
+	\end{itemize}
+\end{itemize}
+\subsection{Opportunities in mobile crowd sensing}
+\bibentry{Ma2014}
+\subsubsection*{Summary}
+\subsubsection*{Notes}
+\begin{itemize}
+\item The authors frame MCS in the same way as \cite{Lane2010}: as part of the advancement in IoT, ``which aims at sensing and interconnecting various physical objects and their surroundings in the realistic world more comprehensively and on a larger scale [1, 2]'' (p. 29).
+\item Sensing paradigms:
+	\begin{itemize}
+		\item \emph{Participatory sensing}. ``It requires the participants to \emph{consciously} opt to meet the application requests by deciding when, where, what, and how to sense'' (p. 29).
+		\item \emph{Opportunistic sensing}. ``It is fully \emph{unconscious}, namely the application may run in the background and opportunistically collect data without active involvement of users'' (p. 29).
+	\end{itemize}
+\item Transmission paradigms:
+	\begin{itemize}
+	\item \emph{Infrastructural}. ``It considers users reporting and accessing sensory data through the Internet by cellular networks'' (p. 29).
+	\item \emph{Opportunistic}. ``It enables opportunistic data forwarding among mobile users through intermittent connections with short-range radio communications'' (p. 29).
+	\end{itemize}
+\item Benefits of human involvement:
+	\begin{itemize}
+	\item Easier deployment and scalability since the sensing network scales with the numbers users, and the number of users with these devices is ubiquitous.
+	\item Easier maintaince since users are incentivized to take care of their own devices.
+	\item In general, all the benefits that come with decentralizing/pushing the responsibility of a sensing network to the users.
+	\end{itemize}
+\item Drawbacks of human involvement:
+	\begin{itemize}
+	\item User privacy concerns, i.e., cautious of how their personal data is shared.
+	\item Require incentives to participate.
+	\end{itemize}
+\item Opportunistic characteristics of human mobility:
+	\begin{itemize}
+	\item Unique characteristics of MCS human mobility (e.g., spatio-temporal correlation, hotspots' effects, and sociality) can improve sensing quality, network planning, sensing and transmission protocol efficiency, mobility model accuracy (p. 31).
+	\item The authors discuss important considerations that are specific to opportunistic transmission (e.g., inter-contact time, opportunistic coverage, sociality, spatio-temporal mobility correlations). A primary reason for considering these is efficiency: in the MCS applications the authors assume, sensing data from many users creates redundancy in what is sensed. However, for ShareTrace, each user is a distinct source of information, so no data redundancy is created. Further, since user actors need to communicate after coming in contact, it is simpler to consider non-opportunistic transmission models for passing messages. In other words, because ShareTrace assumes an overlay network that is responsible for providing actor communication, we can bypass the complex considerations of spatio-temporal human mobility patterns required to implement opportunistic transmission of user data.
+	\end{itemize}
+\item \emph{Data fusion/aggregation} can ``effectively eliminate redundancy and hence reduce network overhead'' when ``sensory data collected in close proximity or time periods may be highly correlated'' (p. 33). See \cite{Lane2010} notes on how this applies to ShareTrace.
+\item Open issues: evaluation of sensing quality (i.e., detecting low-quality and malicious user data); integration of MCS and static sensing (i.e., static sensing networks are more reliable, but less scalable); integration of opportunistic forwarding and in-network processing; adaptive opportunistic forwarding protocols; context-aware incentive mechanisms; and balancing among sensing quality, incentive, and privacy (pp. 34--35).
+\end{itemize}
+
+\subsection{Mobile crowd sensing and computing}
+\bibentry{Guo2015}
+\subsubsection*{Summary}
+``The main contributions of our article are as follows:
+	\begin{itemize}
+	\item Charactizing the unique features of MCSC, such as grassroots-powered sensing, human-centric computing, transient network connection, and cross-space crowd-sourced data processing.
+	\item Reviewing exisitng applications and techniques on community/urban sensing, including environment monitoring, traffic planning, mobile social recommendation, healthcare, and public safety. Based on these studies, a layered reference framework to build MCSC systems is proposed.
+	\item Investigating the complementary features of human capabilities and machine intelligence and exploring the collaboration patterns of them in the crowd sensing and computing process.
+	\item Identifyingc challenges and future research directions of MCSC. We examine the challenges such as sensing with human participation, incentive mechanisms, data selection in transient networks, data quality and data selection, and heterogeneous crowdsourced data mining. The future research trends and emerging techniques to address these challenges are also discussed.''
+	\end{itemize}
+\subsubsection*{Notes}
+\paragraph{Section 1: Introduction}
+\begin{itemize}
+\item Formal definition of \emph{mobile crowd sensing and computing} (MCSC): ``a new sensing paradigm that empowers ordinary citizens to contribute data sensed or generated from their mobile devices and aggregates and fuses the data in the cloud for crowd intelligence extraction and human-centric service delivery'' (p. 2).
+\item MCSC is `an extension to the particpatory sensing concept to have user participation in the whole computing lifecycle: (1) leveraging both offline mobile sensing and online social media data; (2) addressing the fusion of human and machine intelligence in both the sensing and computing process'' (p. 3).
+	\begin{itemize}
+	\item \emph{Participatory sensing} ``tasks average citizens and companioned mobile devices to form participatory sensor networks for local knowledge gathering and sharing'' (p. 3).
+	\end{itemize}
+\end{itemize}
+\paragraph{Section 2: Characterizing MCSC}
+	\begin{itemize}
+	\item Grassroots-powered sensing
+		\begin{itemize}
+		\item Unlike a traditional wireless sensor network (WSN), MCSC democratizes computing (or at least sensing), offers low deployment cost, provides high spatiotemporal coverage, and suffers from low data quality due to heterogeneous sensor performance and trustworthiness of user-contributed data (p. 4).
+		\item MCSC extends participatory sensing in the following ways.
+			\begin{itemize}
+			\item \emph{Data generation mode}. \emph{Mobile sensing} ``typically functions at a context-based and individual manner, leveraging risch sensing capabilities from individual devices'' \cite{Lane2010}. \emph{Mobile social networking} (MSN) services ``bridge the gap between online interactions and physical elements. \emph{Given the nature of ShareTrace, it operates in the mobile sensing mode of MCSC.}
+			\item \emph{Sensing style}. Participatory sensing and opportunistic sensing are extremes \cite{Ganti2011}. MCSC can also be categorized along the spectrum of \emph{user's awareness to the sensing task} (i.e., \emph{explicit} or \emph{implicit}). \emph{ShareTrace is explicit because data collection is the primary purpose of the application.}
+			\item \emph{Volunteer organization}. ``Participants can be self-organized citizens with verying levels of organizational involvement [i.e., \emph{group}, \emph{community}, and \emph{urban}]'' (p. 4). \emph{ShareTrace is urban because it has ``broad appeal'' and ``any citizens (mostly strangers) can participate.'' Moreover, urban voluneer organization is characterized by low data quality (for some, seemingly arbitrary reason), loose collaboration, and weak social tie strength, which align with that of ShareTrace (p. 5).}
+			\end{itemize}
+		\end{itemize}
+	\item Hybrid human-machine systems. MCSC should be developed in a human-centric manner to address the following problems: (1) motivation of human participation; (2) fusion of human-machine intelligence; and (3) user security and privacy.
+	\item Transient networking. ``The success of MCSC relies on leveraging ubiquitous and heterogeneous communication capabilities to provide transcient network connection and effective collection of mobile sensing data. While different MCSC applications or systems may have various connection architectures and communication requirements, most of them share the following characteristics:'' (1) heterogeneous network connection (e.g., WiFi, Bluetooth); (2) time-evolving network topology and human mobility (i.e., designin routing protocols for dynamic networks); (3) disruption tolerance service (i.e., some MCSC data does not need to be transmitted in real-time or be complete/accurate); (4) high scalability requirement (i.e., highly distributed/decentralized communication protocols and network architectures) (pp. 6--7).
+	\item Crowd data processing and intelligence extraction
+		\begin{itemize}
+		\item Intelligence extraction classification (p. 7), ranked by applicability to ShareTrace:
+			\begin{enumerate}
+			\item \emph{User awareness}: ``extraction of personal contexts (e.g.,, location, activity) and and behaviorial patterns (e.g., mobility patterns).''
+			\item \emph{Social awareness}: ``about the contexxts of a group or community'' (e.g., interpersonal relations).
+			\item \emph{Ambient awareness}: ``to learn the status{\ldots}or the semantics{\ldots}of a particular space.
+			\end{enumerate}
+		\item Challenges to effective data extraction (p. 8):
+			\begin{itemize}
+			\item \emph{Low-quality data}. ``Data quality is usually defined as the degree of how fit the data is for its intended use{\ldots}Low-quality data is user-related data collected regardless of fitness for use.'' Users may collect incorrect, redundant, or inconsistent data. ``\emph{Data selection} is often neeed to improve data quality.''
+			\item \emph{Heterogeneous cross-space data mining}. This relates to the mobile social networking aspect of MCSC (i.e., data fusion across phyiscal and virtual user dom), which is not applicable to ShareTrace.
+			\end{itemize}
+		\item MCSC taxonomy
+			\begin{itemize}
+			\item Consider citing this section specifically; it gives a succinct summary of the previous subsections and provides a nice hierarchical diagram.
+			\item Categorizing ShareTrace as MCSC application (pp. 8--9):
+				\begin{itemize}
+				\item Hardware sensors only, not software sensors (i.e., no MSN).
+				\item Type of sensing depends on framing. If sensing of risk, ShareTrace is hybrid b/t participatory (i.e., reporting symptoms) and opportunistic (i.e., sensing contacts and computing exposure scores).
+				\item At a minimum, ShareTrace uses continuous sensing. However, it would ideally use event-triggered sensing to ensure that contacts are only be sensed when the device is on the user.
+				\item Incentives: monetary (hypothetically, maybe as a dApp), ethical, privacy protection
+				\item Data processing is a hybrid between centralized (PDAs) and self-supported (on-device computing of symptom scores).
+				\item Crowd intelligence: user and social awareness, not ambient.
+				\item Usage: by authorities, public institutions, and ordinary citizens
+				\item Purposes of ShareTrace: decision making (to minimize infection spread) and visualization/sharing (to understand general trend of risk)
+				\end{itemize}
+			\end{itemize}
+		\end{itemize}
+	\end{itemize}
+\paragraph{Section 3: MCSC applications -- N/A}
+\paragraph{Section 4: Conceptual framework for MCSC}
+	\begin{itemize}
+	\item This would be good to use when explaining MCSC beyond just a definition.
+	\item Layers (ascending):
+		\begin{enumerate}
+		\item \emph{Crowd sensing}. Hetergeneous data sources (e.g., mobile devices, users on mobile Internet apps). Access control is important to give users autonomy over what and to whom data is shared (pp. 17--18).
+		\item \emph{Data transmission}. Transient-tolerant, interruption-tolernace, possibly opportunistic, cooperative networking to upload sensed data for further processing.
+		\item \emph{Data collection infrastructure}. ``Gathers data from selected senor nodes and provides privacy-preserving mechanisms for data contributors.'' Components of this layer include task allocation, sensor gateways, data anonymization, incentive mechanism, and big data storage.
+		\item \emph{Crowd data processing}. ``Extract high-level intelligence from the raw sensory data by leveraging a wide variety of machine-learning and logic-based inference techniques. In other words, the focus of crowd data processing is to discover frequent data patterns to obtain the three dimensions of crowd intelligence at an integrated level.'' Components of this layer include data processing architecture (centralized, self-supported, hybrid (recommended)), data quality maintanence, cross-space feature association/fusion, and crowd intelligence extraction.
+		\item \emph{Applications}. Includes data visualization, user interface, etc.
+		\end{enumerate}
+	\end{itemize}
+\paragraph{Section 5: Towards hybrid human-machine systems}
+	\begin{itemize}
+	\item ``Human and machine intelligence often show distinct strengths and weaknesses in MCSC systems{\ldots}By combining the intelligence of crowds and computing machinery, MCSC allows the creation of hybrid human-machine systems. These hybrid systems enable applications and experiences that neither crowds nor machines could support alone'' (p. 19).
+	\item Layers: crowd sensing, data transmission, data collection, and crowd data processing.
+	\item Combination of HI and MI can be sequential, parallel, and iterative; and should be ``application centric'' that ``dynamically trade off human and machine intelligence according to application needs (p. 21).
+	\end{itemize}
+\paragraph{Section 6: Limitations, challenges, and opportunities}
+	\begin{enumerate}
+	\item \emph{Sensing with human participation}: efficient task allocation and data sampling; human grouping to enhance data quality; and coverage, reliability, and scalability (i.e., spatio-temporal coverage, impact of user skills/preferences).
+	\item \emph{Incentive mechanisms}: requires Implicit user effort (e.g., energy, money) or explicit user effort (e.g., input, assessment). Implicit incentives include interest, enjoyment, and social/ethical reasons. ``Financial incentives are probably the easiest way to motivate user participation'' (p. 23).
+	\item \emph{Data delivery in transient networks}. In addition to handling bandwidth and energy constraints of mobile devices/networks, MCSC must also address (1) robust data delivery among highly mobile devices; (2) tradeoff b/t communication and processing via localized analytics; (3) distributed caching and replication schemes; and (3) hybrid networking protocols.
+	\item \emph{Data redundancy, quality, and inconsistency}.
+	\item \emph{Cross-space, heterogeneous crowdsourced data mining}.
+	\item \emph{Trust, security, and privacy} (p. 25).
+		\begin{itemize}
+		\item Human involvement risks malicious users and incorrect data sensing. ``We have to develop trust preservation and abnormal detection technologies to ensure the quality of the obtained data.''
+		\item Privacy preservation can be implemented by processing the raw data locally. However, application-specific energy and resource constraints must be considered. On the other hand, data can be processed remotely, but this requires the implementation of privacy-preserving data mining techniques. Privacy-preservation can also be implemented with privacy-aware sensing model and architecture
+		\end{itemize}
+	\end{enumerate}
+
+\subsection{A survey on mobile crowdsensing systems: challenges, solutions, and opportunities}
+\bibentry{Capponi2019}
+\subsubsection*{Summary}
+The main contributions of our article are as follows (p. 2420):
+	\begin{itemize}
+	\item Provide``a survey that covers the whole decade of research in MCS and provides a clear state of its evolution.''
+	\item ``Proposing detailed taxonomies to simplify the understanding of the current definitions, available techniques, and solutions in the field of MCS.''
+	\item ``To introduce MCS as a four-layered architecture, divided into application data, communication, and sensing layers.''
+	\item ``To compare and analyze existing MCS data collections frameworks (DCFs), theoretical works leveraging operational research and optimization, practical ones such as platforms, simulators, and those making crowdsensed datasets publicly available.''
+	\item ``To propose novel and detailed taxonomies based on the layered architecture that cover all MCS aspects, allowing for a simple and clear classification of MCS systems and domains.''
+	\item ``To classify MCS systems according to the proposed taxonomies.''
+	\item ``To discuss future directions given the consolidated past efforts and inter-disciplinary reseach areas.''
+	\end{itemize}
+\subsubsection*{Notes}
+	\begin{itemize}
+	\item Section 2 provides an overview of surveys of related concepts (i.e., mobile crowdsensing, sensors and wireless social networks (WSNs), mobile phone sensing, anticipatory mobile computing and networking, user recruitment, and privacy) and a brief history of the MCS field.
+	\item MCS is described as a 4-layer architecture (pp. 2427--2428):
+		\begin{itemize}
+		\item \emph{Application layer}: high-level aspects of MCS campaigns (i.e., recruitment strategy, task scheduling, user selection, operational optimization)
+		\item \emph{Data layer}: ``comprises all components [located in the edge or cloud] responsible to store analyze, and process data received from contributors''
+		\item \emph{Communication layer}: ``includes both technologies and methodologies to deliver data acquired from mobile devices through their sensors to the cloud collector''
+		\item \emph{Sensing layer}: core layer of MCS applications; uses mobile device sensors to transduce data from the user's environment
+		\end{itemize}
+	\item A \emph{data collection framework} (DCF) is the process of acquiring data and delivering it to the cloud collector; may be \emph{domain-specific} or \emph{general-purpose} (p. 2428).
+		\begin{itemize}
+		\item Aspects of general-purpose DCFs include context awareness; energy efficiency; resource allocation; scalability; sensing task coverage; and trustworthiness and privacy (p. 2431--2433).
+		\item The targets of operational research in the field of MCS include data-energy trade-off, sensing coverage, user recruitment, context awareness, and budget-constraint optimization (pp. 2433 -- 2436).
+			\begin{itemize}
+			\item \emph{For ShareTrace, probably the most relevant targets are context awareness and the data-energy tradeoff. Because ShareTrace is a decentralized, user-centric application, targets like sensing coverage and user recruitment are not very applicable.}
+			\end{itemize}
+		\end{itemize}
+	\item Sections 4--7 are the taxonomies and classifications of MCS applications, according to the authors' 4-layer architecture. \emph{These are very useful for classifying/contextualizing ShareTrace and demonstrating its uniqueness, relative to the other applications classified in the survey.}
+	\item Application-layer taxonomy (pp. 2439--2443)
+		\begin{itemize}
+		\item Task
+			\begin{itemize}
+			\item \emph{Task scheduling} ``describes the process of allocating the tasks to the users'' and is classified on the basis of user behavior. \emph{Pro-active scheduling} allows users to decide when and where they contribute sensing data. \emph{Reactive scheduling} requires that ``a user receives a request, and upon acceptance, accomplishes a task'' (p. 2439). \emph{ShareTrace uses pro-active scheduling because it is up to the users when they carry their phone. There is not a finite taks that they are requested to complete.}
+			\item \emph{Task assignment} ``indicates how tasks are assigned to users and is classifed on the basis of who is responsible for the assignment. With \emph{central-authority assignment}, ``a central authority distributes tasks among users.'' With \emph{decentralized assignment}, ``each participant becomes an authority and can either perform the task or forward it to other userss. This approach is very useful when users are very interested in specific events or activities'' (p. 2439). \emph{ShareTrace follows the decentralized assignment paradiagm since the ``task'' that a user assigns to themself is to sense other nearby users. These ``contact tasks'' are both temporally and spatially very specific.}
+			\item \emph{Task execution} can be either single tasked or multi-tasked. \emph{Single-task execution} MCS campaigns only assign one type of task to users. Intuitively, \emph{multi-task execution} campagins involve multiple types of tasks. \emph{ShareTrace is a single-task campaign since the only task is sensing contacts. Alternatively, if the task is more abstractely defined as sensing risk, then ShareTrace could be considered multi-task where both contacts and user symptoms are sensed. The latter being ``sensed'' most simply through user input, but could hypothetically be sensed through dediated sensor types (e.g., body thermometer, camera, microphone).}
+			\end{itemize}
+		\item User
+			\begin{itemize}
+			\item \emph{User recruitment} ``is the process of recruiting participants, who can join on a voluntary basis or through incentives{\ldots}These strategies are not mutually exclusive and users can first volunteer and then be rewarded for quality execution of sensing tasks'' (p. 2440). \emph{Volunteer-based recruitment} is when citizens can ``join a sensing campaign for personal interests{\ldots}or willingness to help the community'' (p. 2440). \emph{Incentive-based recruitment} promotes participation and offers control over the recruitment rate. ``In general, incentives should also depend on the quality of contributed data and decided on the relationship between demand and supply'' (p. 2441). \emph{ShareTrace, as described in the whitepaper, uses volunteer-based recruitment. Hypothetically, users could be monetarily incentivized following the dApp paradiagm.}
+			\item \emph{User selection} ``consists of choosing contributors [called \emph{recruited users}] to a sensing campaign that better match its requirements.'' \emph{User-centric selection} is when ``contributions depend only on participants willingness to sense and report data to the central collector, which is not responsible for choosing them.'' \emph{Platform-centric selection} is ``when the central authority directly decides data contributors{\ldots}Platform centric decisions are taken according to the utility of data to accomplish the targets of the campaign'' (p. 2441). \emph{ShareTrace is employs user-centric user selection. The primary objective of ShareTrace is to give each user the knowledge of their risk, which is inherently decentralized. Each user can decide when they carry their device and participate.}
+			\item \emph{User type} includes contributors and consumers. A \emph{contributor} ``reports data to the MCS platform with no interest in the results of the sensing campaign'' and ``are typically driven by incentives or by the desire to help the scientific or civil communities.'' A \emph{consumer} joins ``a service to obtain information about certain application scenario and have a direct interest in the results of the sensing campaign'' (p. 2441). \emph{ShareTrace users could take on either role since being a contributor is helpful in adding sensing coverage to the contact network. However, it is assumed that users join to obtain knowledge of their own risk, and not for some altruistic reason.}
+			\end{itemize}
+		\end{itemize}
+	\item Data-layer taxonomy (pp. 2443--2447)
+		\begin{itemize}
+		\item Management
+			\begin{itemize}
+			\item \emph{Storage}. \emph{Centralized storage} involves data being ``stored and maintained in a single location, which is usually a database made available in the cloud. This approach is typically employed when significant processing or data aggregation is required.'' \emph{Distributed storage} ``is typically employed for delay-tolerant applications, i.e., when users are allowed to deliver data with a delayed reporting'' (p. 2443). \emph{For the core functionality of ShareTrace, distributed storage is used. This assumes the distributed implementation of risk propagation. For the hypothetical use case of reporting the population-level risk distribution, then centralized storage would also be used. ShareTrace is delay tolerant.}
+			\item \emph{Format}. \emph{Structured data} is standardized and easy to readily analyzable. \emph{Unstructured data} requires significant processing before it can be used. \emph{ShareTrace uses structured data, either in the form of risk scores or timestamped actor IDs.}
+			\item \emph{Dimension} refers to the complexity of the sensed data. \emph{Single-dimension data} typically occurs when a single sensor is used. \emph{Multi-dimensional data} typically occurs when multiple sensors are used. \emph{ShareTrace is single dimensional because it only uses Bluetooth to sensor the actor IDs of nearby users. Hypothetically ShareTrace could be multi-dimensional if it used other types of sensors to derive the user's symptom score.}
+			\end{itemize}
+		\item Processing
+			\begin{itemize}
+			\item \emph{Pre-processing} is categorized on the basis of its output. \emph{Raw data output} implies that no modification is made to the sensed data. \emph{Filtering and denoising} imply that the output is refined by ``removing irrelevant and redundant data. In addition, they help to aggregate and make sense of data while reducing at the same tiem the volume to be stored'' (p. 2444). \emph{ShareTrace uses filtering and denoising to ensure that only valid contacted actor IDs are stored, i.e., those that correspond to sustained contacts and not fleeting interactions.}
+			\item \emph{Analytics} ``aims to extract and expose meaningful information.'' \emph{ML and data mining analytics} are not real-time. They ``aim to infer information, identify patterns, or predict future trends.'' `\emph{Real-time analytics} consist of ``examining collected data as soon as it is produced by the contributors'' (p. 2444). \emph{While ShareTrace can utilize the data as soon as it becomes available in the PDA, it does not need to be real-time. Moreover, what is performed on the data is inference, so the type of analytics that apply is ML and data mining.}
+			\item \emph{Post-processing}. \emph{Statistical post-processing} ``aims at inferring proportions given quantitative examples of the input data. \emph{Prediction post-processing} aims to determine ``future outcomes from a set of possibilities when given new input in the system'' (p. 2444). \emph{ShareTrace does not clearly align with either of these categories. If the ``post-processed data'' is considered the exposure score, then prediction more closely applies since it is meant to predict future outcome.}
+			\end{itemize}
+		\end{itemize}
+	\item Communication-layer taxonomy (pp. 2447--2450)
+		\begin{itemize}
+		\item Technologies
+			\begin{itemize}
+			\item \emph{Infrastructured technologies} ``indicate the need for an infrastructure for data delivery.'' \emph{Cellular} connectivity ``is typically required from sensing campaign that perform real-time monitoring and require data reception as soon as it is sensed.'' \emph{WLAN} (i.e., WiFi) ``is used mainly when sensing organizers do not specify any preferred reporting technologies or when the application domain permits to send data also a certain amount of time after the sensing process'' (p. 2447). \emph{ShareTrace does not require cellular connectivity, but does allow for it. ShareTrace is delay tolerant.}
+			\item \emph{Infrastructure-less technologies} ``consists of device-to-device (D2D) communications that do not require any infrastructure{\ldots}but rather allow devices in the vicinity to communicate directly [i.e., proximity-based communication].'' Technologies include \emph{WiFi-Direct}, \emph{LTE-Direct}, and \emph{Bluetooth} (p. 2447). \emph{ShareTrace uses Bluetooth because of its energy efficiency and short range.}
+			\end{itemize}
+		\item Reporting
+			\begin{itemize}
+			\item \emph{Upload mode}. In \emph{relay uploading}, ``data is delivered as soon as collected.'' \emph{Store and forward} ``is typically used in delay-tolerant applications when campaigns do not need to receive data in real-time'' (p. 2448). \emph{ShareTrace is delay-tolerant, so it uses store-and-forward uploading.}
+			\item \emph{Methodology} (i.e., ``how a device executes a sensing process in respect to others). \emph{Individual} is ``when each user accomplishes the requested task individually and without interaction with other participants.'' \emph{Collaborative} is when ``users communicate with each other, exchange data and help themselves in accomplishing a task or delivering information to the central collector. Users are typically grouped and exchange data exploiting short-range communication technologies, such as WiFi-direct or Bluetooth'' (p. 2448). \emph{ShareTrace is collaborative since users exchange their actors' ID with each other to accomplish the task of estimating their infection risk.}
+			\item \emph{Timing} (i.e., if the devices should sense in the same period or not). \emph{Synchronous timing} ``includes cases in which users start and accomplish at the same time the sensing task. For synchronization purposes, participants communicate with each other.'' \emph{Asynchronous timing} occurs ``when users perform sensing activity not in time synchronization with other users'' (p. 2448). ``Note that systems that create maps merging data from different users are considered individual because users do not interact between each other to contribute'' (p. 2450). \emph{ShareTrace is synchronous because sensing contacts inherently requires synchronous communication between the involved devices. Regarding the point merging data, ShareTrace is still collaborative because this merging requires users to communicate first.}
+			\end{itemize}
+		\end{itemize}
+	\item Sensing-layer taxonomy (pp. 2451--2456)
+		\begin{itemize}
+		\item Elements
+			\begin{itemize}
+			\item \emph{Deployment}. \emph{Dedicated deployment} involves the use of ``non-embedded sensing elements,'' typically for a specific task. \emph{Non-dedicated deployment} utilizes sensors that ``do not require to be paired with other devices for data delivery but exploit the communication capabilities of mobile devices'' (p. 2451). \emph{ShareTrace uses non-dedicated deployment (i.e., Bluetooth, cellular and WLAN).}
+			\item \emph{Activity}. \emph{Always-on sensors} ``are required to accomplish mobile devices basic functionalities, such as detection of rotation and acceleration{\ldots}Activity recognition [i.e., context awareness]{\ldots}is a very important feature that accelerometers enable.'' \emph{On-demand sensors} ``need to be switched on by users or exploiting an application running in the background. Typically, they serve more complex applications than always-on sensors and consume a higher amount fo energy'' (p. 2452). \emph{ShareTrace primarily uses Bluetooth, which may be considered on-demand. While energy efficient, users do have the ability to turn it on and off. Hypothetically, ShareTrace could also use accelerometers and gyroscopes to detect when this needs to be on.}
+			\item \emph{Acquisition}. \emph{Homogeneous acquisition} ``involves only one type of data and it does not change from one user to another one.'' \emph{Heterogeneous acquisition} ``involves different data types usually sampled from several sensors'' (p. 2452). \emph{ShareTrace is homogeneous because all users sense the same data from one sensor.}
+			\end{itemize}
+		\item Sampling
+			\begin{itemize}
+			\item \emph{Frequency}. \emph{Continuous sensing} ``indicates tasks that are accomplished regularly and independently by the context of the smartphone or the user activities.'' \emph{Event-based sensing} is when ``data collection starts after a certain event has occurred. In this context, an event can be seen as an active action from a user or the central collector, but also a given context awareness'' (p. 2452). \emph{ShareTrace could be either continuous or event-based. For example, it would be more eneregy-efficient if we used the accelerometer and/or the gyroscope to detect when the user has their device on them. Because this is not mentioned in previous papers, we'll assume continuous sensing.}
+			\item \emph{Responsibility}. \emph{Mobile devices}: ``devices or users take sampling decisions locally and independently from the central authority{\ldots}When devices take sampling decisions, it is often necessary to detect the context in which smartphones and wearable devices are. The objective is to maximize the utility of data collection and minimize the cost of performing unnecessary operations'' (pp. 2452--2453). \emph{Central collector}: ``the collector takes decisions about sensing and communicate them to the mobile devices'' (p. 2453). \emph{ShareTrace assumes mobile devices are responsible since it is a decentralized application.}
+			\item \emph{User involvement}. \emph{Participatory involvement} ``requires active actions from users, who are explicitly asked to perform specific tasks. They are responsible to consciously meet the application requests by deciding when, what, where, and how to perform sensing tasks.'' \emph{Opportunistic involvement} means that ``users do not have direct involvement, but only declare their interest in joining a campaign and providing their sensors as a service. Upon a simple handshake mechanism between the user and the MCS platform, a MCS thread is generated on the mobile device (e.g., in the form of a mobile app), and the decisions of what, where, when, and how to perform the sensing are delegated to the corresponding thread. After having accepted the sensing process, the user is totall unconscious with no tasks to perform and data collection is fully automated{\ldots}The smartphone itself is context-aware and makes decisions to sense and store data, automatically determining when its context matches the requirements of an application. Therefore, coupling opportunistic MCS systems with context-awareness is a crucial requirement'' (p. 2453). \emph{ShareTrace is opportunistic.}
+			\end{itemize}
+		\end{itemize}
+\item Surveys on privacy: 15, 16
+\end{itemize}

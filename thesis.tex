@@ -1,0 +1,31 @@
+\documentclass[12pt,oneside]{book}
+
+\usepackage{thesis}
+
+\begin{document}
+% Uncomment to find unused references
+% \nocite{*}
+\frontmatter
+%\pagestyle{plain}
+%\input{content/title}
+%\input{content/approval}
+%\input{content/toc}
+%\input{content/acks}
+%\input{content/abstract}
+
+\mainmatter
+\input{content/intro}
+\input{content/algorithms}
+%\input{content/evaluation}
+%\input{content/conclusions}
+\appendix
+\noappendicestocpagenum
+\addappheadtotoc
+%\input{content/previous-designs}
+%\input{content/structures}
+\input{content/conventions}
+
+\backmatter
+\input{content/biblio}
+
+\end{document}

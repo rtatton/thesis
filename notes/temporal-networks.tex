@@ -1,0 +1,212 @@
+\section{Temporal Networks}
+
+\subsection{Modern temporal network theory: a colloquium}
+\bibentry{Holme2015b}
+\subsubsection*{Summary}
+Holme provides a thorough overview of the field of temporal networks, citing many works that are relevant for the discussion of risk propagation (e.g., human proximity networks, temporal network representations, metrics for describing temporal structure, reachability, distance measures, reference models, generative models, epidemic models, information spreading). Holme includes many other topics that are not directly relevant to risk propagation.
+\subsubsection*{Notes}
+Cite as a reference paper for learning about the temporal network theory in general.
+
+\subsection{Temporal networks}
+\bibentry{Holme2012}
+\subsubsection*{Summary}
+Similar to \cite{Holme2015b}, but only contains details on temporal network structure, representation, modeling, and dynamic models. Much of the future work in this review is contained in \cite{Holme2015b}. However, more detail is included about the topics contained in this review than in \cite{Holme2015b}. This work tends to include more definitions that could be useful in the thesis.
+\subsubsection*{Notes}
+Cite as a reference paper for learning about the temporal network theory in general.
+
+\subsection{Concurrency measures in the era of temporal network epidemiology}
+\bibentry{Masuda2021}
+\subsubsection*{Summary}
+The purpose of this literature review is ``to connect the temporal network structure to the theory of concurrent partnerships'' (p. 2). The authors begin by discussing the ties between temporal network epidemiology (particularly sexually transmitted diseases) and concurrency, as well as key definitions (event, temporal network, partnership, dynamic partnership network, momentary network, and aggregate network). The authors proceed to explain concurrency in relation to mean network degree, degree distribution heterogeneity, and dynamic network structure. This work concludes with a discussion on the future role of concurrency in temporal network theory and lines of research that remain underexplored.
+\subsubsection*{Notes}
+\begin{itemize}
+\item Cite as a reference paper for learning about the field, specifically concurrency and temporal network epidemiology.
+\item ``Many factors determine the likelihood of whether or not one event [i.e., contact] spreads the disease from one individual to another---the nature of the interaction, the health status of those involved, etc.'' (p. 1). \emph{How extensible is risk propagation to incorporate these factors?}
+\item ``Note that infections can only propagate along time-respecting paths'' (p. 2). \emph{Risk propagation does not require time-respecting paths since it allows for delays between when the contact occurred and what messages can be passed.}
+\item A temporal network is represented as a contact sequence (p. 2) \cite{Holme2012, Holme2015b}.
+\item ``In network epidemiology in general, higher degrees (more neighbours) in a contact network signals an easier spread of disease. This is true both for individuals and for entire networks.'' Mentioned as an introductory remark when discussing ``concurrency as a large mean degree of the network'' (p. 3).
+\item The metrics proposed by \cite{Morris1995, Kretzschmar1996} are discussed at great length (pp. 4--6). \emph{Have these been extended to temporal networks?}
+\item ``Studies using a dynamical netork model would involve a parameter to control the level of concurrency{\ldots}and examine how epidemic spreading changes as one varies the control parameter,'' (p. 6). \emph{For risk propagation, how does the score TTL distribution $p_s(t)$ and contact time distribution $p_c(t)$ (i.e., the control parameters) relate to concurrency?
+	\begin{itemize}
+		\item What does it mean that $p_s(t)$ and $p_c(t)$ overlap significantly (i.e., minimal divergence)?
+			\begin{itemize}
+				\item Minimal lag between when contacts occur/added to the network and when symptom scores are copmuted.
+				\item Minimal sending of cached messages.
+				\item Actual TTL doesn't matter.
+			\end{itemize}
+		\item What if $p_s(t)$ is shifted to the left (i.e., smaller score TTL)?
+			\begin{itemize}
+				\item Symptom scores will tend to be newer than contacts.
+				\item Fewer messages propagated; more cached messages sent.
+				\item Likely when self-isolating b/c no new contacts being added.
+				\item The time buffer $\beta$ effectively shifts $p_c(t)$ to the left (i.e., shifts contacts forward in time by constant amount).
+			\end{itemize}
+		\item What if $p_c(t)$ is shifted to the left?
+			\begin{itemize}
+				\item Contacts are newer than symptom scores; people aren't using the app, pretty much.
+			\end{itemize}
+	\end{itemize}}
+\item Means of isolating the effects concurrency on epidemic spread (pp. 6--7):
+	\begin{itemize}
+		\item For a contact in risk propagation, $t_{\mathit{start}} = t - \tau_c$ and $t_{\mathit{end}} = t + \beta$, where $t$ is the most recent contact time, $\tau_c$ is the contact TTL and $\beta$ is the time buffer.
+		\item \emph{Individual index of concurrency (IIC)}. Qualitatively, the IIC of a vertex is the total normalized concurrency beyond randomness, given the edges incident to the vertex. ``They found no correlation between the IIC value and whether or not the smapled people were HIV-infected'' (p. 6). Section 6 (p. 9) briefly discusses the debate over the concurrency hypothesis, and that this study was criticized for its methodology. \emph{The original source to IIC is not accessible.}
+		\item \emph{Temporal concurrency (TC)}. ``The probability that the time windows of activation on two edges overlap'' (p. 6). Empirically, TC is defined as the ``fraction of edge pairs that have overlapping active time, where the edge may be optionally assumed to be active all the time between its first and last event times'' (p. 6; see original source). \emph{Could definitely use this metric.}
+		\item \emph{Reachability}. ``The reachability of the temporal network generally increases as the temporal coherence increases'' (p. 6; see original sources). ``By definition, the reachability ignores infectivity and therefore does not directly translate into observed epidemics. However, since high average reachability is positively correlated with the final outbreak size, the results{\ldots}are consistent with the claim that the concurrency positively contributes to the severity of outbreaks'' (p. 7). \emph{For risk propagation, however, it does account for infectivity due to message passing!}
+	\end{itemize}
+\item ``In empirical data of temporal networks, events between nodes are often bursty.'' (p. 7; cite original sources). \emph{Would a density mixture of contact TTLs capture burstiness?}
+\item \emph{Important insight}: ``It is incorrect to consider the time (or ensemble) average of the degree distribution first{\ldots}and then calculate the concurrency measure, or consider the time average of the network first{\ldots}and then calculate the concurrency measure{\ldots}We emphasize that the time aggregation of a concurrency measure and the concurrency measure for the time or ensemble average of an evolving network are generally different from each other. For assessing the effect of concurrency on epidemic spreading, the former is relevant but not the latter, because the time or ensemble average of networks is not the object on which epidemic spreading occur'' (p. 8).
+\item \emph{Important insights from Section 7: Outlook}
+	\begin{itemize}
+		\item ``They [temporal networks] do not typically, for example, record the type of interaction event (e.g. condom use) or the biological characteristics of the individuals that may affect the transmission probability. However, all simplifying assumptions in temporal networks are also used in the concurrency literature, so predictions based on concurrency cannot be more accurate than those made by temporal network epidemiology'' (p. 9). \emph{By propagating the risk of infection (which can account for biological individuality), rather than trying to model the spread directly, does this mean risk proapgation could be more accurate?}
+		\item ``It seems necessary to agree on the definition of how to construct a partnership edge from a temporal network composed of time-stamped events'' (p. 10; cite original source). \emph{Useful to mention when defining a contact w.r.t. risk propagation.}
+		\item ``Our understanding of how temporal structures are related to concurrency is even more limited{\ldots}One such example is the statistics of interevent times{\ldots}One way of understanding temporal effects on concurrency measures, so far missing in the literature, would be to use randomized datasets as null models'' (p. 10; cite original sources).'' \emph{Consider using randomized null models of SocioPattern contact networks in the evaluation and interevent statistics.}
+		\item ``Empirical studies of concurrency have almost exclusively focused on sexually transmitted diseases{\ldots}Other infections such as influenza{\ldots}or COVID-19{\ldots}also spread over networks, and concucrency should affect these as much as sexually transmitted ones'' (p. 10). \emph{While the thesis will be using simulated epidemic outbreaks, it does contribute to this line of research.}
+		\item ``Unlike sexual networks, it is the mobility of people{\ldots}that drives proximity networks. The term `partnership' is even more misleading for such mobility-induced networks, but the mechanism of concurrency as an accelerator of epidemics is probably still valid'' (p. 11).
+		\item ``Whether concurrency is a useful target for mitigating disease spread is unclear, and may depend on the phase of the epidemic{\ldots}Decreasing concurrency without changing the total number of events would require that one proactively change events' timing to reduce concurrent events that nodes experience. Such concurrency-based interventions are underexplored'' (p. 11; cite original source). \emph{Reducing concurrency is effectively achieved by social distancing. Proximity-based contact tracing, especially ShareTrace which accounts for indirect contact, would permit such proactive interventions by individual users.}
+		\item ``We also need to carry out more extensive studies to clarify whether concurrency is a sizable contributor to epidemic dynamics on networks compared to other static and temporal network properties'' (p. 11). \emph{Consider following this line of research in the evaluation.}
+	\end{itemize}
+\end{itemize}
+
+\subsection{Types of temporal networks}
+\begin{itemize}
+\item Temporal networks have been applied to study many phenomenon, such as epidemics and physcial proximity of humans and animals. For clarity, this work does not include a review of other applications \cite{Holme2012, Holme2015b}. In this work, a \emph{contact network} is a temporal network in which the vertices represent persons and edges represent physical proximity between persons\footnote{The usage of ``contact'' is in reference to contact tracing; however, ``contact'' also refers to an edge in a temporal network, regardless of the semantics associated with its vertices and edges. What shall be called a contact network in this work has also been called a \emph{human proximity network} \cite{Holme2015b} or \emph{social contact network} \cite{Onaga2017}.}.
+\end{itemize}
+
+\subsubsection*{Contact Networks}
+SocioPatterns publications: \url{http://www.sociopatterns.org/publications/} and earlier works \cite{Holme2012}
+
+\subsection{Methods and measures for the description of epidemiologic contact networks}
+\bibentry{Riolo2001}
+\subsubsection*{Summary}
+This work defines the \emph{transmission graph} for describing epidemiological contact networks that can ``reflect the potential of a network to transmit infection'' (p. 446). Additionally, it defines \emph{source counts} that ``summarize the potential for the transmission of infection from prior or concurrent relationships and individuals to a particular relationship or individual'' (p. 446).
+\subsubsection*{Notes}
+\begin{itemize}
+\item A \emph{cumulative transmission graph} is a directed graph. A vertex $v_{ij}$ represents a relationship between two persons $i, j$ over a time interval $[s_{ij}, e_{ij}]$. An edge $(v_{ij}, v_{k\ell})$ is present if
+	\begin{enumerate}
+		\item vertices $v_{ij}, v_{k\ell}$ share at least one person: $\{i, j\} \subseteq \{k, \ell\}$; and
+		\item the relationships are at least partially concurrent: $s_{k\ell} < e_{ij} + \delta$ and $s_{ij} < e_{k\ell}$, i.e., $[s_{ij}, e_{ij} + \delta]$ is a subinterval of $[s_{k\ell}, e_{k\ell}]$ or vice versa;
+	\end{enumerate}
+where $\delta$ is the sum of the incubation and contagiousness periods\footnote{\cite{Holme2012} appear to have incorrectly defined these conditions.}. The authors also define an \emph{interval transmission graph} in which in-degree edges are removed from vertex $v_{ij}$ at time $e
+_{ij} + \omega$ where $\omega > 0$. Transmission graphs ``cannot handle edges where one vertex manages to not catch the disease. Furthermore, paths in transmission graphs do not have to be time respecting [since there is no constraint $s_{k\ell} \leq s_{ij}$, assuming start times are used to define a time-respecting path]'' \cite{Holme2012}.
+\item The \emph{source count} ``is the number of previous partnerships that could have originated a chain of infection that could reach the partnership of concern.'' Formally, the source count of vertex $v_{ij}$ is the number of unique vertices that can reach $v_{ij}$ on the transmission graph.
+\item The \emph{reachability matrix} $\mathbf{R}$ is defined as an $n \times n$ matrix such that entry $r_{ij} \in \mathbf{R}$ is 1 if there exists a path to vertex $v_{ij}$ and 0 otherwise. The message reachability matrix $\mathbf{M}$ is similar to $\mathbf{R}$ in that both require a temporal path from vertex $i$ to vertex $j$. However, $\mathbf{M}$ is further constrained by message-passing semantics.
+\end{itemize}
+
+\subsection{Concurrency-induced transitions in epidemic dynamics on temporal networks}
+\bibentry{Onaga2017}
+\subsubsection*{Summary}
+This work provides a theoretical explanation for why concurrency in temporal networks is positively correlated with epidemic spreading (i.e., inversely correlated with the epidemic threshold). The authors also show that when network and epidemic dynamics have comparable time scales, the infection dies out. ``This is a stochastic effect and cannot be captured by existing approaches to epidemic processes on temporal networks that neglect stochastic dying out'' (p. 4). The authors use an activity-driven model (as opposed to a contact sequence) of a temporal network in order to isolate the effects of concurrency. The authors utilize a susceptible-infected-susceptible (SIS) model of epidemic spreading and a switching network. The outcomes of  work includes ``an analytically tractable matrix equation using a probability generating function for dynamic networks'' and evidence in support of ``nonmonotonic effects of link concurrency on spreading dynamics'' (p. 1).
+\subsubsection*{Notes}
+\begin{itemize}
+\item Reference when discussing prior works that do not provide theoretical support for their claims regarding concurrency and increased spreading.
+\item ``Analysis of epidemic processes driven by discrete pairwise contact events, which is a popular approach \cite{Holme2012,Holme2015b,Masuda2013,Karsai2011,Stehle2011a}, does not address the problem of concurrency because we must be able to control the number of simultaneously active links possessed by a node in order to examine the role of concurrency without confounding with other aspects'' (p. 1).
+\item \emph{Concurrency} is node-centric, defined as the number of edges a node has a given time.
+\item \emph{Main finding}: ``The presence of network dynamics boosts the prevalence (and decreases the epidemic threshold $\beta_c$) when the concurrency $m$ is large and suppresses the prevalence (and increases $\beta_c$) when $m$ is small, for a range of values of the network dynamic time scale $\tau$'' (p. 4)
+\item Is the finding regarding time scales related to self-isolation? If the contact network dynamics is comparable to epidemic dynamics, then exposure scores would begin to default to 0, right?
+\end{itemize}
+
+\subsection{Exploring concurrency and reachability in the presence of high temporal resolution}
+\bibentry{Lee2019b}
+\subsubsection*{Summary}
+This work studies the relationship between concurrency (defined as the number of edges active during the same time interval) and reachability on empirical temporal networks, including the high school SocioPatterns network \cite{Fournet2014}. This work also provides a summary of some previous works on the same topic. In particular, the authors build upon their previous work \cite{Lee2019a} and the methods and results of \cite{Moody2016}. The evaluation of the empirical networks varies the concurrency while maintaining contact duration. The authors find that affect of concurrency on reachability heavily depends on the network topology, specifically the connectivity or the structural cohesion \cite{Moody2016, Lee2019a}. The authors also show that a course contact details can be used in place of individual contact intervals and obtain reasonable estimates of the true reachability.
+\subsubsection*{Notes}
+\begin{itemize}
+\item Remarks about previous work:
+    \begin{itemize}
+        \item Based on previous works, the authors note that the inconsistent effects of burstiness on spreading dynamics indicate other factors are involved (p. 129).
+        \item ``Because the reachability is an underlying property of a temporal network independent of the spreading process taking place on the network, and since it naturally constrains all spreading processes on the temporal network, reachability has been used in multiple previous studies \cite{Armbruster2017, Holme2005, Lentz2013, Moody2002, Moody2016, Onaga2017}.''
+        \item \cite{Moody2002} ``emphasized the substantial effect of concurrency on the reachability in an adolescent romantic network, in that reachability plays the role of an upper bound on the expected outbreak size of an infection spreading on the network.
+        \item The authors remark on their previous work \cite{Lee2019a}, ``Their existing models do not do as well in the presence of larger numbers of available alternate paths between nodes'' (p. 132).
+    \end{itemize}
+\item \emph{Concurrency} is defined as the number of temporally overlapping contacts.
+\item ``In simulations where edge timings are independent and identically distributed [\cite{Moody2016, Lee2019a}]{\ldots}the expected measurement of concurrency over all edge pairs is equivalent to that over the subset of connected edge pairs'' (p. 135). \emph{This seems very similar to how contacts are being simulated for risk propagation.}
+\item \emph{Contact time rescaling methodology}:Let $s_{\min}$ be the earliest start time of any contact. Let $\rho \in [0, 1]$ be the concurrency rescaling/mixing parameter such that the duration of each contact is preserved,
+    \begin{align*}
+        s_i' &= s_{\min} + \rho(s_i - s_{\min}) = \rho s_i + (1 - \rho)s_{\min} \\
+        e_i' &= s_i' + (e_i - s_i).
+    \end{align*}
+Observe that $\rho = 1$ corresponds to no concurrency scaling and $\rho = 0$ corresponds to maximal concurrency.
+\item A faster approach to measuring reachability than what is proposed here (i.e., adjacency-matrix exponentiation) is to use message passing (pp. 135--138).
+\item Plotting concurrency vs. reachability for various values of $r$ is an excellent way to show the relationship. \emph{Is the slope a meaningful characteristic of a dataset, or the difference in reachability between minimal and maximal concurrency?}
+\item ``Increasing concurrency all the way to 1 reduces the question of accessibility to connected components in the temporally-aggregated network, with reachability then equal to the fraction of node pairs in the same connected component'' (p. 139).
+\item ``With ever greater emphasis on temporal network data, focusing on the role of concurrency appears to be one productive way to accurately summarize the population-level effects of the edge timing details'' (p. 143).
+\item \emph{Excellent insight}: ``Whereas increased concurrency increases temporal path accessibility, and this increased reachability must increase diffusion potential, the amount of increase in reachability depends on other network factors{\ldots}While we have no data to speak directly to these questions about the value of concurrency in the public health context, our results suggest that one contributing factor might be high variance in the levels of structural cohesion in the underlying networks. As such, by analyzing the extent of concurrency in a temporal network and its impact on reachability given the structural properties of the underlying network, one might be able to better choose between different intervention strategies to best mitigate the spread of an infectious disease or enhance the extent of positive behaviors'' (pp. 143-144).
+\end{itemize}
+
+\subsection{The effect of concurrency on epidemic threshold in time-varying networks}
+\bibentry{Onaga2019}
+\subsubsection*{Summary}
+This work builds on upon \cite{Onaga2017} by extending their framework to model group dynamics with cliques. The authors model is very similar to \cite{Onaga2017}, with the exception that the activated nodes are forced to form cliques. The analysis focuses on a continuous-time SIS model with an activity-driven model of the temporal network. The cases of equal activation and attractiveness-based activation are measured. Reinforcing \cite{Onaga2017}, the authors find that the ``epidemic threshold and prevalence, and how they compare with the case of static networks, mainly depend on the level of concurrency and the distribution of attriveness'' (p. 267).
+\subsubsection*{Notes}
+\begin{itemize}
+\item While this work uses an SIS model, risk propagation does not require such a model to be assumed since the \emph{probabilities of infection} are propagated, rather than the disease itself (p. 255).
+\item This work is very similar to their previous work \cite{Onaga2017}. The main difference in this work is that the authors model group events with cliques.
+\item Useful to cite for theoretical support about concurrency and epidemic spreading.
+\end{itemize}
+
+\subsection{Fast approximation for finding node-independent paths in networks}
+\bibentry{White2001}
+\subsubsection*{Summary}
+This work provides a fast, simple, and accurate approximation algorithm for finding vertex-independent paths in $O(S k^{\min(d_s, d_t)})$, where $k$ is the maximum number of vertex-independent paths to consider, $d_s$ is the degree of the source vertex, $d_t$ is the degree of the target vertex, and $S$ is the time to find the shortest path between $s$ and $t$. (Note: this definition is more general than what is provided in the paper, which assumes a breadth-first search shortest-path algorithm.).
+\subsubsection*{Notes}
+\begin{itemize}
+\item \emph{Vertex-independent paths} in a graph $G$ from vertex $s$ to vertex $t$ are paths in $G$ that share no vertices, except $s, t$ (p. 1).
+\item For distinct, $s, t \in V$, the \emph{local connectivity $\kappa(s, t)$} is the ``minimum number of vertices that must be removed to disconnect them'' (p. 1).
+\item $\kappa(s, t) = K(s, t)$, where $K(s, t)$ is the maximum number of vertex-independent paths between $s, t \in V$ (p. 1; \cite{Menger1927}).
+\item Approximation algorithm to find $\kappa(s, t)$:
+    \begin{itemize}
+        \item Let $m = 0$ and $N = \min(k, \min(d_s, d_t))$.
+        \item For $n = 1, \ldots, N$: if a shortest path $P = s \rightarrow t$ exists, increment $m$ and remove all intermediate vertices in $P$ from $G$.
+    \end{itemize}
+\item (Not in paper): to find the shortest path between two \emph{adjacent vertices}, we must use a $k$-shortest path algorithm to find the nontrivial paths that connect $s$ and $t$. Suurballe's algorithm can be used to find edge-disjoint paths if the weights are non-negative and the graph is directed. The algorithm uses Dijkstra's algorithm, which has time complexity $O(m + n \log(n))$ if using a Fibonacci heap. Thus, Suurballe's algorithm has a similar bound of $O(q(m + n \log(n)))$, where $q$ is the number of disjoint paths that need to be found.
+\newcommand{\davg}{\langle d \rangle}
+The complexity of finding the approximate number of vertex-independent paths for all source-target pairs in an undirected graph is $O(n^2 k^{\davg} (m + n \log(n)))$, where
+    \begin{equation*}
+        \davg \approx \frac{1}{m}\sum_{\{s, t\} \in E} \min(d_s, d_t)
+    \end{equation*}
+is the average degree. Considering all $n(n - 1)/2$ distinct source-target pairs, there are $m$ adjacent vertices. In this case, the number of disjoint paths that must be found is fixed at 2, since only one nontrivial shortest path must be found between a source and target vertex.
+    \begin{align*}
+        & O\left(2m k^{\davg} (m + n \log(n)) + \left(\frac{n(n - 1)}{2} - m\right) k^{\davg} (m + n \log(n)) \right] \\
+        &= O \left(n^2 k^{\davg}(m + n \log(n))\right),
+    \end{align*}
+where $O(k^{\davg}(m + n \log(n)))$ is the expected time complexity to find $k$ vertex-independent paths for a random vertex and $O(n^2)$ source-target pairs are considered. The all-pairs query can be trivially parallelized over a set of processors since each pair can be analyzed independent of all other pairs.
+\end{itemize}
+
+\subsection{Interdependent effects of cohesion and concurrency for epidemic potential}
+\bibentry{Moody2016}
+\subsubsection*{Summary}
+This work examines ``how concurrency affects epidemic potential [measured as the proportion of reachable pairs] and how it is moderated by network connectivity [i.e., structural cohesion]'' (p. 241). The context and evaluation discussed from the perspective of sexual transmission networks. The authors employ a 4-step random walk methodology to generate contact networks from a large collaboration network. The first finding relates reachability and concurrency: ``concurrency creates symmetry in exposure, opening paths that would be unavailable in networks with the same contact pattern but no concurrency{\ldots}Because transmission is a stochastic function on the exposure network, creating new paths in the exposure network increases epidemic potential. The second finding relates path structure and concurrency: ``Controlling for other network characteristics, we find that structural cohesion{\ldots}boosts transmission directly, moderating the marginal returns to concurrency. While concurrency increases exposure under all structural conditions, the effect is strongest in low-cohesion networks because cohesive networks have more contact paths generating higher reachability in the absence of concurrency'' (p. 246).
+\subsubsection*{Notes}
+\begin{itemize}
+\item Definitions:
+    \begin{itemize}
+        \item \emph{Contact network}: ``the pairs of people linked by direct contact. Contact relations are timed by date of first and last contact'' (p. 242). ``We also tested a valued version of this measure using the number of time periods adjacent edges overlap divided by the total length of the two relations durations. The results were substantively the same'' (p. 243).
+        \item \emph{Exposure network}: ``a subset of the relations in the contact network where timing makes it possible for one person to infect another{\ldots}The set of all time-ordered paths'' (p. 242).
+        \item \emph{Transmission network}: ``the subset of the exposure network where infection passes. This is a stochastic tree layered on the exposure network determined by the particular source individual(s) and pairwise transmission probability'' (p. 242).
+        \item \emph{Reachability}: ``the proportion of pairs in the population who could infect each other'' (p. 242).
+        \item \emph{Concurrency}: ``adjacent relationships that overlap in time'' (p. 242).
+        \item \emph{Epidemic potential}: ``the proportion of (directed) pairs reachable in the time-ordered [i.e., time-respecting] exposure network'' (p. 243).
+        \item \emph{Structural cohesion}: the number of vertex-independent paths between two distinct vertices.
+    \end{itemize}
+\item Evaluation:
+    \begin{itemize}
+        \item ``Since one cannot manipulate structural cohesion directly via simulation, there will be some correlation among the network structure measures. As such, statistical models provide the best option to identify independent structural effects'' (p. 243).
+        \item Contact duration is sampled from a skewed distribution and start time is sampled uniformly with known variance. The variance thus impacts the concurrency (p. 243). \emph{This is similar to my approach with a TTL distribution}.
+        \item Simulation design: 37 concurrency levels; 25 random contact networks per concurrency level; 50 (10 duration distributions and 5 permutations per distribution) temporal variants per network per concurrency level (46,250 observations) (p. 244).
+        \item ``We model reachability using a maximum likelihood GLM with a logit link function, since the dependent variable ranges from 0 to 1. We test nonlinear effects in concurrency as well as the interaction between concurrency and cohesion'' (p. 243). See paper for specific model results. This may be a good/necessary approach when analyzing these relationships in risk propagation.
+        \item Appendix 2 (p. 248) provides a nice way to report summary statistics about a network. It organizes statistics by volume (number of nodes, mean degree; density, proportion of adjacent pairs; and centralization, inequality in closeness centrality that is normalized to capture long-tail effects) and topology (average distance (?); diameter, centralization (?), and average number of vertex-independent paths).
+    \end{itemize}
+\item Future work:
+    \begin{itemize}
+        \item ``An ideal computational experiment would directly randomize both the timing (as we do) and the relevant structure of the network. Unfortunately, there are no ready algorithms for manipulating structural cohesion independently of other network features, which is why we rely on running simulations over extant networks and summarizing marginal effects with statistical models. Future algorithmic work on generating networks with nonlocal network features, such as structural cohesion, is need to make this possible'' (p. 246).
+        \item ``Identifying how exposure and timing interact with node level features (such as average degree or degree skew) would ease empirical verification, since such features are easier to measure in the populations of interest'' (p. 246).
+    \end{itemize}
+\item Remarks:
+    \begin{itemize}
+        \item When formalizing the problem, ``one can only pass infection to current or future partners, not past partners'' (p. 242). Risk propagation allows the infection temporal dynamics and contact dynamics to be decoupled.
+        \item Exposure is causal, but risk propagation allows for parametrized non-causality via the time buffer $\beta$.
+        \item Fig. 3 scatter plot provides a more detailed view than Fig. 4 in \cite{Lee2019b}.
+        \item \emph{Risk propagation extends the scenario of epidemic spreading on a temporal network by considering/decoupling contact recency, risk-score recency (i.e., ), and risk-score value. The temporal network encodes the posterior distribution of infection along with the causal (structural and temporal) constraints that allow the posterior to be updated. Evaluating such a network is most easily done by decomposing it into independent layers (static topology, contact time distribution, score time distribution, and score value distribution), but adding dependencies between the layers is straightforward.}
+        \item \emph{While structural cohesion and concurrency likely still provide explain epidemic potential in the case of risk propagation, they probably do not account for the symptom score information that is propagated. That is, the ``liveness'' or recency of the contacts vs. scores (i.e., score-based concurrency) will affect how information/epidemic spreads.}
+    \end{itemize}
+\end{itemize}
