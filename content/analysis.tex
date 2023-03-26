@@ -130,89 +130,95 @@ When the \emph{mobile device} is responsible, ``devices or users take sampling d
 \emph{Participatory involvement} ``requires active actions from users, who are explicitly asked to perform specific tasks. They are responsible to consciously meet the application requests by deciding when, what, where, and how to perform sensing tasks.'' \emph{Opportunistic involvement} means that ``users do not have direct involvement, but only declare their interest in joining a campaign and providing their sensors as a service. Upon a simple handshake mechanism between the user and the MCS platform, a MCS thread is generated on the mobile device (e.g., in the form of a mobile app), and the decisions of what, where, when, and how to perform the sensing are delegated to the corresponding thread. After having accepted the sensing process, the user is totally unconscious with no tasks to perform and data collection is fully automated{\ldots}The smartphone itself is context-aware and makes decisions to sense and store data, automatically determining when its context matches the requirements of an application. Therefore, coupling opportunistic MCS systems with context-awareness is a crucial requirement'' \cite{Capponi2019}. Earlier works on MCS refer to user involvement as the \emph{sensing paradigm} \cite{Lane2010, Ganti2011, Ma2014}. ShareTrace is opportunistic, ideally with context-awareness.
 
 \begin{table}[htb]
+\renewcommand{\arraystretch}{0.85}
 \scriptsize
 \centering
-\begin{tabular}{ccccc}
+\begin{tabularx}{\textwidth}{
+    >{\centering\arraybackslash}X
+    >{\centering\arraybackslash}X
+    >{\centering\arraybackslash}X
+    c
+    >{\centering\arraybackslash}X}
 \toprule
 \multirow{12}*{Application}
 	& \multirow{6}*{Task}
 		& \multirow{2}*{Scheduling}
-			& Proactive & \checkmark \\
+			& Proactive & $\bullet$ \\
 			&&& Reactive & \\
 		\cmidrule{3-5}
 		&& \multirow{2}*{Assignment}
 			& Centralized & \\
-			&&& Decentralized & \checkmark \\
+			&&& Decentralized & $\bullet$ \\
 		\cmidrule{3-5}
 		&& \multirow{2}*{Execution}
-			& Single task & \checkmark \\
+			& Single task & $\bullet$ \\
 			&&& Multi-tasking & \\
 	\cmidrule{2-5}
 	& \multirow{6}*{User}
 		& \multirow{2}*{Recruitment}
-			& Voluntary & \checkmark \\
+			& Voluntary & $\bullet$ \\
 			&&& Incentivized & \\
 		\cmidrule{3-5}
 		&& \multirow{2}*{Selection}
 			& Platform-centric & \\
-			&&& User-centric & \checkmark \\
+			&&& User-centric & $\bullet$ \\
 		\cmidrule{3-5}
 		&& \multirow{2}*{Type}
-			& Consumer & \checkmark \\
-			&&& Contributor & \checkmark \\
+			& Consumer & $\bullet$ \\
+			&&& Contributor & $\bullet$ \\
 		\cmidrule{2-5}
 \cmidrule{1-5}
 \multirow{12}*{Data}
 	& \multirow{6}*{Management}
 		& \multirow{2}*{Storage}
 			& Centralized & \\
-			&&& Distributed & \checkmark \\
+			&&& Distributed & $\bullet$ \\
 		\cmidrule{3-5}
 		&& \multirow{2}*{Format}
-			& Structured & \checkmark \\
+			& Structured & $\bullet$ \\
 			&&& Unstructured & \\
 		\cmidrule{3-5}
 		&& \multirow{2}*{Dimension}
-			& Single dimension & \checkmark \\
+			& Single dimension & $\bullet$ \\
 			&&& Multi-dimensional & \\
 	\cmidrule{2-5}
 	& \multirow{6}*{Processing}
 		& \multirow{2}*{Pre-processing}
 			& Raw data & \\
-			&&& Filtering and denoising & \checkmark \\
+			&&& Filtering and denoising & $\bullet$ \\
 		\cmidrule{3-5}
 		&& \multirow{2}*{Analytics}
-			& ML and data mining & \checkmark \\
+			& ML and data mining & $\bullet$ \\
 			&&& Real-time & \\
 		\cmidrule{3-5}
 		&& \multirow{2}*{Post-processing}
 			& Statistical & \\
-			&&& Prediction & \checkmark \\
+			&&& Prediction & $\bullet$ \\
 		\cmidrule{2-5}
 \cmidrule{1-5}
 \multirow{11}*{Communication}
 	& \multirow{5}*{Technologies}
 		& \multirow{2}*{Infrastructured}
-			& Cellular & \checkmark \\
-			&&& WLAN & \checkmark \\
+			& Cellular & $\bullet$ \\
+			&&& WLAN & $\bullet$ \\
 		\cmidrule{3-5}
 		&& \multirow{3}*{Infrastructure-less}
 			& LTE-Direct & \\
 			&&& WiFi-Direct & \\
-			&&& Bluetooth & \checkmark \\
+			&&& Bluetooth & $\bullet$ \\
 		\cmidrule{3-5}
 	\cmidrule{2-5}
 	& \multirow{6}*{Reporting}
 		& \multirow{2}*{Upload mode}
 			& Relay & \\
-			&&& Store and forward & \checkmark \\
+			&&& Store and forward & $\bullet$ \\
 		\cmidrule{3-5}
 		&& \multirow{2}*{Methodology}
 			& Individual & \\
-			&&& Collaborative & \checkmark \\
+			&&& Collaborative & $\bullet$ \\
 		\cmidrule{3-5}
 		&& \multirow{2}*{Timing}
-			& Synchronous & \checkmark \\
+			& Synchronous & $\bullet$ \\
 			&&& Asynchronous & \\
 		\cmidrule{2-5}
 \cmidrule{1-5}
@@ -220,31 +226,31 @@ When the \emph{mobile device} is responsible, ``devices or users take sampling d
 	& \multirow{6}*{Elements}
 		& \multirow{2}*{Deployment}
 			& Dedicated & \\
-			&&& Non-dedicated & \checkmark \\
+			&&& Non-dedicated & $\bullet$ \\
 		\cmidrule{3-5}
 		&& \multirow{2}*{Activity}
-			& Always-on* & \\
-			&&& On-demand & \checkmark \\
+			& Always-on & $\bullet$ \\
+			&&& On-demand & $\circ$ \\
 		\cmidrule{3-5}
 		&& \multirow{2}*{Acquisition}
-			& Homogeneous & \checkmark \\
+			& Homogeneous & $\bullet$ \\
 			&&& Heterogeneous & \\
 	\cmidrule{2-5}
 	& \multirow{6}*{Sampling}
 		& \multirow{2}*{Frequency}
-			& Continuous & \checkmark \\
-			&&& Event-based* & \\
+			& Continuous & $\bullet$ \\
+			&&& Event-based & $\circ$ \\
 		\cmidrule{3-5}
 		&& \multirow{2}*{Responsibility}
-			& Mobile device & \checkmark \\
+			& Mobile device & $\bullet$ \\
 			&&& Central collector & \\
 		\cmidrule{3-5}
         && \multirow{2}*{User involvement}
 			& Participatory & \\
-			&&& Opportunistic & \checkmark \\
+			&&& Opportunistic & $\bullet$ \\
 \bottomrule
-\end{tabular}
-\caption[ShareTrace classification]{ShareTrace classification using the four-layered architecture of an MCS application \cite{Capponi2019}. *Ideally, ShareTrace would operate with context-awareness.}
+\end{tabularx}
+\caption[ShareTrace classification]{ShareTrace classification using the four-layered architecture of a mobile crowdsensing application \cite{Capponi2019}. Always ($\bullet$); with context-awareness ($\circ$).}
 \label{tab:classification}
 \end{table}
 
