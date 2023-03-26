@@ -38,8 +38,8 @@
 % Customize itemize and enumerate environments 
 \usepackage{enumitem}
 
-% Add appendices to the table of contents
-\usepackage[titletoc]{appendix}
+% Set section depth to paragraph level
+\setcounter{secnumdepth}{4}
 
 % Citations and cross-referencing
 \usepackage[hidelinks]{hyperref}
@@ -63,6 +63,40 @@
 
 % Specifies how to format key terms in text
 \newcommand{\define}[1]{\emph{#1}}
+
+% Add appendices to the table of contents
+\usepackage[titletoc]{appendix}
+
+% TABLES AND FIGURES
+\usepackage{booktabs}
+
+\usepackage{multirow}
+
+\newcommand{\rowgroup}[1]{\hspace{-1em}#1}
+
+\usepackage{subcaption}
+\captionsetup{labelfont=bf}
+
+\usepackage{tikz}
+\graphicspath{{assets/}}
+\usetikzlibrary{bayesnet,plotmarks,calc,angles,quotes}
+
+\usepackage{pgfplots}
+\usepgfplotslibrary{groupplots,statistics}
+\pgfplotsset{
+	compat=1.15,
+	table/search path={./assets/},
+	only if/.style args={entry of #1 is #2}{
+		/pgfplots/boxplot/data filter/.code={
+			\edef\tempa{\thisrow{#1}}
+			\edef\tempb{#2}
+			\ifx\tempa\tempb
+			\else
+			\def\pgfmathresult{}
+			\fi
+		}
+	}
+}
 
 % ALGORITHM AND PSEUDOCODE
 
@@ -92,14 +126,6 @@
 % Boolean-operator keywords
 \algnewcommand{\OR}{\textbf{ or }}
 \algnewcommand{\AND}{\textbf{ and }}
-
-% Math-mode pseudocode variants
-\algnewcommand{\mIf}[1]{\If{$#1$}}
-\algnewcommand{\mFor}[1]{\For{$#1$}}
-\algnewcommand{\mWhile}[1]{\While{$#1$}}
-\algnewcommand{\mForEach}[1]{\ForEach{$#1$}}
-\algnewcommand{\mState}[1]{\State $#1$}
-\algnewcommand{\mReturn}[1]{\State \Return $#1$}
 
 % Pseudocode variable
 \algnewcommand{\var}{\mathit}
@@ -158,41 +184,6 @@
 	showtabs=false,
 	tabsize=1}
 \lstset{style=pyStyle}
-
-% TABLES AND FIGURES
-\usepackage{booktabs}
-
-\usepackage{multirow}
-
-\newcommand{\rowgroup}[1]{\hspace{-1em}#1}
-
-\usepackage{subcaption}
-\captionsetup{labelfont=bf}
-
-\usepackage{tikz}
-\graphicspath{{assets/}}
-\usetikzlibrary{bayesnet,plotmarks,calc,angles,quotes}
-
-\usepackage{pgfplots}
-\usepgfplotslibrary{groupplots,statistics}
-\pgfplotsset{
-	compat=1.15,
-	table/search path={./assets/},
-	only if/.style args={entry of #1 is #2}{
-		/pgfplots/boxplot/data filter/.code={
-			\edef\tempa{\thisrow{#1}}
-			\edef\tempb{#2}
-			\ifx\tempa\tempb
-			\else
-			\def\pgfmathresult{}
-			\fi
-		}
-	}
-}
-
-% Table of contents
-\usepackage[nottoc,notlot,notlof]{tocbibind}
-\renewcommand{\listalgorithmname}{List of Functions}
 
 % PSEUDOCODE and MATH SYMBOLS
 
@@ -407,3 +398,8 @@
 \newcommand{\setbuilder}[2]{\set{ #1 | #2}}
 \newcommand{\Setbuilder}[2]{\Set{ #1 | #2}}
 \newcommand{\ltwodots}{\mathinner {\ldotp \ldotp}}
+
+% TABLE OF CONTENTS
+\usepackage[nottoc,notlot,notlof]{tocbibind}
+\renewcommand{\listalgorithmname}{List of Functions}
+\setcounter{tocdepth}{2}
