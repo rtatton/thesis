@@ -81,7 +81,7 @@
 
 \usepackage{tikz}
 \graphicspath{{assets/}}
-\usetikzlibrary{bayesnet,plotmarks,calc,angles,quotes}
+\usetikzlibrary{bayesnet,plotmarks,calc,angles,quotes,arrows}
 
 \usepackage{pgfplots}
 \usepgfplotslibrary{groupplots,statistics}
@@ -238,10 +238,10 @@
 \newcommand{\vScoreMsgTime}[2]{\vScoreTime_{#1 \rightarrow #2}}
 \newcommand{\vScoreMsgValue}[2]{\vScoreValue_{#1 \rightarrow #2}}
 \newcommand{\vScoreMsg}[2]{\vMsg_{#1 \rightarrow #2}}
-\newcommand{\vVariable}[1]{v_{#1}}
-\newcommand{\vFactor}[1]{f_{#1}}
-\newcommand{\vFactorMsg}[3]{\vScoreMsg{\vFactor{#1}}{\vVariable{#2}}^{(#3)}}
-\newcommand{\vVariableMsg}[3]{\vScoreMsg{\vVariable{#1}}{\vFactor{#2}}^{(#3)}}
+\NewDocumentCommand{\vVariable}{o}{\IfNoValueTF{#1}{v}{v_{#1}}}
+\NewDocumentCommand{\vFactor}{o}{\IfNoValueTF{#1}{f}{f_{#1}}}
+\newcommand{\vFactorMsg}[3]{\vScoreMsg{\vFactor[#1]}{\vVariable[#2]}^{(#3)}}
+\newcommand{\vVariableMsg}[3]{\vScoreMsg{\vVariable[#1]}{\vFactor[#2]}^{(#3)}}
 
 % Parameters
 \newcommand{\pCacheLookAhead}{\vAhead{\pDuration}}

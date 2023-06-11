@@ -1,11 +1,16 @@
 \chapter{Actor-Based Contact Tracing}
 
-After outlining the system model, the original description of risk propagation is presented as both context and motivation for this work. Following this discussion is the main part of the chapter, which frames risk propagation as an online algorithm and an application of the actor model. Lastly, message reachability is introduced as a generalization of temporal reachability that can estimate the complexity of message-passing on temporal networks. Refer to \Cref{sec:conventions} for the typographical conventions used in this chapter.
+In prior ShareTrace work \cite{Ayday2021}, risk propagation was described under the assumption that 
+
+% TODO Update
+After outlining the system model, the original description of risk propagation is presented as both context and motivation for this work. Following this discussion is the main part of the chapter, which frames risk propagation as an online algorithm and an application of the actor model. Lastly, message reachability is introduced as a generalization of temporal reachability that can estimate the complexity of message-passing on temporal networks. 
+
+Refer to \Cref{sec:conventions} for the typographical conventions used in this chapter.
 
 \section{System Model}
 % TODO add iterative dataflow diagram
 
-The system model is similar to that in previous work \cite{Ayday2020,Ayday2021}. \Cref{fig:actor-dataflow} illustrates the corresponding data flow\footnote{A \emph{data-flow diagram} consists of data processors (circles), directed data flow (arrows), data stores (parallel lines), and external entities (rectangles) \cite[pp. 437--438]{Fowler2004}\label{foot:dataflow}.}.
+The system model is similar to that in previous work \cite{Ayday2020, Ayday2021}. \Cref{fig:actor-dataflow} illustrates the corresponding data flow\footnote{A \emph{data-flow diagram} consists of data processors (circles), directed data flow (arrows), data stores (parallel lines), and external entities (rectangles) \cite[pp. 437--438]{Fowler2004}\label{foot:dataflow}.}.
 %
 \begin{itemize}
     % TODO A more formal set of definitions for distributed, co-located, centralized, and decentralized computing is in order.
@@ -14,18 +19,13 @@ The system model is similar to that in previous work \cite{Ayday2020,Ayday2021}.
     \item Symptom scores are computed in a user's PDS to support integrating multiple streams of personal data \cite{Ayday2020}. While local symptom-score computation \cite{Ayday2020, Ayday2021} is more privacy-preserving, it is assumed that the user's PDS is a trusted entity.
     \item User device interactions serve as a proxy for proximal human interactions. This work does not assume a specific protocol, but does assume that the protocol can approximate the duration of contact with relative accuracy and that communication with the actors of those contacted users can be established in a privacy-preserving manner.
     \item No geolocation data is collected \cite{Ayday2020}. As a decentralized, proximity-based solution, it is not necessary to collect user geolocation data. See \Cref{sec:location-based} for a discussion of a geolocation-based design that was considered.
-    \item Actor-based risk propagation is a distributed, online algorithm \cite[pp. 791--818]{Cormen2022}. Previous work \cite{Ayday2020, Ayday2021} (see also \Cref{sec:previous-designs}) formulates risk propagation as a centralized, offline algorithm that periodically aggregates all user data to estimate infection risk. To improve the privacy, scalability, and responsivenes of ShareTrace, this work designs risk propagation to avoid data aggregation and to estimate infection risk in near real-time.
+    \item Actor-based risk propagation is a distributed, online algorithm \cite[pp. 791--818]{Cormen2022}. Previous work \cite{Ayday2020, Ayday2021} (see also \Cref{sec:previous-designs}) formulates risk propagation as a centralized, offline algorithm that periodically aggregates all user data to estimate infection risk. To improve the privacy, scalability, and responsiveness of ShareTrace, this work designs risk propagation to avoid data aggregation and to estimate infection risk in near real-time.
 \end{itemize}
 %
-\begin{figure}[htb]
-    \includegraphics[width=\textwidth]{actor-dataflow}
-    \caption[Actor-based ShareTrace data flow]{Actor-based ShareTrace data flow. \emph{Contacts} include the actor name and contact time of all users with which the user came into close proximity. \emph{Personal data} includes the user's demographics, reported symptoms, and diagnosis. It may also include machine-generated biomarkers and electronic health record data
-    \cite{Ayday2020}.}
-    \label{fig:actor-dataflow}
-\end{figure}
 
 \section{Global Risk Propagation}
 
+\NewDocumentCommand{\pr}{mo}{\IfNoValueTF{#2}{p(#1)}{p_{#2}(#1)}}
 \newcommand{\eventspace}{\Omega}
 \newcommand{\event}{\omega}
 \newcommand{\topk}[1]{\text{top } K \text{ of } #1}
@@ -36,17 +36,17 @@ In risk propagation, computing infection risk is an inference problem in which t
 
 \footnotetext{While previous work on ShareTrace \cite{Ayday2021} defines a \emph{contact} as a contiguous 15 minutes in which the devices of two users are proximal, the Centers for Disease Control and Prevention technically considers these 15 minutes \emph{over a 24-hour time window} \cite{CDC2021}.}
 
-Computing the full joint probability distribution is intractable as it scales exponentially with the number of users. To circumvent this challenge, risk propagation uses a variation of message passing on a factor graph. Formally, let $\vGraph = (\vVariables, \vFactors, \vEdges)$ be a factor graph where $\vVariables$ is the set of variable vertices, $\vFactors$ is the set of factor vertices, and $\vEdges$ is the set of edges incident between them \cite{Kschischang2001}. A \define{variable vertex} $\vVariable{i}$ is a random variable such that $\vVariable{i}: \eventspace \rightarrow \{0, 1\}$, where the sample space is $\eventspace = \{\var{healthy}, \var{infected}\}$ and
+Computing the full joint probability distribution is intractable as it scales exponentially with the number of users. To circumvent this challenge, risk propagation uses a variation of message passing on a factor graph. Formally, let $\vGraph = (\vVariables, \vFactors, \vEdges)$ be a factor graph where $\vVariables$ is the set of variable vertices, $\vFactors$ is the set of factor vertices, and $\vEdges$ is the set of edges incident between them \cite{Kschischang2001}. A \define{variable vertex} $\vVariable[i]$ is a random variable such that $\vVariable[i]: \eventspace \rightarrow \{0, 1\}$, where the sample space is $\eventspace = \{\var{healthy}, \var{infected}\}$ and
 %
 \begin{equation*}
-    \vVariable{i}(\event) =
+    \vVariable[i](\event) =
         \begin{cases}
             0 & \text{if } \event = \var{healthy} \\
             1 & \text{if } \event = \var{infected}.
         \end{cases}
 \end{equation*}
 %
-Thus, $p_\vTime(\vVariable{i}) = \vScore_\vTime$ is a risk score of user $i$. A \define{factor vertex} $\vFactor{}(\vVariable{i}, \vVariable{j}) = \vFactor{ij}$ represents contact between users $i, j$ such that $\vFactor{ij}$ is adjacent to $\vVariable{i}, \vVariable{j}$. \Cref{fig:factor-graph} depicts a factor graph that reflects the problem constraints. 
+Thus, $\pr{\vVariable[i]}[\vTime] = \vScore_\vTime$ is a risk score of user $i$. A \define{factor vertex} $\vFactor(\vVariable[i], \vVariable[j]) = \vFactor[ij]$ represents contact between users $i, j$ such that $\vFactor[ij]$ is adjacent to $\vVariable[i], \vVariable[j]$. \Cref{fig:factor-graph} depicts a factor graph that reflects the problem constraints.
 % TODO Find a better way to transition to this statement
 While the max-sum algorithm aims to maximize the \emph{joint} distribution \cite[pp. 411--415]{Bishop2006}, risk propagation aims to maximize \emph{individual} MPIPs \cite{Ayday2021}.
 %
@@ -55,12 +55,11 @@ While the max-sum algorithm aims to maximize the \emph{joint} distribution \cite
     \begin{tikzpicture}[ampersand replacement=\&]
     	\matrix[row sep=1.5em, column sep=0.75em]
     	{
-    		\& 
-    		\factor[minimum size=1em] {f12} {above:$\vFactor{12}$} {} {}; \&\&
-    		\factor[minimum size=1em] {f23} {above:$\vFactor{23}$} {} {}; \& \\
-    		\node[latent, minimum size=2em] (v1) {$\vVariable{1}$}; \&\&
-    		\node[latent, minimum size=2em] (v2) {$\vVariable{2}$}; \&\&
-    		\node[latent, minimum size=2em] (v3) {$\vVariable{3}$}; \\
+    		\& \factor[minimum size=1em] {f12} {above:$\vFactor[12]$} {} {}; \&\&
+    		\factor[minimum size=1em] {f23} {above:$\vFactor[23]$} {} {}; \& \\
+    		\node[latent, minimum size=2em] (v1) {$\vVariable[1]$}; \&\&
+    		\node[latent, minimum size=2em] (v2) {$\vVariable[2]$}; \&\&
+    		\node[latent, minimum size=2em] (v3) {$\vVariable[3]$}; \\
     	};
     	\edge[-] {v1} {f12};
     	\edge[-] {v2} {f12};
@@ -79,45 +78,52 @@ While the max-sum algorithm aims to maximize the \emph{joint} distribution \cite
 \State $(\vVariables, \vFactors, \vEdges) \assign \Call{Factor-Graph}{C}$
 \State $n \assign 1$
 \State $\diff{n - 1} \assign \infty$
-\ForEach{$\vVariable{i} \in \vVariables$}
+\ForEach{$\vVariable[i] \in \vVariables$}
 	\State $\scores{i}{n - 1} \assign \topk{S_i}$
 \EndFor
 \While{$n \leq N \AND \diff{n - 1} > \diff{\mathit{min}}$}
-	\ForEach{$\{\vVariable{i}, \vFactor{ij}\} \in \vEdges$}
+	\ForEach{$\{\vVariable[i], \vFactor[ij]\} \in \vEdges$}
 		\State $\vVariableMsg{i}{ij}{n} \assign \scores{i}{n - 1} \setminus \setbuilder{\vFactorMsg{ij}{i}{k}}{k \in [1 \ltwodots n - 1]}$
 	\EndFor
-	\ForEach{$\{\vVariable{i}, \vFactor{ij}\} \in \vEdges$}
+	\ForEach{$\{\vVariable[i], \vFactor[ij]\} \in \vEdges$}
 		\State $\vFactorMsg{ij}{j}{n} \assign \max (\{0\} \cup \setbuilder{\pTransRate \cdot \vScore_\vTime}{\vScore_\vTime \in \vVariableMsg{i}{ij}{n}, \vTime \leq \vTime_{ij} + \pTimeBuffer})$
 	\EndFor
-	\ForEach{$\vVariable{i} \in \vVariables$}
-		\State $\scores{i}{n} \assign \topk{\setbuilder{\vFactorMsg{ij}{i}{k}}{k \in [1 \ltwodots n], \vFactor{ij} \in \neighbors_i}}$
+	\ForEach{$\vVariable[i] \in \vVariables$}
+		\State $\scores{i}{n} \assign \topk{\setbuilder{\vFactorMsg{ij}{i}{k}}{k \in [1 \ltwodots n], \vFactor[ij] \in \neighbors_i}}$
 	\EndFor
 	\State $\diff{n} \assign 0$
-	\ForEach{$\vVariable{i} \in \vVariables$}
+	\ForEach{$\vVariable[i] \in \vVariables$}
 		\State $\diff{n} \assign \diff{n} + \max \scores{i}{n} - \max \scores{i}{n - 1}$
 	\EndFor
 	\State $n \assign n + 1$
 \EndWhile
-\State \Return $\setbuilder{\max \scores{i}{n}}{\vVariable{i} \in \vVariables}$
+\State \Return $\setbuilder{\max \scores{i}{n}}{\vVariable[i] \in \vVariables}$
 \end{function}
 
 \section{Local Risk Propagation}\label{sec:vertices-to-actors}
 
-The only purpose of a factor vertex is to compute and relay messages between variable vertices. Thus, one-mode projection onto the variable vertices can be applied such that variable vertices $\vVariable{i},\vVariable{j} \in \vVariables$ are adjacent if the factor vertex $\vFactor{ij} \in \vFactors$ exists \cite{Zhou2007}. \Cref{fig:projected} shows the modified topology.
+\begin{figure}[htb]
+    \includegraphics[width=\textwidth]{distributed-dataflow}
+    \caption[Distributed ShareTrace data flow]{Distributed ShareTrace data flow. \emph{Contacts} include the actor name and contact time of all users with which the user came into close proximity. \emph{Personal data} includes the user's demographics, reported symptoms, and diagnosis. It may also include machine-generated biomarkers and electronic health record data
+    \cite{Ayday2020}.}
+    \label{fig:distributed-dataflow}
+\end{figure}
+
+The only purpose of a factor vertex is to compute and relay messages between variable vertices. Thus, one-mode projection onto the variable vertices can be applied such that variable vertices $\vVariable[i],\vVariable[j] \in \vVariables$ are adjacent if the factor vertex $\vFactor[ij] \in \vFactors$ exists \cite{Zhou2007}. \Cref{fig:projected} shows the modified topology.
 %
 \begin{figure}[htbp]
 \centering
 \begin{tikzpicture}[ampersand replacement=\&]
 	\matrix[row sep=7em, column sep=2em]
 	{
-		\node[latent, minimum size=2em] (v1) {$\vVariable{1}$}; \&\&\&
-		\node[latent, minimum size=2em] (v2) {$\vVariable{2}$}; \&\&\&
-		\node[latent, minimum size=2em] (v3) {$\vVariable{3}$}; \\
+		\node[latent, minimum size=2em] (v1) {$\vVariable[1]$}; \&\&\&
+		\node[latent, minimum size=2em] (v2) {$\vVariable[2]$}; \&\&\&
+		\node[latent, minimum size=2em] (v3) {$\vVariable[3]$}; \\
 	};
-	\factor[minimum size=1em, above= of v1] {f12_1} {above:$\vFactor{12}$} {} {};
-	\factor[minimum size=1em, above= of v2, xshift=-3em] {f12_2} {above:$\vFactor{12}$} {} {};
-	\factor[minimum size=1em, above= of v2, xshift=3em] {f23_2} {above:$\vFactor{23}$} {} {};
-	\factor[minimum size=1em, above= of v3] {f23_3} {above:$\vFactor{23}$} {} {};
+	\factor[minimum size=1em, above= of v1] {f12_1} {above:$\vFactor[12]$} {} {};
+	\factor[minimum size=1em, above= of v2, xshift=-3em] {f12_2} {above:$\vFactor[12]$} {} {};
+	\factor[minimum size=1em, above= of v2, xshift=3em] {f23_2} {above:$\vFactor[23]$} {} {};
+	\factor[minimum size=1em, above= of v3] {f23_3} {above:$\vFactor[23]$} {} {};
 
 	\plate{p1} {(v1)(f12_1)(f12_1-caption)} {};
 	\plate{p2} {(v2)(f12_2)(f23_2)(f12_2-caption)(f23_2-caption)} {};
@@ -137,13 +143,13 @@ to show how the original topology is modified.}
 \label{fig:projected}
 \end{figure}
 %
-To send a message to variable vertex $\vVariable{i}$, variable vertex $\vVariable{j}$ applies the computation associated with the factor vertex $\vFactor{ij}$. This modification differs from the distributed extension of risk propagation \cite{Ayday2021} in that we do not create duplicate factor vertices and messages in each user's PDS. By storing the contact time between users on the edge incident to their variable vertices, this modified topology is identical to the \emph{contact-sequence} representation of a \emph{contact network}, a kind of \emph{time-varying} or \emph{temporal network} in which a vertex represents a person and an edge indicates that two persons came in contact:
+To send a message to variable vertex $\vVariable[i]$, variable vertex $\vVariable[j]$ applies the computation associated with the factor vertex $\vFactor[ij]$. This modification differs from the distributed extension of risk propagation \cite{Ayday2021} in that we do not create duplicate factor vertices and messages in each user's PDS. By storing the contact time between users on the edge incident to their variable vertices, this modified topology is identical to the \emph{contact-sequence} representation of a \emph{contact network}, a kind of \emph{time-varying} or \emph{temporal network} in which a vertex represents a person and an edge indicates that two persons came in contact:
 
 \begin{equation}
-    \setbuilder{(\vVariable{i}, \vVariable{j}, \vTime)}{\vVariable{i}, \vVariable{j} \in \vVariables; \vVariable{i} \neq \vVariable{j}; \vTime \in \naturals}, \label{eq:contact-seq}
+    \setbuilder{(\vVariable[i], \vVariable[j], \vTime)}{\vVariable[i], \vVariable[j] \in \vVariables; \vVariable[i] \neq \vVariable[j]; \vTime \in \naturals}, \label{eq:contact-seq}
 \end{equation}
 %
-where a triple $(\vVariable{i}, \vVariable{j}, \vTime)$ is called a \emph{contact} \cite{Holme2012}. Specific to risk propagation, $\vTime$ is the time at which users $u$ and $v$ \emph{most recently} came in contact (see \Cref{sec:vertices-to-actors}).
+where a triple $(\vVariable[i], \vVariable[j], \vTime)$ is called a \emph{contact} \cite{Holme2012}. Specific to risk propagation, $\vTime$ is the time at which users $u$ and $v$ \emph{most recently} came in contact (see \Cref{sec:vertices-to-actors}).
 
 The usage of a temporal network in this work differs from its typical usage in epidemiology which focuses on modeling and analyzing the spreading dynamics of disease \cite{Riolo2001, Danon2011, Lokhov2014, Craft2015, Pastor-Satorras2015, Koher2019, Zino2021}. In contrast, this work uses a temporal network to infer a user's MPPI. As a result, \Cref{sec:reachability} extends temporal reachability to account for both the message-passing semantics and temporal dynamics of the network. As noted by \cite{Holme2012}, the transmission graph provided by \cite{Riolo2001} ``cannot handle edges where one vertex manages to not catch the disease.'' Notably, the usage of a temporal network in this work allows for such cases by modeling the possibility of infection as a continuous outcome.
 % TODO
@@ -647,8 +653,8 @@ Given the multivariate nature of message reachability, it is helpful to visualiz
 
 Risk propagation has worst-case time complexity $O(\card{\vContacts})$ because the number of messages scales with the number of contacts. As noted in \Cref{sec:reachability}, however, this does not capture the temporal constraints of message passing on a time-varying contact network. This is a tighter bound than previous work \cite{Ayday2021} which states that the worst-case time complexity is $O(n^2)$, where $n$ is the number of actors. The space complexity of risk propagation is also $O(\card{\vContacts})$ because each actor must store their contacts and the messages received in their mailbox.
 
-Let $\delta \in \reals_{\leq 0}$ be the time between when the contact occurred and when the user actor receives the corresponding message. Assuming $B \leq L$, there are 3 cases to consider: $\delta \leq B$, $B < \delta \leq L$, and $\delta > L$.
+%Let $\delta \in \reals_{\leq 0}$ be the time between when the contact occurred and when the user actor receives the corresponding message. Assuming $B \leq L$, there are 3 cases to consider: $\delta \leq B$, $B < \delta \leq L$, and $\delta > L$.
 
-For each risk-score message that a user receives,
+%For each risk-score message that a user receives,
 
-If $\delta \leq B$, then there is no effect on what risk score the contacted user receives. The user will send
+%If $\delta \leq B$, then there is no effect on what risk score the contacted user receives. The user will send
