@@ -1,42 +1,22 @@
-\chapter{Actor-Based Contact Tracing}
-
-In prior ShareTrace work \cite{Ayday2021}, risk propagation was described under the assumption that 
-
-% TODO Update
-After outlining the system model, the original description of risk propagation is presented as both context and motivation for this work. Following this discussion is the main part of the chapter, which frames risk propagation as an online algorithm and an application of the actor model. Lastly, message reachability is introduced as a generalization of temporal reachability that can estimate the complexity of message-passing on temporal networks. 
-
-Refer to \Cref{sec:conventions} for the typographical conventions used in this chapter.
-
-\section{System Model}
-% TODO add iterative dataflow diagram
-
-The system model is similar to that in previous work \cite{Ayday2020, Ayday2021}. \Cref{fig:actor-dataflow} illustrates the corresponding data flow\footnote{A \emph{data-flow diagram} consists of data processors (circles), directed data flow (arrows), data stores (parallel lines), and external entities (rectangles) \cite[pp. 437--438]{Fowler2004}\label{foot:dataflow}.}.
-%
-\begin{itemize}
-    % TODO A more formal set of definitions for distributed, co-located, centralized, and decentralized computing is in order.
-    % TODO More conceptual detail should be introduced before this point. Add a section in the Introduction that defines self-sovereignty concepts.
-    \item Each user owns a \emph{personal data store} (PDS), a form of cloud storage that empowers the user with ownership and access control over their data.
-    \item Symptom scores are computed in a user's PDS to support integrating multiple streams of personal data \cite{Ayday2020}. While local symptom-score computation \cite{Ayday2020, Ayday2021} is more privacy-preserving, it is assumed that the user's PDS is a trusted entity.
-    \item User device interactions serve as a proxy for proximal human interactions. This work does not assume a specific protocol, but does assume that the protocol can approximate the duration of contact with relative accuracy and that communication with the actors of those contacted users can be established in a privacy-preserving manner.
-    \item No geolocation data is collected \cite{Ayday2020}. As a decentralized, proximity-based solution, it is not necessary to collect user geolocation data. See \Cref{sec:location-based} for a discussion of a geolocation-based design that was considered.
-    \item Actor-based risk propagation is a distributed, online algorithm \cite[pp. 791--818]{Cormen2022}. Previous work \cite{Ayday2020, Ayday2021} (see also \Cref{sec:previous-designs}) formulates risk propagation as a centralized, offline algorithm that periodically aggregates all user data to estimate infection risk. To improve the privacy, scalability, and responsiveness of ShareTrace, this work designs risk propagation to avoid data aggregation and to estimate infection risk in near real-time.
-\end{itemize}
-%
-
-\section{Global Risk Propagation}
+\chapter{Risk Propagation}
 
 \NewDocumentCommand{\pr}{mo}{\IfNoValueTF{#2}{p(#1)}{p_{#2}(#1)}}
-\newcommand{\eventspace}{\Omega}
-\newcommand{\event}{\omega}
-\newcommand{\topk}[1]{\text{top } K \text{ of } #1}
-\newcommand{\scores}[2]{R_{#1}^{(#2)}}
-\newcommand{\diff}[1]{\delta_{#1}}
+\NewDocumentCommand{\eventSpace}{}{\Omega}
+\NewDocumentCommand{\event}{}{\omega}
 
-In risk propagation, computing infection risk is an inference problem in which the objective is to estimate a user's \define{marginal posterior infection probability} (MPIP). The prior infection probability of a user is derived from their symptoms \cite{Menni2020}, so it is called a \define{symptom score}. Because the posterior infection probability accounts for direct and indirect contact with other users\footnotemark{}, it is called an \define{exposure score}. In general, a \define{risk score} $\vScore_\vTime$ is a timestamped infection probability where $\vScore \in [0, 1]$ and $\vTime \in \naturals$ is the time of its computation.
+%Refer to \Cref{sec:conventions} for the typographical conventions used in this chapter.
 
-\footnotetext{While previous work on ShareTrace \cite{Ayday2021} defines a \emph{contact} as a contiguous 15 minutes in which the devices of two users are proximal, the Centers for Disease Control and Prevention technically considers these 15 minutes \emph{over a 24-hour time window} \cite{CDC2021}.}
+Risk propagation is a message-passing algorithm that estimate's an individual's infection risk by considering their demographics, symptoms, diagnosis, and contact with others. Formally, a \define{risk score} $\vScore_\vTime$ is a timestamped infection probability where $\vScore \in [0, 1]$ and $\vTime \in \naturals$ is the timestamp of its computation. Thus, an individual with a high risk score implies that they are likely to test positive for the disease and pose a significant health risk to others. There are two types of risk scores: \define{symptom scores}, or prior infection probabilities, which account for non-contact risk (e.g., demographics, symptoms, diagnosis) \cite{Menni2020}; and \define{exposure scores}, or posterior infection probabilities, which incorporate the risk introduced by interacting with others, either directly or indirectly.
 
-Computing the full joint probability distribution is intractable as it scales exponentially with the number of users. To circumvent this challenge, risk propagation uses a variation of message passing on a factor graph. Formally, let $\vGraph = (\vVariables, \vFactors, \vEdges)$ be a factor graph where $\vVariables$ is the set of variable vertices, $\vFactors$ is the set of factor vertices, and $\vEdges$ is the set of edges incident between them \cite{Kschischang2001}. A \define{variable vertex} $\vVariable[i]$ is a random variable such that $\vVariable[i]: \eventspace \rightarrow \{0, 1\}$, where the sample space is $\eventspace = \{\var{healthy}, \var{infected}\}$ and
+
+
+Computing an individual's MPIP from the joint infection probability distribution scales exponentially with the size of the population. Moreover, requiring 
+
+Marginalization the joint infection probability distribution is intractable as it scales exponentially with the number of individuals. To circumvent this challenge, risk propagation 
+
+variation of message passing on a factor graph
+
+To circumvent this challenge, risk propagation uses a variation of message passing on a factor graph. Formally, let $\vGraph = (\vVariables, \vFactors, \vEdges)$ be a factor graph where $\vVariables$ is the set of variable vertices, $\vFactors$ is the set of factor vertices, and $\vEdges$ is the set of edges incident between them \cite{Kschischang2001}. A \define{variable vertex} $\vVariable[i]$ is a random variable such that $\vVariable[i]: \eventSpace \rightarrow \{0, 1\}$, where the sample space is $\eventSpace = \{\var{healthy}, \var{infected}\}$ and
 %
 \begin{equation*}
     \vVariable[i](\event) =
@@ -46,9 +26,7 @@ Computing the full joint probability distribution is intractable as it scales ex
         \end{cases}
 \end{equation*}
 %
-Thus, $\pr{\vVariable[i]}[\vTime] = \vScore_\vTime$ is a risk score of user $i$. A \define{factor vertex} $\vFactor(\vVariable[i], \vVariable[j]) = \vFactor[ij]$ represents contact between users $i, j$ such that $\vFactor[ij]$ is adjacent to $\vVariable[i], \vVariable[j]$. \Cref{fig:factor-graph} depicts a factor graph that reflects the problem constraints.
-% TODO Find a better way to transition to this statement
-While the max-sum algorithm aims to maximize the \emph{joint} distribution \cite[pp. 411--415]{Bishop2006}, risk propagation aims to maximize \emph{individual} MPIPs \cite{Ayday2021}.
+Thus, $\pr{\vVariable[i]}[\vTime] = \vScore_\vTime$ is a risk score of individual $i$. A \define{factor vertex} $\vFactor(\vVariable[i], \vVariable[j])$,  also denoted as $\vFactor[ij]$, represents contact between individuals $i, j$ such that $\vFactor[ij]$ is adjacent to $\vVariable[i], \vVariable[j]$. \Cref{fig:factor-graph} depicts a factor graph that reflects the problem constraints. Unlike the max-sum algorithm that aims to maximize the \emph{joint} distribution \cite[pp. 411--415]{Bishop2006}, the objective of risk propagation is to maximize \emph{individual} marginal probabilities \cite{Ayday2021}.
 %
 \begin{figure}[htbp]
     \centering
@@ -69,45 +47,76 @@ While the max-sum algorithm aims to maximize the \emph{joint} distribution \cite
     \caption[Factor graph]{A factor graph of 3 variable vertices and 2 factor vertices.}
     \label{fig:factor-graph}
 \end{figure}
+
+\section{System Models} % TODO
+
+%\footnotetext{While previous work on ShareTrace \cite{Ayday2021} defines a \emph{contact} as a contiguous 15 minutes in which the devices of two users are proximal, the Centers for Disease Control and Prevention technically considers these 15 minutes \emph{over a 24-hour time window} \cite{CDC2021}.}
+
+The system model is similar to that in previous work \cite{Ayday2020, Ayday2021}. \Cref{fig:actor-dataflow} illustrates the corresponding data flow\footnote{A \emph{data-flow diagram} consists of data processors (circles), directed data flow (arrows), data stores (parallel lines), and external entities (rectangles) \cite[pp. 437--438]{Fowler2004}\label{foot:dataflow}.}.
 %
-% Optimizations: 
-%     only retain contacts of sufficient duration
-%     use retain the most recent contact time
-%     only retain "relevant" contacts and risk scores
-\begin{function}{Global-Risk-Propagation}[S, C]
+\begin{itemize}
+    % TODO A more formal set of definitions for distributed, co-located, centralized, and decentralized computing is in order.
+    % TODO More conceptual detail should be introduced before this point. Add a section in the Introduction that defines self-sovereignty concepts.
+    \item Each user owns a \emph{personal data store} (PDS), a form of cloud storage that empowers the user with ownership and access control over their data.
+    \item Symptom scores are computed in a user's PDS to support integrating multiple streams of personal data \cite{Ayday2020}. While local symptom-score computation \cite{Ayday2020, Ayday2021} is more privacy-preserving, it is assumed that the user's PDS is a trusted entity.
+    \item User device interactions serve as a proxy for proximal human interactions. This work does not assume a specific protocol, but does assume that the protocol can approximate the duration of contact with relative accuracy and that communication with the actors of those contacted users can be established in a privacy-preserving manner.
+    \item No geolocation data is collected \cite{Ayday2020}. As a decentralized, proximity-based solution, it is not necessary to collect user geolocation data. See \Cref{sec:location-based} for a discussion of a geolocation-based design that was considered.
+    \item Actor-based risk propagation is a distributed, online algorithm \cite[pp. 791--818]{Cormen2022}. Previous work \cite{Ayday2020, Ayday2021} (see also \Cref{sec:previous-designs}) formulates risk propagation as a centralized, offline algorithm that periodically aggregates all user data to estimate infection risk. To improve the privacy, scalability, and responsiveness of ShareTrace, this work designs risk propagation to avoid data aggregation and to estimate infection risk in near real-time.
+\end{itemize}
+
+\begin{figure}[htb]
+    \includegraphics[width=\textwidth]{distributed-dataflow}
+    \caption[Distributed ShareTrace data flow]{Distributed ShareTrace data flow. \emph{Contacts} include the actor name and contact time of all users with which the user came into close proximity. \emph{Personal data} includes the user's demographics, reported symptoms, and diagnosis. It may also include machine-generated biomarkers and electronic health record data \cite{Ayday2020}.}
+    \label{fig:distributed-dataflow}
+\end{figure}
+
+\begin{figure}[htb]
+    \includegraphics[width=\textwidth]{centralized-dataflow}
+    \caption[Centralized ShareTrace data flow]{Centralized ShareTrace data flow. \emph{Contacts} include the actor name and contact timestamp of all users with which the user came into close proximity. \emph{Personal data} includes the user's demographics, reported symptoms, and diagnosis. It may also include machine-generated biomarkers and electronic health record data \cite{Ayday2020}.}
+    \label{fig:centralized-dataflow}
+\end{figure}
+
+\section{Synchronous Risk Propagation}
+
+\NewDocumentCommand{\diff}{o}{\IfNoValueTF{#1}{\delta}{\delta_{#1}}}
+\NewDocumentCommand{\topK}{m}{\text{top } K \text{ of } #1}
+\NewDocumentCommand{\scores}{mm}{R_{#1}^{(#2)}}
+
+%Risk propagation was originally defined as an iterative message-passing algorithm in which the message passing was performed directly on the factor graph that was derived from the ShareTrace user population.\cite{Ayday2021}. Moreover, the termination condition
+%
+%- iteration = global strate, offline, centralized
+%
+%As a basis for defining non-iterative versions of the algorithm, this section covers iterative risk propagation. With the exception of a few improvements, the definition provided in this section is identical to that provided in previous work \cite{Ayday2021}. Specifically, iterative risk propagation is an offline algorithm that requires centralized aggregation of individuals' risk scores and contacts. 
+%
+%Note that the description of iterative risk propagation in this section does not assume a particular model of computation. In fact, the notion of a ``message'' in the following description need not correspond to a literal message that is passed during execution.
+
+\begin{function}[H]{\nSyncRiskProp}[S, C; \pTransRate, \pTimeBuffer, K, N, \diff]
 \State $(\vVariables, \vFactors, \vEdges) \assign \Call{Factor-Graph}{C}$
 \State $n \assign 1$
-\State $\diff{n - 1} \assign \infty$
+\State $\diff[n -1] \assign \infty$
 \ForEach{$\vVariable[i] \in \vVariables$}
-	\State $\scores{i}{n - 1} \assign \topk{S_i}$
+	\State $\scores{i}{n - 1} \assign \topK{S_i}$
 \EndFor
-\While{$n \leq N \AND \diff{n - 1} > \diff{\mathit{min}}$}
+\While{$n \leq N \AND \diff[n - 1] > \diff$}
 	\ForEach{$\{\vVariable[i], \vFactor[ij]\} \in \vEdges$}
 		\State $\vVariableMsg{i}{ij}{n} \assign \scores{i}{n - 1} \setminus \setbuilder{\vFactorMsg{ij}{i}{k}}{k \in [1 \ltwodots n - 1]}$
 	\EndFor
 	\ForEach{$\{\vVariable[i], \vFactor[ij]\} \in \vEdges$}
-		\State $\vFactorMsg{ij}{j}{n} \assign \max (\{0\} \cup \setbuilder{\pTransRate \cdot \vScore_\vTime}{\vScore_\vTime \in \vVariableMsg{i}{ij}{n}, \vTime \leq \vTime_{ij} + \pTimeBuffer})$
+		\State $\vFactorMsg{ij}{j}{n} \assign \max (\{0\} \cup \setbuilder{\pTransRate \cdot \vScore_\vTime}{\vScore_\vTime \in \vVariableMsg{i}{ij}{n}, \vTime < \vTime_{ij} + \pTimeBuffer})$
 	\EndFor
 	\ForEach{$\vVariable[i] \in \vVariables$}
-		\State $\scores{i}{n} \assign \topk{\setbuilder{\vFactorMsg{ij}{i}{k}}{k \in [1 \ltwodots n], \vFactor[ij] \in \neighbors_i}}$
+		\State $\scores{i}{n} \assign \topK{\setbuilder{\vFactorMsg{ij}{i}{k}}{k \in [1 \ltwodots n], \vFactor[ij] \in \neighbors_i}}$
 	\EndFor
-	\State $\diff{n} \assign 0$
+	\State $\diff[n] \assign 0$
 	\ForEach{$\vVariable[i] \in \vVariables$}
-		\State $\diff{n} \assign \diff{n} + \max \scores{i}{n} - \max \scores{i}{n - 1}$
+		\State $\diff[n] \assign \diff[n] + \max \scores{i}{n} - \max \scores{i}{n - 1}$
 	\EndFor
 	\State $n \assign n + 1$
 \EndWhile
 \State \Return $\setbuilder{\max \scores{i}{n}}{\vVariable[i] \in \vVariables}$
 \end{function}
 
-\section{Local Risk Propagation}\label{sec:vertices-to-actors}
-
-\begin{figure}[htb]
-    \includegraphics[width=\textwidth]{distributed-dataflow}
-    \caption[Distributed ShareTrace data flow]{Distributed ShareTrace data flow. \emph{Contacts} include the actor name and contact time of all users with which the user came into close proximity. \emph{Personal data} includes the user's demographics, reported symptoms, and diagnosis. It may also include machine-generated biomarkers and electronic health record data
-    \cite{Ayday2020}.}
-    \label{fig:distributed-dataflow}
-\end{figure}
+\section{Asynchronous Risk Propagation}\label{sec:vertices-to-actors}
 
 The only purpose of a factor vertex is to compute and relay messages between variable vertices. Thus, one-mode projection onto the variable vertices can be applied such that variable vertices $\vVariable[i],\vVariable[j] \in \vVariables$ are adjacent if the factor vertex $\vFactor[ij] \in \vFactors$ exists \cite{Zhou2007}. \Cref{fig:projected} shows the modified topology.
 %
@@ -456,7 +465,7 @@ The temporal reachability metrics previously defined can be extended to message 
 \begin{align*}
 	\vMsgInfluenceSet(u) &= \{v \in \vVariables \mid \vMsgReach(u, v) > 0\} \\
 	\vMsgSourceSet(v) &= \{u \in \vVariables \mid \vMsgReach(u, v) > 0\} \\
-	\vMsgReachRatio(G) &= \frac{\sum_{v \in \vVariables} \card{\vMsgInfluenceSet(v)}}{\card{\vVariables}} .
+	\vMsgReachRatio(G) &= \sum_{v \in \vVariables} \card{\vMsgInfluenceSet(v)} \cdot \card{\vVariables}^{-1}.
 \end{align*}
 %
 Let $\mathbf{M}$ be the $\card{\vVariables} \times \card{\vVariables}$ \emph{message-reachability matrix} of the temporal network $G$ such that vertices are enumerated $1, 2, \ldots, \card{\vVariables}$ and for each $\vMsg_{ij} \in \mathbf{M}$,
