@@ -3,12 +3,19 @@
 % GENERAL
 
 \usepackage[utf8]{inputenc}
+\usepackage[english]{babel}
 
 \usepackage[margin=1.5in]{geometry}
 
 % Adjust line spacing
 \usepackage{setspace}
 \doublespacing
+
+% No hyphenation
+\usepackage[none]{hyphenat}
+
+% Provides NewDocumentCommand and NewDocumentEnvironment 
+\usepackage{xparse}
 
 %% microtype not supported by TexpadTeX typesetter
 %% Uncomment this comment block for final formatting
@@ -30,7 +37,7 @@
 %\SetTracking{encoding={*}, shape=sc}{25}
 
 % Math symbols and fonts
-\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{amsmath, amssymb, amsfonts}
 
 % Convenience commands for proper bracket formatting
 \usepackage{braket}
@@ -81,7 +88,7 @@
 
 \usepackage{tikz}
 \graphicspath{{assets/}}
-\usetikzlibrary{bayesnet,plotmarks,calc,angles,quotes,arrows}
+\usetikzlibrary{bayesnet, plotmarks, calc, angles, quotes, arrows}
 
 \usepackage{pgfplots}
 \usepgfplotslibrary{groupplots,statistics}
@@ -101,6 +108,11 @@
 }
 
 % ALGORITHM AND PSEUDOCODE
+
+% \indexed{index}{value}
+\newcommand{\indexed}[2]{the $#1$-th #2}
+\newcommand{\Indexed}[2]{The $#1$-th #2}
+\newcommand{\twoindexed}[3]{the $#1$-th and $#2$-th #3}
 
 \usepackage[plain]{algorithm}
 
@@ -149,7 +161,6 @@
 %	\begin{function}[position]{title}[args]
 %	...
 %	\end{function}
-\usepackage{xparse}
 \newcommand{\Title}[2]{\item[$\Call{#1}{#2}$]}
 \NewDocumentEnvironment{function}{O{ht!} m O{}}{
 	\begin{algorithm}[#1]
@@ -190,17 +201,14 @@
 % PSEUDOCODE and MATH SYMBOLS
 
 % Variables
-\newcommand{\vActorIndex}{k}
-\newcommand{\vActors}{G}
 \newcommand{\vActor}{A}
-\newcommand{\vAhead}[1]{#1_a}
-\newcommand{\vBack}[1]{#1_b}
+\newcommand{\vAhead}[1]{#1_a} % TODO change to forward
+\newcommand{\vBack}[1]{#1_b} % TODO change to backward
 \newcommand{\vCacheItem}{x}
 \newcommand{\vCache}{C}
 \newcommand{\vContacts}{C}
 \newcommand{\vContact}{c}
 \newcommand{\vEdges}{E}
-\newcommand{\vExpScores}{S}
 \newcommand{\vFactors}{F}
 \newcommand{\vGraph}{G}
 \newcommand{\vInfluenceSet}{I}
@@ -213,50 +221,51 @@
 \newcommand{\vScoreValue}{r}
 \newcommand{\vScore}{s}
 \newcommand{\vSentScore}{s'}
+\newcommand{\vScores}{S}
 \newcommand{\vSourceSet}{S}
-\newcommand{\vSymScores}{S}
-\newcommand{\vThreshold}{\var{threshold}}
 \newcommand{\vTimer}{x}
-\newcommand{\vTime}{t}
 \newcommand{\vVariables}{V}
+\newcommand{\pRefTime}{\tau}
 
 \newcommand{\vOldCacheItem}{\vOld{\vCacheItem}}
 \newcommand{\vNewCacheItem}{\vNew{\vCacheItem}}
-\newcommand{\vScoreTime}{\vTime}
 
-\newcommand{\vCurrScoreTime}{\vScoreTime}
-\newcommand{\vCurrScoreValue}{\vScoreValue}
 \newcommand{\vEstMsgReach}{\hat{\vMsgReach}}
-\newcommand{\vInitMsg}{\vMsg_0}
-\newcommand{\vInitScoreTime}{\vScoreTime_0}
 \newcommand{\vInitScoreValue}{\vScoreValue_0}
 \newcommand{\vMsgInfluenceSet}{\vInfluenceSet_\vMsg}
 \newcommand{\vMsgReachRatio}{\vReachRatio_\vMsg}
 \newcommand{\vMsgReach}{\vMsg}
 \newcommand{\vMsgSourceSet}{\vSourceSet_\vMsg}
 \newcommand{\vPath}[2]{#1 \rightarrow #2}
-\newcommand{\vScoreMsgTime}[2]{\vScoreTime_{#1 \rightarrow #2}}
-\newcommand{\vScoreMsgValue}[2]{\vScoreValue_{#1 \rightarrow #2}}
+\NewDocumentCommand{\vVariable}{o}{\IfValueTF{#1}{v_{#1}}{v}}
+\NewDocumentCommand{\vFactor}{o}{\IfValueTF{#1}{f_{#1}}{f}}
 \newcommand{\vScoreMsg}[2]{\vMsg_{#1 \rightarrow #2}}
-\NewDocumentCommand{\vVariable}{o}{\IfNoValueTF{#1}{v}{v_{#1}}}
-\NewDocumentCommand{\vFactor}{o}{\IfNoValueTF{#1}{f}{f_{#1}}}
-\newcommand{\vFactorMsg}[3]{\vScoreMsg{\vFactor[#1]}{\vVariable[#2]}^{(#3)}}
-\newcommand{\vVariableMsg}[3]{\vScoreMsg{\vVariable[#1]}{\vFactor[#2]}^{(#3)}}
+\NewDocumentCommand{\vFactorMsg}{omm}{
+    \IfValueTF{#1}
+        {\vScoreMsg{\vFactor[#2]}{\vVariable[#3]}^{(#1)}}
+        {\vScoreMsg{\vFactor[#2]}{\vVariable[#3]}}
+}
+\NewDocumentCommand{\vVariableMsg}{omm}{
+    \IfValueTF{#1}
+        {\vScoreMsg{\vVariable[#2]}{\vFactor[#3]}^{(#1)}}
+        {\vScoreMsg{\vVariable[#2]}{\vFactor[#3]}}
+}
 
 % Parameters
-\newcommand{\pCacheLookAhead}{\vAhead{\pDuration}}
-\newcommand{\pCacheLookBack}{\vBack{\pDuration}}
+\newcommand{\pDuration}{T}
+\newcommand{\pCacheLookAhead}{\vAhead{\pDuration}} % TODO change to forward
+\newcommand{\pCacheLookBack}{\vBack{\pDuration}} % TODO change to backward
 \newcommand{\pCacheNumIntervals}{N}
 \newcommand{\pCacheNumLookAhead}{\vAhead{\pCacheNumIntervals}}
 \newcommand{\pCacheNumLookBack}{\vBack{\pCacheNumIntervals}}
 \newcommand{\pCacheRefreshPeriod}{T}
-\newcommand{\pDuration}{{\Delta}t}
 \newcommand{\pNumActors}{K}
 \newcommand{\pSendCoeff}{\gamma}
 \newcommand{\pTimeBuffer}{\beta}
 \newcommand{\pTimeout}{T}
 \newcommand{\pTransRate}{\alpha}
 \newcommand{\pTtl}{\pDuration}
+\newcommand{\pMinContactDuration}{\delta}
 
 \newcommand{\pContactTtl}{\pTtl_\vContact}
 \newcommand{\pScoreTtl}{\pTtl_\vScore}
@@ -390,6 +399,7 @@
 
 % Standard number sets
 \newcommand{\naturals}{\mathbb{N}} 
+\newcommand{\reals}{\mathbb{R}} 
 
 % Math functions
 \DeclareMathOperator{\aeMsgReachRatio}{mrr}
@@ -400,12 +410,11 @@
 \newcommand{\ceil}[1]{\left\lceil #1 \right\rceil}
 \newcommand{\floor}[1]{\left\lfloor #1 \right\rfloor}
 \newcommand{\neighbors}{N}
-\newcommand{\scaledsetbuilder}[2]{\left\{ #1 \,\middle| \, #2 \right\}}
-\newcommand{\setbuilder}[2]{\set{ #1 | #2}}
-\newcommand{\Setbuilder}[2]{\Set{ #1 | #2}}
+\newcommand{\setBuilder}[2]{\set{ #1 | #2}}
+\newcommand{\SetBuilder}[2]{\Set{ #1 | #2}}
 \newcommand{\ltwodots}{\mathinner {\ldotp \ldotp}}
 
 % TABLE OF CONTENTS
-\usepackage[nottoc,notlot,notlof]{tocbibind}
+\usepackage[nottoc, notlot, notlof]{tocbibind}
 \renewcommand{\listalgorithmname}{List of Functions}
 \setcounter{tocdepth}{2}

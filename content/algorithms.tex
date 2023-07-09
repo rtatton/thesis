@@ -1,32 +1,38 @@
 \chapter{Risk Propagation}
 
-\NewDocumentCommand{\pr}{mo}{\IfNoValueTF{#2}{p(#1)}{p_{#2}(#1)}}
-\NewDocumentCommand{\eventSpace}{}{\Omega}
-\NewDocumentCommand{\event}{}{\omega}
+\NewDocumentCommand{\pr}{mo}{\IfValueTF{#2}{p_{#2}(#1)}{p(#1)}}
+\newcommand{\eventSpace}{\Omega}
+\newcommand{\event}{\omega}
 
 %Refer to \Cref{sec:conventions} for the typographical conventions used in this chapter.
 
-Risk propagation is a message-passing algorithm that estimate's an individual's infection risk by considering their demographics, symptoms, diagnosis, and contact with others. Formally, a \define{risk score} $\vScore_\vTime$ is a timestamped infection probability where $\vScore \in [0, 1]$ and $\vTime \in \naturals$ is the timestamp of its computation. Thus, an individual with a high risk score implies that they are likely to test positive for the disease and pose a significant health risk to others. There are two types of risk scores: \define{symptom scores}, or prior infection probabilities, which account for non-contact risk (e.g., demographics, symptoms, diagnosis) \cite{Menni2020}; and \define{exposure scores}, or posterior infection probabilities, which incorporate the risk introduced by interacting with others, either directly or indirectly.
+Risk propagation is a message-passing algorithm that estimates an individual's infection risk by considering their demographics, symptoms, diagnosis, and contact with others. Formally, a \define{risk score} $\vScore_t$ is a timestamped infection probability where $\vScore \in [0, 1]$ and $t \in \naturals$ is the time of its computation. Thus, an individual with a high risk score is likely to test positive for the infection and poses a significant health risk to others. There are two types of risk scores: \define{symptom scores}, or prior infection probabilities, which account for an individual's demographics, symptoms, and diagnosis \cite{Menni2020}; and \define{exposure scores}, or posterior infection probabilities, which incorporate the risk of direct and indirect contact (i.e., sustained, proximal interaction) with others.
 
+Given their recent symptom scores and contacts, an individual's exposure score is derived by marginalizing over the joint infection probability distribution. Naively computing this marginalization scales exponentially with the number of variables (i.e., individuals). To circumvent this intractability, the joint distribution is modeled as a factor graph, and an efficient message-passing procedure is employed to compute the marginal probabilities with a time complexity that scales linearly in the number of factor nodes (i.e., contacts) in the graph.
 
-
-Computing an individual's MPIP from the joint infection probability distribution scales exponentially with the size of the population. Moreover, requiring 
-
-Marginalization the joint infection probability distribution is intractable as it scales exponentially with the number of individuals. To circumvent this challenge, risk propagation 
-
-variation of message passing on a factor graph
-
-To circumvent this challenge, risk propagation uses a variation of message passing on a factor graph. Formally, let $\vGraph = (\vVariables, \vFactors, \vEdges)$ be a factor graph where $\vVariables$ is the set of variable vertices, $\vFactors$ is the set of factor vertices, and $\vEdges$ is the set of edges incident between them \cite{Kschischang2001}. A \define{variable vertex} $\vVariable[i]$ is a random variable such that $\vVariable[i]: \eventSpace \rightarrow \{0, 1\}$, where the sample space is $\eventSpace = \{\var{healthy}, \var{infected}\}$ and
+Formally, let $\vGraph = (\vVariables, \vFactors, \vEdges)$ be a \define{factor graph} where $\vVariables$ is the set of variable nodes, $\vFactors$ is the set of factor nodes, and $\vEdges$ is the set of edges incident between them \cite{Kschischang2001}. A \define{variable node} 
 %
 \begin{equation*}
-    \vVariable[i](\event) =
+   \vVariable: \eventSpace \rightarrow \{0, 1\} 
+\end{equation*}
+%
+is a random variable that represents the infection status of an individual, where the sample space is $\eventSpace = \{\var{healthy}, \var{infected}\}$ and
+%
+\begin{equation*}
+    \vVariable(\event) =
         \begin{cases}
             0 & \text{if } \event = \var{healthy} \\
             1 & \text{if } \event = \var{infected}.
         \end{cases}
 \end{equation*}
 %
-Thus, $\pr{\vVariable[i]}[\vTime] = \vScore_\vTime$ is a risk score of individual $i$. A \define{factor vertex} $\vFactor(\vVariable[i], \vVariable[j])$,  also denoted as $\vFactor[ij]$, represents contact between individuals $i, j$ such that $\vFactor[ij]$ is adjacent to $\vVariable[i], \vVariable[j]$. \Cref{fig:factor-graph} depicts a factor graph that reflects the problem constraints. Unlike the max-sum algorithm that aims to maximize the \emph{joint} distribution \cite[pp. 411--415]{Bishop2006}, the objective of risk propagation is to maximize \emph{individual} marginal probabilities \cite{Ayday2021}.
+Thus, $\pr{\vVariable[i]}[t] = \vScore_t$ is a risk score of \indexed{i}{individual}. A \define{factor node} 
+%
+\begin{equation*}
+    \vFactor: \vVariables \times \vVariables \rightarrow [0, 1]
+\end{equation*}
+%
+defines the transmission of infection risk between two contacts. Specifically, contact between \twoindexed{i}{j}{individual} is represented by the factor node $\vFactor(\vVariable[i], \vVariable[j])$ = $\vFactor[ij]$, which is adjacent to the variable nodes $\vVariable[i], \vVariable[j]$. This work and previous work \cite{Ayday2021} assume risk transmission is a symmetric function, $\vFactor[ij] = \vFactor[ji]$. However, it may be extended to account for an individual's susceptibility and transmissibility such that $\vFactor[ij] \neq \vFactor[ji]$. \Cref{fig:factor-graph} depicts a factor graph that reflects the domain constraints.
 %
 \begin{figure}[htbp]
     \centering
@@ -44,82 +50,138 @@ Thus, $\pr{\vVariable[i]}[\vTime] = \vScore_\vTime$ is a risk score of individua
     	\edge[-] {v2} {f23};
     	\edge[-] {v3} {f23};
     \end{tikzpicture}
-    \caption[Factor graph]{A factor graph of 3 variable vertices and 2 factor vertices.}
+    \caption[Factor graph]{A factor graph of 3 variable nodes and 2 factor nodes.}
     \label{fig:factor-graph}
 \end{figure}
 
-\section{System Models} % TODO
-
-%\footnotetext{While previous work on ShareTrace \cite{Ayday2021} defines a \emph{contact} as a contiguous 15 minutes in which the devices of two users are proximal, the Centers for Disease Control and Prevention technically considers these 15 minutes \emph{over a 24-hour time window} \cite{CDC2021}.}
-
-The system model is similar to that in previous work \cite{Ayday2020, Ayday2021}. \Cref{fig:actor-dataflow} illustrates the corresponding data flow\footnote{A \emph{data-flow diagram} consists of data processors (circles), directed data flow (arrows), data stores (parallel lines), and external entities (rectangles) \cite[pp. 437--438]{Fowler2004}\label{foot:dataflow}.}.
+%\Cref{sec:synchronous} summarizes and improves upon prior work \cite{Ayday2021}, which defines risk propagation as a synchronous, iterative message-passing algorithm that uses the factor graph to compute exposure scores. As noted in that work, synchronous risk propagation has significant privacy and scalability limitations, because it requires centralized knowledge of the population's symptom score and contact data. Notwithstanding the privacy concern, 
 %
-\begin{itemize}
-    % TODO A more formal set of definitions for distributed, co-located, centralized, and decentralized computing is in order.
-    % TODO More conceptual detail should be introduced before this point. Add a section in the Introduction that defines self-sovereignty concepts.
-    \item Each user owns a \emph{personal data store} (PDS), a form of cloud storage that empowers the user with ownership and access control over their data.
-    \item Symptom scores are computed in a user's PDS to support integrating multiple streams of personal data \cite{Ayday2020}. While local symptom-score computation \cite{Ayday2020, Ayday2021} is more privacy-preserving, it is assumed that the user's PDS is a trusted entity.
-    \item User device interactions serve as a proxy for proximal human interactions. This work does not assume a specific protocol, but does assume that the protocol can approximate the duration of contact with relative accuracy and that communication with the actors of those contacted users can be established in a privacy-preserving manner.
-    \item No geolocation data is collected \cite{Ayday2020}. As a decentralized, proximity-based solution, it is not necessary to collect user geolocation data. See \Cref{sec:location-based} for a discussion of a geolocation-based design that was considered.
-    \item Actor-based risk propagation is a distributed, online algorithm \cite[pp. 791--818]{Cormen2022}. Previous work \cite{Ayday2020, Ayday2021} (see also \Cref{sec:previous-designs}) formulates risk propagation as a centralized, offline algorithm that periodically aggregates all user data to estimate infection risk. To improve the privacy, scalability, and responsiveness of ShareTrace, this work designs risk propagation to avoid data aggregation and to estimate infection risk in near real-time.
-\end{itemize}
-
-\begin{figure}[htb]
-    \includegraphics[width=\textwidth]{distributed-dataflow}
-    \caption[Distributed ShareTrace data flow]{Distributed ShareTrace data flow. \emph{Contacts} include the actor name and contact time of all users with which the user came into close proximity. \emph{Personal data} includes the user's demographics, reported symptoms, and diagnosis. It may also include machine-generated biomarkers and electronic health record data \cite{Ayday2020}.}
-    \label{fig:distributed-dataflow}
-\end{figure}
-
-\begin{figure}[htb]
-    \includegraphics[width=\textwidth]{centralized-dataflow}
-    \caption[Centralized ShareTrace data flow]{Centralized ShareTrace data flow. \emph{Contacts} include the actor name and contact timestamp of all users with which the user came into close proximity. \emph{Personal data} includes the user's demographics, reported symptoms, and diagnosis. It may also include machine-generated biomarkers and electronic health record data \cite{Ayday2020}.}
-    \label{fig:centralized-dataflow}
-\end{figure}
-
-\section{Synchronous Risk Propagation}
-
-\NewDocumentCommand{\diff}{o}{\IfNoValueTF{#1}{\delta}{\delta_{#1}}}
-\NewDocumentCommand{\topK}{m}{\text{top } K \text{ of } #1}
-\NewDocumentCommand{\scores}{mm}{R_{#1}^{(#2)}}
-
-%Risk propagation was originally defined as an iterative message-passing algorithm in which the message passing was performed directly on the factor graph that was derived from the ShareTrace user population.\cite{Ayday2021}. Moreover, the termination condition
+%Even if a distributed graph-processing framework is utilized to mitigate the scalability bottleneck, synchronization inherently limits 
 %
-%- iteration = global strate, offline, centralized
+%\section{System Models}\label{sec:system-model}
 %
-%As a basis for defining non-iterative versions of the algorithm, this section covers iterative risk propagation. With the exception of a few improvements, the definition provided in this section is identical to that provided in previous work \cite{Ayday2021}. Specifically, iterative risk propagation is an offline algorithm that requires centralized aggregation of individuals' risk scores and contacts. 
+%The system model is similar to that in previous work \cite{Ayday2020, Ayday2021}. \Cref{fig:actor-dataflow} illustrates the corresponding data flow\footnote{A \emph{data-flow diagram} consists of data processors (circles), directed data flow (arrows), data stores (parallel lines), and external entities (rectangles) \cite[pp. 437--438]{Fowler2004}\label{foot:dataflow}.}.
+%%
+%\begin{itemize}
+%    % TODO A more formal set of definitions for distributed, co-located, centralized, and decentralized computing is in order.
+%    % TODO More conceptual detail should be introduced before this point. Add a section in the Introduction that defines self-sovereignty concepts.
+%    \item Each user owns a \emph{personal data store} (PDS), a form of cloud storage that empowers the user with ownership and access control over their data.
+%    \item Symptom scores are computed in a user's PDS to support integrating multiple streams of personal data \cite{Ayday2020}. While local symptom-score computation \cite{Ayday2020, Ayday2021} is more privacy-preserving, it is assumed that the user's PDS is a trusted entity.
+%    \item User device interactions serve as a proxy for proximal human interactions. This work does not assume a specific protocol, but does assume that the protocol can approximate the duration of contact with relative accuracy and that communication with the actors of those contacted users can be established in a privacy-preserving manner.
+%    \item No geolocation data is collected \cite{Ayday2020}. As a decentralized, proximity-based solution, it is not necessary to collect user geolocation data. See \Cref{sec:location-based} for a discussion of a geolocation-based design that was considered.
+%    \item Actor-based risk propagation is a distributed, online algorithm \cite[pp. 791--818]{Cormen2022}. Previous work \cite{Ayday2020, Ayday2021} (see also \Cref{sec:previous-designs}) formulates risk propagation as a centralized, offline algorithm that periodically aggregates all user data to estimate infection risk. To improve the privacy, scalability, and responsiveness of ShareTrace, this work designs risk propagation to avoid data aggregation and to estimate infection risk in near real-time.
+%\end{itemize}
 %
-%Note that the description of iterative risk propagation in this section does not assume a particular model of computation. In fact, the notion of a ``message'' in the following description need not correspond to a literal message that is passed during execution.
+%\begin{figure}[htb]
+%    \includegraphics[width=\textwidth]{distributed-dataflow}
+%    \caption[Distributed ShareTrace data flow]{Distributed ShareTrace data flow. \emph{Contacts} include the actor name and contact time of all users with which the user came into close proximity. \emph{Personal data} includes the user's demographics, reported symptoms, and diagnosis. It may also include machine-generated biomarkers and electronic health record data \cite{Ayday2020}.}
+%    \label{fig:distributed-dataflow}
+%\end{figure}
+%
+%\begin{figure}[htb]
+%    \includegraphics[width=\textwidth]{centralized-dataflow}
+%    \caption[Centralized ShareTrace data flow]{Centralized ShareTrace data flow. \emph{Contacts} include the actor name and contact timestamp of all users with which the user came into close proximity. \emph{Personal data} includes the user's demographics, reported symptoms, and diagnosis. It may also include machine-generated biomarkers and electronic health record data \cite{Ayday2020}.}
+%    \label{fig:centralized-dataflow}
+%\end{figure}
 
-\begin{function}[H]{\nSyncRiskProp}[S, C; \pTransRate, \pTimeBuffer, K, N, \diff]
-\State $(\vVariables, \vFactors, \vEdges) \assign \Call{Factor-Graph}{C}$
-\State $n \assign 1$
-\State $\diff[n -1] \assign \infty$
-\ForEach{$\vVariable[i] \in \vVariables$}
-	\State $\scores{i}{n - 1} \assign \topK{S_i}$
-\EndFor
-\While{$n \leq N \AND \diff[n - 1] > \diff$}
-	\ForEach{$\{\vVariable[i], \vFactor[ij]\} \in \vEdges$}
-		\State $\vVariableMsg{i}{ij}{n} \assign \scores{i}{n - 1} \setminus \setbuilder{\vFactorMsg{ij}{i}{k}}{k \in [1 \ltwodots n - 1]}$
-	\EndFor
-	\ForEach{$\{\vVariable[i], \vFactor[ij]\} \in \vEdges$}
-		\State $\vFactorMsg{ij}{j}{n} \assign \max (\{0\} \cup \setbuilder{\pTransRate \cdot \vScore_\vTime}{\vScore_\vTime \in \vVariableMsg{i}{ij}{n}, \vTime < \vTime_{ij} + \pTimeBuffer})$
-	\EndFor
-	\ForEach{$\vVariable[i] \in \vVariables$}
-		\State $\scores{i}{n} \assign \topK{\setbuilder{\vFactorMsg{ij}{i}{k}}{k \in [1 \ltwodots n], \vFactor[ij] \in \neighbors_i}}$
-	\EndFor
-	\State $\diff[n] \assign 0$
-	\ForEach{$\vVariable[i] \in \vVariables$}
-		\State $\diff[n] \assign \diff[n] + \max \scores{i}{n} - \max \scores{i}{n - 1}$
-	\EndFor
-	\State $n \assign n + 1$
+\section{Synchronous Risk Propagation}\label{sec:synchronous}
+
+\NewDocumentCommand{\diff}{o}{\IfValueTF{#1}{\delta_{#1}}{\delta}}
+\newcommand{\topK}[1]{\text{top } K \text{ of } #1}
+\NewDocumentCommand{\scores}{o}{\IfValueTF{#1}{R_{#1}}{R}}
+\newcommand{\maxScores}{\scores[\textit{max}]}
+\newcommand{\iScores}[2]{\scores[#1]^{(#2)}}
+\newcommand{\iMaxScores}[1]{\maxScores^{(#1)}}
+\newcommand{\dist}{d}
+
+Risk propagation was first proposed as a synchronous, iterative message-passing algorithm that uses the factor graph to compute exposure scores \cite{Ayday2021}. The inputs to \cSyncRiskProp{} are the family of risk score sets $\vScores$, where
+%
+\begin{equation} \label{eq:score-set}
+    \vScores_i =\setBuilder{\vScore_t}{\pRefTime - t \leq \pScoreTtl} \in \vScores
+\end{equation}
+%
+is the set of symptom scores and exposure scores of \indexed{i}{individual}; and the contact set
+%
+\begin{equation} \label{eq:contact-set}
+    \vContacts = \setBuilder{(i, j, t)}{i \neq j, \pRefTime - t \leq \pContactTtl},
+\end{equation}
+%
+where $(i, j, t)$ is the \emph{most recent} contact between \twoindexed{i}{j}{individual} that occurred from time $t$ until at least time $t + \pMinContactDuration$. To remain consistent with prior work \cite{Ayday2021}, the \define{minimum contact duration} $\pMinContactDuration \in \naturals$ is assumed to be $\pMinContactDuration = 15 \text{ minutes}$\footnote{While this and prior work require contact to occur over a contiguous period of $\pMinContactDuration$ time, the Centers for Disease Control and Prevention only requires that the duration of contact is at least $\pMinContactDuration$ \emph{over a 24-hour period} \cite{CDC2021}.}.
+
+Risk scores and contacts are assumed to have finite relevance. As such, \eqref{eq:score-set} and \eqref{eq:contact-set} are constrained by the \define{risk score time-to-live} $\pScoreTtl \in \naturals$ and the \define{contact time-to-live} $\pContactTtl \in \naturals$, respectively, where $\pRefTime \in \naturals$ is the time at which \cSyncRiskProp{} is invoked.
+
+\subsection{Initialization (lines \ref{step:create-graph}--\ref{step:end-score-init})}
+
+The factor graph $\vGraph$ is created from the contact set $\vContacts$. The data structure $\scores$ is used to record the risk scores associated with each variable node. Specifically, $\iScores{i}{n}$ is the set of risk scores associated with the variable node $\vVariable[i]$ in \indexed{n}{iteration}. For \indexed{i}{individual}, $\iScores{i}{1}$ is assigned the top $K$ risk scores in $\vScores_i$.
+
+\subsection{Computing variable messages (lines \ref{step:start-send-variable-msgs}--\ref{step:end-send-variable-msgs})}
+
+The current exposure score of \indexed{i}{individual} is defined as $\max \vScores_i$, which assumes that interacting with others has a nondecreasing effect on their infection risk. Consequently, a \define{variable message} $\vVariableMsg[n]{i}{ij}$ from the variable node $\vVariable[i]$ to the factor node $\vFactor[ij]$ during \indexed{n}{iteration} is the set of maximal risk scores $\iScores{i}{n - 1}$ from the previous $n - 1$ iterations that were not derived by $\vFactor[ij]$. In this way, risk propagation is reminiscent of the max-sum algorithm; however, risk propagation aims to maximize \emph{individual} marginal probabilities rather than the joint distribution \cite[pp. 411--415]{Bishop2006}.
+
+\subsection{Computing factor messages (lines \ref{step:start-send-factor-msgs}--\ref{step:end-send-factor-msgs})}
+
+A \define{factor message} $\vFactorMsg[n]{ij}{j}$ from the factor node $\vFactor[ij]$ to the variable node $\vVariable[j]$ during \indexed{n}{iteration} describes the infection risk of interacting with those at most $n$ degrees separated from \indexed{j}{individual} through \indexed{i}{individual}. This population is defined by the subgraph induced in the factor graph $\vGraph$ by
+%
+\begin{equation*}
+    \setBuilder{\vVariable \in \vVariables \cap \vFactors \setminus \{\vVariable[j], \vFactor[ij]\}}{\dist(\vVariable[i], \vVariable) \leq 2n},
+\end{equation*}
+%
+where $\dist(u, v)$ is the distance between the nodes $u, v$ such that $\dist(u, v) = \infty$ if $u, v$ are disconnected. 
+
+The computation of the factor message $\vFactorMsg[n]{ij}{j}$ comprises of filtering and transforming the risk scores contained in the variable message $\vVariableMsg[n]{i}{ij}$.
+
+\begin{enumerate}
+    \item \Indexed{i}{individual} is defined by their highest recent risk score, $\max \vScores_i$.
+    \item Risk transmission decays exponentially at a rate of $\log \pTransRate$, where $\pTransRate \in (0, 1)$ is the \define{transmission rate}. A value of $\pTransRate = 0.8$ is assumed, unless specified otherwise \cite{Hamner2020}.
+    \item A risk score is \define{relevant} to the contact $(i, j, t)$ if it is computed at most $\pTimeBuffer$ time after the time of contact $t$.
+\end{enumerate}
+
+% Contact set: Only the most recent contact - multiple contacts are not necessary
+% Contact set: Only valid contacts - simpler
+% Time buffer - accounts for delayed reporting and incubation
+% Transmission rate
+% Null message
+
+    Unlike previous work \cite{Ayday2021}, the contact set $\vContacts$ only contains \define{valid} contacts. 
+ 
+    A factor message $\vFactorMsg[n]{ij}{j}$ is the maximum \emph{relevant} risk score contained in the variable message $\vVariableMsg[n]{i}{ij}$
+    The set of risk scores in the variable message $\vVariableMsg[n]{i}{ij}$ is used to derive the factor message $\vFactorMsg[n]{ij}{j}$.
+
+    is the maximum risk score derived by variable node $\vVariable[i]$, computed at most $\pTimeBuffer$ time after individuals $i, j$ interacted, and scaled by the transmission rate $\pTransRate$. If the variable message $\vVariableMsg[n]{i}{ij}$ is empty or none of the risk scores contained therein satisfy the temporal constraint, then a risk score of 0 is assigned.
+
+\subsection{Detecting termination (line 5)}
+
+Assigned to $\iScores{i}{n}$ are the top $K$ risk scores from the first $n$ iterations and derived from the neighboring factor nodes $\neighbors_i$ of the variable node $\vVariable[i]$.
+
+\cSyncRiskProp{} terminates either after $N$ iterations or when the normed difference between individuals' maximum exposure score of the previous and current iteration is less than the tolerance $\diff$. Note that $\maxScores$ is the vector of maximum risk scores such that $(\maxScores)_i = \max \scores[i]$. The $\ell_1$-norm and the $\ell_\infty$-norm are sensible choices for detecting convergence. The $\ell_1$-norm was assumed in previous work \cite{Ayday2021}, which ensures 
+%
+\begin{function}[H]{\nSyncRiskProp}[\vScores, \vContacts]
+\State $(\vVariables, \vFactors, \vEdges) \assign \Call{Factor-Graph}{\vContacts}$ \label{step:create-graph}
+\State $n \assign 1$ \label{step:init-iteration}
+\ForEach{$\vVariable[i] \in \vVariables$} \label{step:start-score-init}
+	\State $\iScores{i}{n - 1} \assign \topK{\vScores_i}$
+\EndFor \label{step:end-score-init}
+\While{$n \leq N \AND \| \iMaxScores{n} - \iMaxScores{n - 1} \| > \diff$} \label{step:test-termination}
+	\ForEach{$\{\vVariable[i], \vFactor[ij]\} \in \vEdges$} \label{step:start-send-variable-msgs}
+		\State $\vVariableMsg[n]{i}{ij} \assign \iScores{i}{n - 1} \setminus \setBuilder{\vFactorMsg[k]{ij}{i}}{k \in [1 \ltwodots n - 1]}$
+	\EndFor \label{step:end-send-variable-msgs}
+	\ForEach{$\{\vVariable[i], \vFactor[ij]\} \in \vEdges$} \label{step:start-send-factor-msgs}
+		\State $\vFactorMsg[n]{ij}{j} \assign \max (\{0\} \cup \setBuilder{\pTransRate \cdot \vScore_t}{\vScore_t \in \vVariableMsg[n]{i}{ij}, t \leq t_{ij} + \pTimeBuffer})$
+	\EndFor \label{step:end-send-factor-msgs}
+	\ForEach{$\vVariable[i] \in \vVariables$} \label{step:start-update-scores}
+		\State $\iScores{i}{n} \assign \topK{\setBuilder{\vFactorMsg[n]{ij}{i}}{\vFactor[ij] \in \neighbors_i}}$
+	\EndFor \label{step:end-update-scores}
+	\State $n \assign n + 1$ \label{step:update-iteration}
 \EndWhile
-\State \Return $\setbuilder{\max \scores{i}{n}}{\vVariable[i] \in \vVariables}$
+\State \Return $\iMaxScores{n}$ \label{step:return-scores}
 \end{function}
 
-\section{Asynchronous Risk Propagation}\label{sec:vertices-to-actors}
+\section{Asynchronous Risk Propagation}\label{sec:asynchronous}
 
-The only purpose of a factor vertex is to compute and relay messages between variable vertices. Thus, one-mode projection onto the variable vertices can be applied such that variable vertices $\vVariable[i],\vVariable[j] \in \vVariables$ are adjacent if the factor vertex $\vFactor[ij] \in \vFactors$ exists \cite{Zhou2007}. \Cref{fig:projected} shows the modified topology.
-%
+% Shortcomings of synchronous RP
+% What becomes possible with asynchronous RP?
+% What problems must be solved to make RP asynchronous?
+
 \begin{figure}[htbp]
 \centering
 \begin{tikzpicture}[ampersand replacement=\&]
@@ -146,19 +208,19 @@ The only purpose of a factor vertex is to compute and relay messages between var
 	\edge[-] {p2} {p3};
 \end{tikzpicture}
 \caption[One-mode projection of a factor graph]{One-mode projection
-onto variable vertices of \Cref{fig:factor-graph}. While the projected graph
-contains only variable vertices, the original factor vertices are also included
-to show how the original topology is modified.}
+onto the variable nodes in \Cref{fig:factor-graph}.}
 \label{fig:projected}
 \end{figure}
-%
+
+The only purpose of a factor vertex is to compute and relay messages between variable vertices. Thus, one-mode projection onto the variable vertices can be applied such that variable vertices $\vVariable[i],\vVariable[j] \in \vVariables$ are adjacent if the factor vertex $\vFactor[ij] \in \vFactors$ exists \cite{Zhou2007}. \Cref{fig:projected} shows the modified topology.
+
 To send a message to variable vertex $\vVariable[i]$, variable vertex $\vVariable[j]$ applies the computation associated with the factor vertex $\vFactor[ij]$. This modification differs from the distributed extension of risk propagation \cite{Ayday2021} in that we do not create duplicate factor vertices and messages in each user's PDS. By storing the contact time between users on the edge incident to their variable vertices, this modified topology is identical to the \emph{contact-sequence} representation of a \emph{contact network}, a kind of \emph{time-varying} or \emph{temporal network} in which a vertex represents a person and an edge indicates that two persons came in contact:
 
 \begin{equation}
-    \setbuilder{(\vVariable[i], \vVariable[j], \vTime)}{\vVariable[i], \vVariable[j] \in \vVariables; \vVariable[i] \neq \vVariable[j]; \vTime \in \naturals}, \label{eq:contact-seq}
+    \setBuilder{(\vVariable[i], \vVariable[j], t)}{\vVariable[i], \vVariable[j] \in \vVariables; \vVariable[i] \neq \vVariable[j]; t \in \naturals}, \label{eq:contact-seq}
 \end{equation}
 %
-where a triple $(\vVariable[i], \vVariable[j], \vTime)$ is called a \emph{contact} \cite{Holme2012}. Specific to risk propagation, $\vTime$ is the time at which users $u$ and $v$ \emph{most recently} came in contact (see \Cref{sec:vertices-to-actors}).
+where a triple $(\vVariable[i], \vVariable[j], t)$ is called a \emph{contact} \cite{Holme2012}. Specific to risk propagation, $t$ is the time at which users $u$ and $v$ \emph{most recently} came in contact (see \Cref{sec:asynchronous}).
 
 The usage of a temporal network in this work differs from its typical usage in epidemiology which focuses on modeling and analyzing the spreading dynamics of disease \cite{Riolo2001, Danon2011, Lokhov2014, Craft2015, Pastor-Satorras2015, Koher2019, Zino2021}. In contrast, this work uses a temporal network to infer a user's MPPI. As a result, \Cref{sec:reachability} extends temporal reachability to account for both the message-passing semantics and temporal dynamics of the network. As noted by \cite{Holme2012}, the transmission graph provided by \cite{Riolo2001} ``cannot handle edges where one vertex manages to not catch the disease.'' Notably, the usage of a temporal network in this work allows for such cases by modeling the possibility of infection as a continuous outcome.
 % TODO
@@ -210,13 +272,13 @@ Risk scores and contacts have finite relevance, which is parametrized by a \emph
 %
 % TODO Define risk score and contact notation and standard attributes
 \begin{function}{\nScoreTtl}[\vScore]
-    \State \Return $\max \{0, \pScoreTtl - (\cGetTime - \aScoreTime)\}$
+    \State \Return $\max \{0, \pScoreTtl - (\pRefTime - \aScoreTime)\}$
 \end{function}
 \begin{function}{\nContactTtl}[\vContact]
-    \State \Return $\max \{0, \pContactTtl - (\cGetTime - \aContactTime)\}$
+    \State \Return $\max \{0, \pContactTtl - (\pRefTime - \aContactTime)\}$
 \end{function}
 %
-The interface of a user actor is defined by two types of messages: contact messages and risk-score messages. A \emph{contact message} $\vContact$ contains the name $\aContactName$ of the actor whose user was contacted and the contact time $\aContactTime$. A \emph{risk-score message} $\vScore$ is simply a risk score along with the actor's name $\aScoreSender$ that sent it. A risk score previously defined as the ordered pair $(\vScoreValue, \vTime)$ (see \Cref{sec:vertices-to-actors}) is represented as the attributes $\vScoreValue$ and $\aScoreTime$. The following sections discuss how a contact message and risk-message are processed by an actor.
+The interface of a user actor is defined by two types of messages: contact messages and risk-score messages. A \emph{contact message} $\vContact$ contains the name $\aContactName$ of the actor whose user was contacted and the contact time $\aContactTime$. A \emph{risk-score message} $\vScore$ is simply a risk score along with the actor's name $\aScoreSender$ that sent it. A risk score previously defined as the ordered pair $(\vScoreValue, t)$ (see \Cref{sec:asynchronous}) is represented as the attributes $\vScoreValue$ and $\aScoreTime$. The following sections discuss how a contact message and risk-message are processed by an actor.
 
 \paragraph{Handling Contact Messages}\label{sec:contact-message-handling}
 
@@ -241,11 +303,11 @@ The \cHandleContactMessage operation defines how a user actor processes a contac
     \State $\vOldest \assign \cMinimum[\aActorContacts]$
     \If{$\vOldest \notEquals \nil$}
     	\State $\aTimerKey \assign \text{``contacts''}$
-    	\State $\cStartTimer[\vTimer, \cContactTtl[\vOldest]]$
+    	\State $\cStartTimer[tr, \cContactTtl[\vOldest]]$
     \EndIf
 \end{function}
 %
-\begin{function}{\nHandleContactsRefreshTimer}[\vTimer]
+\begin{function}{\nHandleContactsRefreshTimer}[tr]
     \ForEach{$\vContact \in \aActorContacts$}
     	\If{$\cContactTtl[\vContact] \leq 0$}
     		\State $\cDelete[\aActorContacts, \vContact]$
@@ -290,10 +352,10 @@ Regardless of whether the contact is alive, the user actor attempts to send a ri
 \begin{function}{\nStartThresholdTimer}[\vContact, \vScore]
     \State $\aTimerKey \assign \aContactName + \text{`` threshold''}$
     \State $\aTimerName \assign \aContactName$
-    \State $\cStartTimer[\vTimer, \cScoreTtl[\vScore]]$
+    \State $\cStartTimer[tr, \cScoreTtl[\vScore]]$
 \end{function}
 %
-\begin{function}{Handle-Threshold-Timer}[\vActor, \vTimer]
+\begin{function}{Handle-Threshold-Timer}[\vActor, tr]
     \State $\vContact \assign \cSearch[\aActorContacts, \aTimerName]$
     \If{$\vContact \notEquals \nil$}
     	\State $\vScore \assign \cCacheMax[\aActorCache, \aContactTime + \pTimeBuffer]$
@@ -334,9 +396,9 @@ The \Call{Update-Actor}{} operation is responsible for updating an actor's state
 %
 \begin{function}{\nStartScoreRefreshTimer}[\vActor]
     \State $\aTimerKey \assign \text{``score''}$
-    \State $\cStartTimer[\vTimer, \cScoreTtl[\aActorScore]]$
+    \State $\cStartTimer[tr, \cScoreTtl[\aActorScore]]$
 \end{function}
-\begin{function}{\nHandleScoreRefreshTimer}[\vActor, \vTimer]
+\begin{function}{\nHandleScoreRefreshTimer}[\vActor, tr]
     \State $\vScore \assign \cCacheMax[\cGetTime]$
     \If{$\vScore \equals \nil$}
     	\State $\vScore \assign \cDefaultScore[\vActor]$
@@ -351,7 +413,7 @@ In previous work \cite{Ayday2021}, risk propagation assumes synchronous message 
 
 Assuming a finite number of actors, any positive send coefficient $\pSendCoeff$ guarantees that a risk-score message will be propagated a finite number of times. Because the value of a risk score that is sent to another actor is scaled by the transmission rate $\pTransRate$, its value exponentially decreases as it propagates away from the source actor with a rate constant $\log \pTransRate$.
 
-As with the \cSendCurrentOrCached[] operation, a risk-score message must be alive and relatively recent for it to be propagated. As in previous work \cite{Ayday2021}, factor marginalization is achieved by not propagating the received message to the actor who sent it. The logic of \cPropagate[] differs, however, in two ways. First, it is possible that no message is not propagated to a contact. The intent of sending a risk-score message is to update the exposure score of other actors. However, previous work \cite{Ayday2021} required that a ``null'' message with a risk-score value of 0 is sent. Sending such ineffective messages incurs additional communication overhead. The second difference is that only the \emph{most recent} contact time is used to determine if a message should be propagated to a contact. Contact times determine what messages are relevant. Given two contact times $\vTime_1, \vTime_2$ such that $\vTime_1 \leq \vTime_2$, then any risk score with time $\vTime \leq \vTime_1 + \pTimeBuffer$ also satisfies $\vTime \leq \vTime_2 + \pTimeBuffer$. Thus, storing multiple contact times is unnecessary.
+As with the \cSendCurrentOrCached[] operation, a risk-score message must be alive and relatively recent for it to be propagated. As in previous work \cite{Ayday2021}, factor marginalization is achieved by not propagating the received message to the actor who sent it. The logic of \cPropagate[] differs, however, in two ways. First, it is possible that no message is not propagated to a contact. The intent of sending a risk-score message is to update the exposure score of other actors. However, previous work \cite{Ayday2021} required that a ``null'' message with a risk-score value of 0 is sent. Sending such ineffective messages incurs additional communication overhead. The second difference is that only the \emph{most recent} contact time is used to determine if a message should be propagated to a contact. Contact times determine what messages are relevant. Given two contact times $t_1, t_2$ such that $t_1 \leq t_2$, then any risk score with time $t \leq t_1 + \pTimeBuffer$ also satisfies $t \leq t_2 + \pTimeBuffer$. Thus, storing multiple contact times is unnecessary.
 %
 \begin{function}{\nPropagate}[\vActor, \vScore]
     \ForEach{$\vContact \in \aActorContacts$}
@@ -369,7 +431,7 @@ In the best case, this ``lag'' may only be a few seconds; in the worst case, the
 
 An \emph{interval cache} $\vCache$ is a dictionary that maps a finite time interval (key) to a data element (value). In a typical cache, the \emph{time-to-live} (TTL) of an element is a fixed duration after which the element is removed or \emph{evicted}. In an interval cache, however, the TTL of an element is determined by its associated interval and the current time. That is, an interval cache is like a series of sliding windows, where each window corresponds to an interval that can hold a single element. Thus, the TTL of an element is the duration between the start of its interval and the start of the earliest interval in the cache.
 
-An interval cache maintains $\pCacheNumIntervals$ contiguous, half-closed (start-inclusive) intervals, each of duration $\pDuration$. An interval cache contains $\pCacheNumLookAhead$ \emph{look-ahead intervals} and $\pCacheNumLookBack$ \emph{look-back intervals} such that $\pCacheNumIntervals = \pCacheNumLookBack + \pCacheNumLookAhead$. Look- ahead (resp. look-back) intervals allow elements to be associated with intervals whose start times are later (resp. earlier) than the current time $\vTime$. The \emph{look-back duration} $\pCacheLookBack$ and \emph{look-ahead duration} $\pCacheLookAhead$ are defined as
+An interval cache maintains $\pCacheNumIntervals$ contiguous, half-closed (start-inclusive) intervals, each of duration $\pDuration$. An interval cache contains $\pCacheNumLookAhead$ \emph{look-ahead intervals} and $\pCacheNumLookBack$ \emph{look-back intervals} such that $\pCacheNumIntervals = \pCacheNumLookBack + \pCacheNumLookAhead$. Look- ahead (resp. look-back) intervals allow elements to be associated with intervals whose start times are later (resp. earlier) than the current time $t$. The \emph{look-back duration} $\pCacheLookBack$ and \emph{look-ahead duration} $\pCacheLookAhead$ are defined as
 %
 \begin{align*}
 	\pCacheLookBack &= \pCacheNumLookBack \cdot \pDuration \\
@@ -384,14 +446,14 @@ The \emph{range} of the interval cache is $[\aCacheStart, \aCacheEnd)$, where
 %
 and $\aCacheRefresh$ is the time at which the cache was last refreshed.
 
-An interval cache is a ``live'' data structure, so the range must be updated periodically to reflect the advancement of time. Furthermore, intervals and their associated elements that are no longer contained in the range must be evicted. This process of updating the range and evicting cached elements is called \emph{refreshing the cache}. The \emph{refresh period} $\pCacheRefreshPeriod > 0$ of an interval cache is the duration until the range is updated, based on the current time $\vTime$. Depending on the interval duration $\pDuration$ and the nature of the data that is being cached, the refresh period may be on the order of seconds or days. To recognize when a refresh is necessary, the cache maintains the attribute $\aCacheRefresh$, which is the time of the previous refresh. The operation \cCacheRefresh updates the range if at least $\pCacheRefreshPeriod$ time has elapsed since the previous refresh and then removes all expired elements.
+An interval cache is a ``live'' data structure, so the range must be updated periodically to reflect the advancement of time. Furthermore, intervals and their associated elements that are no longer contained in the range must be evicted. This process of updating the range and evicting cached elements is called \emph{refreshing the cache}. The \emph{refresh period} $\pCacheRefreshPeriod > 0$ of an interval cache is the duration until the range is updated, based on the current time $t$. Depending on the interval duration $\pDuration$ and the nature of the data that is being cached, the refresh period may be on the order of seconds or days. To recognize when a refresh is necessary, the cache maintains the attribute $\aCacheRefresh$, which is the time of the previous refresh. The operation \cCacheRefresh updates the range if at least $\pCacheRefreshPeriod$ time has elapsed since the previous refresh and then removes all expired elements.
 %
 \begin{function}{\nCacheRefresh}[\vCache]
-    \State $\vTime \assign \cGetTime$
-    \If{$\vTime - \aCacheRefresh > \pCacheRefreshPeriod$}
-    	\State $\aCacheStart \assign \vTime - \pCacheLookBack$
-    	\State $\aCacheEnd \assign \vTime + \pCacheLookAhead$
-    	\State $\aCacheRefresh \assign \vTime$
+    \State $t \assign \cGetTime$
+    \If{$t - \aCacheRefresh > \pCacheRefreshPeriod$}
+    	\State $\aCacheStart \assign t - \pCacheLookBack$
+    	\State $\aCacheEnd \assign t + \pCacheLookAhead$
+    	\State $\aCacheRefresh \assign t$
     	\ForEach{$\vCacheItem \in \vCache$}
     		\If{$\aCacheItemKey < \aCacheStart$}
     			\State $\cDelete[\vCache, \vCacheItem]$
@@ -421,8 +483,8 @@ The operation \cCacheInsert refreshes the cache, if necessary, and merges into t
 
 The intention of sending a cached risk score to a contacted user actor is to account for the delay between when the contact occurred and when the actors establish communication. Therefore, the cached risk score that should be sent is that which would have been the current exposure score at the time the users came into contact. That is, each user actor should send the maximum risk score whose cache interval ends at or before the time of contact, accounting for the time buffer $\pTimeBuffer$ (see line \ref{step:cache-max} of \cSendCurrentOrCached in \Cref{sec:behavior}). The operation \cCacheMax is used to carry out this query.
 %
-\begin{function}{\nCacheMax}[\vCache, \vTime]
-    \State \Return $\cMaximum[\{\vCacheItem \in \vCache \mid \aCacheItemKey < \cCacheKey[\vTime]\}]$
+\begin{function}{\nCacheMax}[\vCache, t]
+    \State \Return $\cMaximum[\{\vCacheItem \in \vCache \mid \aCacheItemKey < \cCacheKey[t]\}]$
 \end{function}
 
 An interval cache is implemented by augmenting a hash table \cite[pp. 253--285]{Cormen2009} with the aforementioned attributes and parameters. By using a hash table, the interval cache offers $\Theta(1)$ average-case insert, search, and delete operations. Reference \cite[pp. 348--354]{Cormen2009} implements an \emph{interval tree} by augmenting a red-black tree. However, insert, delete, and search operations on a red-black tree require $\Theta(\log N)$ in the average case.
@@ -510,10 +572,10 @@ where $\vPathSet$ is the set of edges along the shortest path $\vPath{u}{v}$ suc
 %
 \begin{align}
     f_{\vScoreValue}(u, i) &= H(\pTransRate^i \cdot \vScoreValue_u - \pSendCoeff \cdot \vScoreValue_i)\label{eq:value-const} \\
-    f_{\vContact}(u, i, j) &= H(\vTime_{ij} - \vCurrScoreTime_u + \pTimeBuffer) \label{eq:contact-const}
+    f_{\vContact}(u, i, j) &= H(t_{ij} - t_u + \pTimeBuffer) \label{eq:contact-const}
 \end{align}
 %
-are the value and contact-time constraints in the \cShouldReceive[] operation (see \Cref{sec:behavior}), where $(\vScoreValue_i, \vTime_i)$ is the current exposure score for actor $i$ and $\vTime_{ij}$ is the most recent contact time between actors $i$ and $j$.
+are the value and contact-time constraints in the \cShouldReceive[] operation (see \Cref{sec:behavior}), where $(\vScoreValue_i, t_i)$ is the current exposure score for actor $i$ and $t_{ij}$ is the most recent contact time between actors $i$ and $j$.
 
 The value of \eqref{eq:reach} can be found by associating with each symptom score a unique identifier. If each actor maintains a log of the risk scores it receives, then the set of actors that receive the symptom score or a propagated risk score thereof can be identified. This set of actors defines the induced subgraph on which to compute \eqref{eq:reach} using a shortest-path algorithm \cite{Johnson1977}. 
 
@@ -522,7 +584,7 @@ Regarding efficiency, \labelcref{eq:vreach,eq:source-size,eq:influence-size} pro
 By relaxing the constraint \eqref{eq:contact-const}, it is possible to estimate \eqref{eq:reach} with \eqref{eq:value-const}. The \emph{estimated message reachability of vertex $u$ to vertex $v$}, denoted $\vEstMsgReach(u, v)$, is defined as follows. Based on \eqref{eq:value-const},
 %
 \begin{equation*}
-    \pTransRate^{\vEstMsgReach(u, v)} \cdot \vCurrScoreValue_u \leq \pSendCoeff \cdot \vCurrScoreValue_v,
+    \pTransRate^{\vEstMsgReach(u, v)} \cdot \vScoreValue_u \leq \pSendCoeff \cdot \vScoreValue_v,
 \end{equation*}
 %
 where the left-hand side is the value of the propagated symptom score for actor $u$ when $\vEstMsgReach(u, v) = 1$, and the right-hand side is the value required by some message-reachable actor $v$ to propagate the message received by actor $u$ or some intermediate actor. Solving for $\vEstMsgReach(u, v)$,
@@ -536,9 +598,9 @@ where
 \begin{equation*}
     f(u, v) = 
     \begin{cases} 
-        0 & \text{if $\vCurrScoreValue_u = 0$} \\
-        \card{\vPathSet} & \text{if $\vCurrScoreValue_v = 0$} \\
-        \log_{\pTransRate}\pSendCoeff + \log_{\pTransRate}\vCurrScoreValue_v - \log_{\pTransRate}\vCurrScoreValue_u & \text{otherwise.}
+        0 & \text{if $\vScoreValue_u = 0$} \\
+        \card{\vPathSet} & \text{if $\vScoreValue_v = 0$} \\
+        \log_{\pTransRate}\pSendCoeff + \log_{\pTransRate}\vScoreValue_v - \log_{\pTransRate}\vScoreValue_u & \text{otherwise.}
     \end{cases}
 \end{equation*}
 %
@@ -558,7 +620,7 @@ Given the multivariate nature of message reachability, it is helpful to visualiz
     },
     legend style={nodes={scale=0.75, transform shape}},
     legend pos = north west,
-    xlabel = $\vCurrScoreValue(u)$,
+    xlabel = $\vScoreValue(u)$,
     ylabel = {$\vEstMsgReach(u)$},
     ytick distance=4,
     width=0.36\textwidth,
@@ -569,14 +631,14 @@ Given the multivariate nature of message reachability, it is helpful to visualiz
     ymax=16
     ]
     % Format: log2(scoeff * (trate * cval(v)) / (trate * cval(u))) / log2(trate)
-    \nextgroupplot[title={$\pSendCoeff = 0.2$, $\vCurrScoreValue(v) = 0.2$}, ymax=24, ytick distance=6]
+    \nextgroupplot[title={$\pSendCoeff = 0.2$, $\vScoreValue(v) = 0.2$}, ymax=24, ytick distance=6]
     \addplot [domain=0:1, samples=100, color=black, thick, dotted]{log2(0.2 * (0.2 * 0.2) / (0.2 * x)) / log2(0.2)};
     \addplot [domain=0:1, samples=100, color=blue, thick, densely dashed]{log2(0.2 * (0.4 * 0.2) / (0.4 * x)) / log2(0.4)};
     \addplot [domain=0:1, samples=100, color=orange, thick, loosely dashed]{log2(0.2 * (0.6 * 0.2) / (0.6 * x)) / log2(0.6)};
     \addplot [domain=0:1, samples=100, color=green, thick, dashdotted]{log2(0.2 * (0.8 * 0.2) / (0.8 * x)) / log2(0.8)};
     \legend{$\pTransRate = 0.2$, $\pTransRate = 0.4$, $\pTransRate = 0.6$, $\pTransRate = 0.8$};
     
-    \nextgroupplot[title={$\pTransRate = 0.2$, $\vCurrScoreValue(v) = 0.2$}, ymax=8, ytick distance=2]
+    \nextgroupplot[title={$\pTransRate = 0.2$, $\vScoreValue(v) = 0.2$}, ymax=8, ytick distance=2]
     \addplot [domain=0:1, samples=100, color=black, thick, dotted]{log2(0.2 * (0.2 * 0.2) / (0.2 * x)) / log2(0.2)};
     \addplot [domain=0:1, samples=100, color=blue, thick, densely dashed]{log2(0.4 * (0.2 * 0.2) / (0.2 * x)) / log2(0.2)};
     \addplot [domain=0:1, samples=100, color=orange, thick, loosely dashed]{log2(0.6 * (0.2 * 0.2) / (0.2 * x)) / log2(0.2)};
@@ -588,16 +650,16 @@ Given the multivariate nature of message reachability, it is helpful to visualiz
     \addplot [domain=0:1, samples=100, color=blue, thick, densely dashed]{log2(0.2 * (0.2 * 0.4) / (0.2 * x)) / log2(0.2)};
     \addplot [domain=0:1, samples=100, color=orange, thick, loosely dashed]{log2(0.2 * (0.2 * 0.6) / (0.2 * x)) / log2(0.2)};
     \addplot [domain=0:1, samples=100, color=green, thick, dashdotted]{log2(0.2 * (0.2 * 0.8) / (0.2 * x)) / log2(0.2)};
-    \legend{$\vCurrScoreValue(v) = 0.2$, $\vCurrScoreValue(v) = 0.4$, $\vCurrScoreValue(v) = 0.6$, $\vCurrScoreValue(v) = 0.8$};
+    \legend{$\vScoreValue(v) = 0.2$, $\vScoreValue(v) = 0.4$, $\vScoreValue(v) = 0.6$, $\vScoreValue(v) = 0.8$};
     
-    \nextgroupplot[title={$\pSendCoeff = 0.2$, $\vCurrScoreValue(v) = 0.8$}, ymax=12, ytick distance=3]
+    \nextgroupplot[title={$\pSendCoeff = 0.2$, $\vScoreValue(v) = 0.8$}, ymax=12, ytick distance=3]
     \addplot [domain=0:1, samples=100, color=black, thick, dotted]{log2(0.2 * (0.2 * 0.8) / (0.2 * x)) / log2(0.2)};
     \addplot [domain=0:1, samples=100, color=blue, thick, densely dashed]{log2(0.2 * (0.4 * 0.8) / (0.4 * x)) / log2(0.4)};
     \addplot [domain=0:1, samples=100, color=orange, thick, loosely dashed]{log2(0.2 * (0.6 * 0.8) / (0.6 * x)) / log2(0.6)};
     \addplot [domain=0:1, samples=100, color=green, thick, dashdotted]{log2(0.2 * (0.8 * 0.8) / (0.8 * x)) / log2(0.8)};
     \legend{$\pTransRate = 0.2$, $\pTransRate = 0.4$, $\pTransRate = 0.6$, $\pTransRate = 0.8$};
     
-    \nextgroupplot[title={$\pTransRate = 0.2$, $\vCurrScoreValue(v) = 0.8$}, ymax=4, ytick distance=1]
+    \nextgroupplot[title={$\pTransRate = 0.2$, $\vScoreValue(v) = 0.8$}, ymax=4, ytick distance=1]
     \addplot [domain=0:1, samples=100, color=black, thick, dotted]{log2(0.2 * (0.2 * 0.8) / (0.2 * x)) / log2(0.2)};
     \addplot [domain=0:1, samples=100, color=blue, thick, densely dashed]{log2(0.4 * (0.2 * 0.8) / (0.2 * x)) / log2(0.2)};
     \addplot [domain=0:1, samples=100, color=orange, thick, loosely dashed]{log2(0.6 * (0.2 * 0.8) / (0.2 * x)) / log2(0.2)};
@@ -609,16 +671,16 @@ Given the multivariate nature of message reachability, it is helpful to visualiz
     \addplot [domain=0:1, samples=100, color=blue, thick, densely dashed]{log2(0.8 * (0.2 * 0.4) / (0.2 * x)) / log2(0.2)};
     \addplot [domain=0:1, samples=100, color=orange, thick, loosely dashed]{log2(0.8 * (0.2 * 0.6) / (0.2 * x)) / log2(0.2)};
     \addplot [domain=0:1, samples=100, color=green, thick, dashdotted]{log2(0.8 * (0.2 * 0.8) / (0.2 * x)) / log2(0.2)};
-    \legend{$\vCurrScoreValue(v) = 0.2$, $\vCurrScoreValue(v) = 0.4$, $\vCurrScoreValue(v) = 0.6$, $\vCurrScoreValue(v) = 0.8$};%
+    \legend{$\vScoreValue(v) = 0.2$, $\vScoreValue(v) = 0.4$, $\vScoreValue(v) = 0.6$, $\vScoreValue(v) = 0.8$};%
     
-    \nextgroupplot[title={$\pSendCoeff = 0.8$, $\vCurrScoreValue(v) = 0.2$}]
+    \nextgroupplot[title={$\pSendCoeff = 0.8$, $\vScoreValue(v) = 0.2$}]
     \addplot [domain=0:1, samples=100, color=black, thick, dotted]{log2(0.8 * (0.2 * 0.2) / (0.2 * x)) / log2(0.2)};
     \addplot [domain=0:1, samples=100, color=blue, thick, densely dashed]{log2(0.8 * (0.4 * 0.2) / (0.4 * x)) / log2(0.4)};
     \addplot [domain=0:1, samples=100, color=orange, thick, loosely dashed]{log2(0.8 * (0.6 * 0.2) / (0.6 * x)) / log2(0.6)};
     \addplot [domain=0:1, samples=100, color=green, thick, dashdotted]{log2(0.8 * (0.8 * 0.2) / (0.8 * x)) / log2(0.8)};
     \legend{$\pTransRate = 0.2$, $\pTransRate = 0.4$, $\pTransRate = 0.6$, $\pTransRate = 0.8$};
     
-    \nextgroupplot[title={$\pTransRate = 0.8$, $\vCurrScoreValue(v) = 0.2$}, ymax=24, ytick distance=6]
+    \nextgroupplot[title={$\pTransRate = 0.8$, $\vScoreValue(v) = 0.2$}, ymax=24, ytick distance=6]
     \addplot [domain=0:1, samples=100, color=black, thick, dotted]{log2(0.2 * (0.8 * 0.2) / (0.8 * x)) / log2(0.8)};
     \addplot [domain=0:1, samples=100, color=blue, thick, densely dashed]{log2(0.4 * (0.8 * 0.2) / (0.8 * x)) / log2(0.8)};
     \addplot [domain=0:1, samples=100, color=orange, thick, loosely dashed]{log2(0.6 * (0.8 * 0.2) / (0.8 * x)) / log2(0.8)};
@@ -630,16 +692,16 @@ Given the multivariate nature of message reachability, it is helpful to visualiz
     \addplot [domain=0:1, samples=100, color=blue, thick, densely dashed]{log2(0.2 * (0.8 * 0.4) / (0.8 * x)) / log2(0.8)};
     \addplot [domain=0:1, samples=100, color=orange, thick, loosely dashed]{log2(0.2 * (0.8 * 0.6) / (0.8 * x)) / log2(0.8)};
     \addplot [domain=0:1, samples=100, color=green, thick, dashdotted]{log2(0.2 * (0.8 * 0.8) / (0.8 * x)) / log2(0.8)};
-    \legend{$\vCurrScoreValue(v) = 0.2$, $\vCurrScoreValue(v) = 0.4$, $\vCurrScoreValue(v) = 0.6$, $\vCurrScoreValue(v) = 0.8$};%
+    \legend{$\vScoreValue(v) = 0.2$, $\vScoreValue(v) = 0.4$, $\vScoreValue(v) = 0.6$, $\vScoreValue(v) = 0.8$};%
     
-    \nextgroupplot[title={$\pSendCoeff = 0.8$, $\vCurrScoreValue(v) = 0.8$}, ymax=4, ytick distance=1]
+    \nextgroupplot[title={$\pSendCoeff = 0.8$, $\vScoreValue(v) = 0.8$}, ymax=4, ytick distance=1]
     \addplot [domain=0:1, samples=100, color=black, thick, dotted]{log2(0.8 * (0.2 * 0.8) / (0.2 * x)) / log2(0.2)};
     \addplot [domain=0:1, samples=100, color=blue, thick, densely dashed]{log2(0.8 * (0.4 * 0.8) / (0.4 * x)) / log2(0.4)};
     \addplot [domain=0:1, samples=100, color=orange, thick, loosely dashed]{log2(0.8 * (0.6 * 0.8) / (0.6 * x)) / log2(0.6)};
     \addplot [domain=0:1, samples=100, color=green, thick, dashdotted]{log2(0.8 * (0.8 * 0.8) / (0.8 * x)) / log2(0.8)};
     \legend{$\pTransRate = 0.2$, $\pTransRate = 0.4$, $\pTransRate = 0.6$, $\pTransRate = 0.8$};
     
-    \nextgroupplot[title={$\pTransRate = 0.8$, $\vCurrScoreValue(v) = 0.8$}, ymax=12, ytick distance=3]
+    \nextgroupplot[title={$\pTransRate = 0.8$, $\vScoreValue(v) = 0.8$}, ymax=12, ytick distance=3]
     \addplot [domain=0:1, samples=100, color=black, thick, dotted]{log2(0.2 * (0.8 * 0.8) / (0.8 * x)) / log2(0.8)};
     \addplot [domain=0:1, samples=100, color=blue, thick, densely dashed]{log2(0.4 * (0.8 * 0.8) / (0.8 * x)) / log2(0.8)};
     \addplot [domain=0:1, samples=100, color=orange, thick, loosely dashed]{log2(0.6 * (0.8 * 0.8) / (0.8 * x)) / log2(0.8)};
@@ -651,16 +713,12 @@ Given the multivariate nature of message reachability, it is helpful to visualiz
     \addplot [domain=0:1, samples=100, color=blue, thick, densely dashed]{log2(0.8 * (0.8 * 0.4) / (0.8 * x)) / log2(0.8)};
     \addplot [domain=0:1, samples=100, color=orange, thick, loosely dashed]{log2(0.8 * (0.8 * 0.6) / (0.8 * x)) / log2(0.8)};
     \addplot [domain=0:1, samples=100, color=green, thick, dashdotted]{log2(0.8 * (0.8 * 0.8) / (0.8 * x)) / log2(0.8)};
-    \legend{$\vCurrScoreValue(v) = 0.2$, $\vCurrScoreValue(v) = 0.4$, $\vCurrScoreValue(v) = 0.6$, $\vCurrScoreValue(v) = 0.8$};
+    \legend{$\vScoreValue(v) = 0.2$, $\vScoreValue(v) = 0.4$, $\vScoreValue(v) = 0.6$, $\vScoreValue(v) = 0.8$};
     \end{groupplot}
 \end{tikzpicture}
-\caption[Estimated risk propagation message reachability]{Estimated risk propagation message reachability $\vEstMsgReach(u)$ for different values of the transmission rate $\pTransRate$, the send tolerance $\pSendCoeff$, and the initial magnitude $\vCurrScoreValue(v) = \vInitScoreValue(v) / \pTransRate$ of the destination user $v$ with respect to the initial magnitude $\vScoreValue_u = \vInitScoreValue(u) / \pTransRate$ of the source user $u$.}
+\caption[Estimated risk propagation message reachability]{Estimated risk propagation message reachability $\vEstMsgReach(u)$ for different values of the transmission rate $\pTransRate$, the send tolerance $\pSendCoeff$, and the initial magnitude $\vScoreValue(v) = \vInitScoreValue(v) / \pTransRate$ of the destination user $v$ with respect to the initial magnitude $\vScoreValue_u = \vInitScoreValue(u) / \pTransRate$ of the source user $u$.}
 \label{fig:reach}
 \end{figure}
-
-\section{Complexity}
-
-Risk propagation has worst-case time complexity $O(\card{\vContacts})$ because the number of messages scales with the number of contacts. As noted in \Cref{sec:reachability}, however, this does not capture the temporal constraints of message passing on a time-varying contact network. This is a tighter bound than previous work \cite{Ayday2021} which states that the worst-case time complexity is $O(n^2)$, where $n$ is the number of actors. The space complexity of risk propagation is also $O(\card{\vContacts})$ because each actor must store their contacts and the messages received in their mailbox.
 
 %Let $\delta \in \reals_{\leq 0}$ be the time between when the contact occurred and when the user actor receives the corresponding message. Assuming $B \leq L$, there are 3 cases to consider: $\delta \leq B$, $B < \delta \leq L$, and $\delta > L$.
 
