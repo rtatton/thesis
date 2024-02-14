@@ -1,12 +1,15 @@
 \chapter{Data Structures}
 
-\newcommand{\dset}{S}
+\newcommand{\vDynamicSet}{\vSet{S}}
+\newcommand{\vKey}{k}
+\newcommand{\vElement}{x}
+\newcommand{\aElementKey}{\aKey{\vElement}}
 
-Let a \define{dynamic set} $\dset$ be a mutable collection of distinct elements, and a \define{dictionary} be a dynamic set that supports insertion, deletion, and membership querying. Each element of $\dset$ is represented as an object $\vCacheItem$ with attributes such that $\aCacheItemKey$ is a unique identifier for the object $\vCacheItem$ \cite[p. 249]{Cormen2022}. The operations \cSearch, \cInsert, \cDelete, \cMinimum, and \cMaximum{} are mostly consistent with \cite[p. 250]{Cormen2022}.
-%
+Let a \define{dynamic set} $\vDynamicSet$ be a mutable collection of distinct elements. Let $\vElement$ be a pointer to an element in $\vDynamicSet$ such that $\aElementKey$ uniquely identifies the element in $\vDynamicSet$ \cite{Cormen2022}. Let a \define{dictionary} be a dynamic set that supports insertion, deletion, and membership querying \cite{Cormen2022}:
+
 \begin{itemize}
-    \item $\cSearch[S, k]$ returns a pointer $\vCacheItem$ to an element in the set $\dset$ such that $\aCacheItemKey \equals k$, or $\nil$ if no such element belongs to $\dset$.
-    \item $\cInsert[\dset, \vCacheItem]$ adds the element pointed to by $\vCacheItem$ to the set $\dset$.
-    \item $\cDelete[\dset, \vCacheItem]$ removes the element pointed to by $\vCacheItem$ from the set $\dset$.
-    \item $\cMinimum[\dset]$ and $\cMaximum[\dset]$ return a pointer $\vCacheItem$ to the minimum and maximum element, respectively, of the totally ordered set $\dset$, or $\nil$ if $\dset$ is empty. Reference \cite{Cormen2022} only considers the \emph{key} attribute of the pointers when finding the minimum or maximum element of $\dset$. This work, however, will allow other attributes to be used.
+    \item $\cSearch[\vDynamicSet, \vKey]$ returns a pointer $\vElement$ to an element in the set $\vDynamicSet$ such that $\aElementKey \equals \vKey$; or $\nil$, if no such element exists in $\vDynamicSet$.
+    \item $\cInsert[\vDynamicSet, \vElement]$ adds the element pointed to by $\vElement$ to $\vDynamicSet$.
+    \item $\cDelete[\vDynamicSet, \vElement]$ removes the element pointed to by $\vElement$ from $\vDynamicSet$.
+    \item $\cMinimum[\vDynamicSet]$ and $\cMaximum[\vDynamicSet]$ return a pointer $\vElement$ to the minimum and maximum element, respectively, of the totally ordered set $\vDynamicSet$; or $\nil$, if $\vDynamicSet$ is empty. Unlike \cite{Cormen2022}, this work permits attributes other than $\aElementKey$ to be used in the element ordering of $\vDynamicSet$.
 \end{itemize}
