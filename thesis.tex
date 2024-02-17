@@ -3,35 +3,38 @@
 \usepackage{thesis}
 
 \begin{document}
-% Uncomment to find unused references
-% \nocite{*}
+% \nocite{*} % Uncomment to find unused references
 \frontmatter
 \pagestyle{plain}
 
-%\input{content/title}
-%\input{content/approval}
-%\input{content/table-of-contents}
-%\input{content/acknowledgements}
-%\input{content/abstract}
+% TODO - fix citations to use \citet and \citep
+
+%\include{content/title}
+%\include{content/approval}
+%\include{content/table-of-contents}
+%\include{content/acknowledgements}
+%\include{content/abstract} % TODO
 
 \mainmatter
 
-%\input{content/introduction}
-\input{content/algorithms}
-%\input{content/analysis}
-%\input{content/evaluation}
-%\input{content/conclusions}
+%\include{content/introduction} % TODO
+\include{content/algorithm} % TODO
+%\include{content/analysis} % TODO
+%\include{content/conclusions} % TODO
 
 \appendix
 \noappendicestocpagenum
 \addappheadtotoc
 
-%\input{content/previous-designs}
-\input{content/data-structures}
-\input{content/conventions}
+%\include{content/previous-designs} % TODO
+%\include{content/evaluation} % TODO
+\include{content/pseudocode-conventions}
+\include{content/data-structures}
+\include{content/actor-model}
 
 \backmatter
 
-\bibliographystyle{plain}
+\bibliographystyle{plainnat}
+% TODO - format and remove un-cited
 \bibliography{content/references}
 \end{document}

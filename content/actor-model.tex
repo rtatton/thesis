@@ -1,0 +1,50 @@
+\chapter{Actor Model}\label{ch:actor-model}
+
+\newcommand{\vEvents}{\vSet{E}}
+\newcommand{\vEvent}{e}
+
+The \define{actor model} is a local model of concurrent computing that defines computation as a strict partial ordering of events \citep{Hewitt1977a, Hewitt1977b}. An \define{event} is defined as ``a transition from one local state to another'' \citep{Hewitt1977b}; or, more concretely, ``a \textit{message} arriving at a computational agent called an \textit{actor}.'' The actor that receives the message of an event is called the \define{target} of the event.
+
+Upon receipt, an actor may send messages to itself or other actors, update its local state, or create other actors.
+
+May send messages to other actors (Clinger)
+Update its local state (Clinger)
+Create other actors
+
+Events caused 
+
+An event may \define{activate} subsequent events
+
+% activate, activator, external event
+% precedes ordering, activation ordering, arrival ordering, combined ordering
+
+Ordering laws:
+
+% If an actor sends a message and the target never receives it, does it 
+
+\clearpage
+
+Passing messages between actors is the only means of communication. Thus, control and data flow are inseparable in the actor model \citep{Hewitt1973}.
+
+% TODO - pull from Hewitt1977b regarding name
+A minimal specification of an actor includes its \define{name} and \define{behavior}, or how it acts upon receiving a message. \citet{Clinger1981} explains,
+%
+\begin{displayquote}
+  An actor's name is a necessary part of its description because two different actors may have the same behavior. An actor's behavior is a necessary part of its description because the same actor may have different behaviors at different times.
+\end{displayquote}
+%
+\define{acquaintances}, or a finite collection of names of the actors that it knows about \citep{Hewitt1973}.
+
+% De_Koster also includes interface, state, and mailbox as part of an actor definition
+
+% TODO - move this into chapter 2
+
+Thus, the specification of an actor system consists of the following \citep{Hewitt1977a}.
+
+\begin{quote}
+\begin{itemize}
+  \item Deciding on the natural kinds of actors (objects) to have in the system to be constructed.
+  \item Deciding for each kind of actor what kind of messages it should receive.
+  \item Deciding for each kind of actor what it should do when it receives each kind of message.
+\end{itemize}
+\end{quote}
