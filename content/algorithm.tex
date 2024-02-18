@@ -69,21 +69,19 @@ defines the transmission of infection risk between two contacts. Specifically, c
 }
 \newcommand{\dist}{d}
 
-\citet{Ayday2021} first proposed risk propagation as a synchronous, iterative message-passing algorithm that uses the factor graph to compute exposure scores. The first input to \cSyncRiskProp{} is the set family $\vScores$, where
+\citet{Ayday2021} first proposed risk propagation as a synchronous, iterative message-passing algorithm that uses the factor graph to compute exposure scores. The first input to \cRiskPropagation{} is the set family $\vScores$, where
 %
 \begin{equation} \label{eq:score-set}
   \vScores_i =\setBuilder{\vScore_t}{\vRefTime - t < \pScoreTtl} \in \vScores
 \end{equation}
 %
-is the set of recent risk scores of \indexed{i}{individual}. The second input to \cSyncRiskProp{} is the contact set
+is the set of recent risk scores of \indexed{i}{individual}. The second input to \cRiskPropagation{} is the contact set
 %
 \begin{equation} \label{eq:contact-set}
   \vContacts = \setBuilder{(i, j, t)}{i \neq j, \vRefTime - t < \pContactTtl}
 \end{equation}
 %
-such that $(i, j, t)$ is the \emph{most recent} contact between \twoindexed{i}{j}{individual} that occurred from time $t$ until at least time $t + \pMinContactDuration$, where $\pMinContactDuration \in \naturals$ is the \define{minimum contact duration}\footnote{While \citet{Ayday2021} require contact over a $\pMinContactDuration$-contiguous period of time, the Centers for Disease Control and Prevention \citeyearpar{CDC2021} account for contact over a 24-hour period.}. Naturally, risk scores and contacts have finite relevance, so \eqref{eq:score-set} and \eqref{eq:contact-set} are constrained by the \define{risk score expiry} $\pScoreTtl \in \naturals$ and the \define{contact expiry} $\pContactTtl \in \naturals$, respectively. The \define{reference time} $\vRefTime \in \naturals$ defines the relevance of the inputs $\vScores, \vContacts$ and is assumed to be the time at which \cSyncRiskProp{} is invoked.
-
-For notational simplicity in \cSyncRiskProp{}, $\max \vSomeSet = 0$ if $\vSomeSet = \emptyset$.
+such that $(i, j, t)$ is the \emph{most recent} contact between \twoindexed{i}{j}{individual} that occurred from time $t$ until at least time $t + \pMinContactDuration$, where $\pMinContactDuration \in \naturals$ is the \define{minimum contact duration}\footnote{While \citet{Ayday2021} require contact over a $\pMinContactDuration$-contiguous period of time, the Centers for Disease Control and Prevention \citeyearpar{CDC2021} account for contact over a 24-hour period.}. Naturally, risk scores and contacts have finite relevance, so \eqref{eq:score-set} and \eqref{eq:contact-set} are constrained by the \define{risk score expiry} $\pScoreTtl \in \naturals$ and the \define{contact expiry} $\pContactTtl \in \naturals$, respectively. The \define{reference time} $\vRefTime \in \naturals$ defines the relevance of the inputs and is assumed to be the time at which \cRiskPropagation{} is invoked. For notational simplicity in \cRiskPropagation{}, $\max \vSomeSet = 0$ if $\vSomeSet = \emptyset$.
 
 \subsection{Variable Message Computation}
 
@@ -122,13 +120,13 @@ Then $\vMessageSet_k \subseteq \vMessageSet_\ell$ if and only if $\max \vMessage
   \item If an individual has no valid contacts, then their exposure score is $\max \vScores_i$ or $0$, if all of their previously computed risk scores have expired.
 \end{enumerate}
 %
-In either case, a set $\vContacts$ containing only valid contacts implies fewer factor nodes and edges in the factor graph $\vGraph$. Consequently, the complexity of \cSyncRiskProp{} is reduced by a constant factor since fewer messages must be computed.
+In either case, a set $\vContacts$ containing only valid contacts implies fewer factor nodes and edges in the factor graph $\vGraph$. Consequently, the complexity of \cRiskPropagation{} is reduced by a constant factor since fewer messages must be computed.
 
 \subsection{Termination Detection}
 
-\cSyncRiskProp{} terminates when the normed difference between maximum exposure scores of the previous iteration and current iteration is less than the tolerance $\pDiff \in \reals$. Note that $\vIndexedMaxExpScores{n}$ is the vector of maximum risk scores in the \indexed{n}{iteration} such that $\vIndexedMaxExpScores[i]{n}$ is \indexed{i}{component} of $\vIndexedMaxExpScores{n}$. The $\ell^1$ and $\ell^\infty$ norms are sensible choices for detecting convergence. \citet{Ayday2021} use the $\ell^1$ norm, which ensures that an individual's exposure score changed by at most $\pDiff$ after the penultimate iteration.
+To detect convergence, the normed difference between the current and previous exposure scores is compared to the threshold $\pDiff \in \reals$. Note that $\vIndexedMaxExpScores{n}$ is the vector of exposure scores in the \indexed{n}{iteration} such that $\vIndexedMaxExpScores[i]{n}$ is \indexed{i}{component} of $\vIndexedMaxExpScores{n}$. The $\ell^1$ and $\ell^\infty$ norms are sensible choices for detecting convergence. \citet{Ayday2021} use the $\ell^1$ norm, which ensures that an individual's exposure score changed by at most $\pDiff$ after the penultimate iteration.
 
-\begin{function}[H]{\nSyncRiskProp}[\vScores, \vContacts]
+\begin{function}[H]{\nRiskPropagation}[\vScores, \vContacts]
   \State $(\vVariables, \vFactors, \vEdges) \assign \Call{Factor-Graph}{\vContacts}$
   \State $n \assign 1$
   \ForEach{$\vVariable[i] \in \vVariables$}
@@ -157,39 +155,37 @@ In either case, a set $\vContacts$ containing only valid contacts implies fewer 
 
 \section{Asynchronous Risk Propagation}\label{sec:asynchronous}
 
-%\Cref{sec:synchronous} summarizes and improves upon prior work \cite{Ayday2021}, which defines risk propagation as a synchronous, iterative message-passing algorithm that uses the factor graph to compute exposure scores. As noted in that work, synchronous risk propagation has significant privacy and scalability limitations, because it requires centralized knowledge of the population's symptom score and contact data. Notwithstanding the privacy concern, 
+While straightforward to specify, the description of risk propagation in \Cref{sec:synchronous}, is not a viable implementation for real-world application. \cRiskPropagation{} is an \define{offline algorithm} because it requires all individuals' recent contacts and risk scores to run. As \citet{Ayday2021} note, this is not privacy-preserving. An offline design is also suboptimal with respect computational efficiency and human safety. Specifically, most exposure scores may not change across invocations of \cRiskPropagation{}, which implies communication overhead and computational redundancy. As a mitigation, \cRiskPropagation{} can only be executed once or twice daily, which was originally proposed by \citet{Ayday2020}. However, this causes substantial delay in reporting to individuals their new exposure score; and in the face of a pandemic, timely information is essential for individual and collective health.
+
+\begin{enumerate}
+  \item How does message passing terminate?
+  \item How are exposure scores computed?
+\end{enumerate}
 %
-%Even if a distributed graph-processing framework is utilized to mitigate the scalability bottleneck, synchronization inherently limits
-
-% Shortcomings of synchronous RP
-% What becomes possible with asynchronous RP?
-% What problems must be solved to make RP asynchronous?
-
 \begin{figure}[htbp]
 \centering
 \begin{tikzpicture}[ampersand replacement=\&]
-  \matrix[row sep=7em, column sep=2em]
-  {
-    \node[latent, minimum size=2em] (v1) {$\vVariable[1]$}; \&\&\&
-    \node[latent, minimum size=2em] (v2) {$\vVariable[2]$}; \&\&\&
-    \node[latent, minimum size=2em] (v3) {$\vVariable[3]$}; \\
-  };
-  \factor[minimum size=1em, above= of v1] {f12_1} {above:$\vFactor[12]$} {} {};
-  \factor[minimum size=1em, above= of v2, xshift=-3em] {f12_2} {above:$\vFactor[12]$} {} {};
-  \factor[minimum size=1em, above= of v2, xshift=3em] {f23_2} {above:$\vFactor[23]$} {} {};
-  \factor[minimum size=1em, above= of v3] {f23_3} {above:$\vFactor[23]$} {} {};
-
-  \plate{p1} {(v1)(f12_1)(f12_1-caption)} {};
-  \plate{p2} {(v2)(f12_2)(f23_2)(f12_2-caption)(f23_2-caption)} {};
-  \plate{p3} {(v3)(f23_3)(f23_3-caption)} {};
-
-  \edge[-] {v1} {f12_1};
-  \edge[-] {v2} {f12_2};
-  \edge[-] {v2} {f23_2};
-  \edge[-] {v3} {f23_3};
-  \edge[-] {p1} {p2};
-  \edge[-] {p2} {p3};
-\end{tikzpicture}
+    \matrix[row sep=7em, column sep=2em] {
+      \node[latent, minimum size=2em] (v1) {$\vVariable[1]$}; \&\&\&
+      \node[latent, minimum size=2em] (v2) {$\vVariable[2]$}; \&\&\&
+      \node[latent, minimum size=2em] (v3) {$\vVariable[3]$}; \\
+    };
+    \factor[minimum size=1em, above= of v1] {f12_1} {above:$\vFactor[12]$} {} {};
+    \factor[minimum size=1em, above= of v2, xshift=-3em] {f12_2} {above:$\vFactor[12]$} {} {};
+    \factor[minimum size=1em, above= of v2, xshift=3em] {f23_2} {above:$\vFactor[23]$} {} {};
+    \factor[minimum size=1em, above= of v3] {f23_3} {above:$\vFactor[23]$} {} {};
+    
+    \plate{p1} {(v1)(f12_1)(f12_1-caption)} {};
+    \plate{p2} {(v2)(f12_2)(f23_2)(f12_2-caption)(f23_2-caption)} {};
+    \plate{p3} {(v3)(f23_3)(f23_3-caption)} {};
+    
+    \edge[-] {v1} {f12_1};
+    \edge[-] {v2} {f12_2};
+    \edge[-] {v2} {f23_2};
+    \edge[-] {v3} {f23_3};
+    \edge[-] {p1} {p2};
+    \edge[-] {p2} {p3};
+  \end{tikzpicture}
 \caption[One-mode projection of a factor graph]{One-mode projection onto the variable nodes in \Cref{fig:factor-graph}.}
 \label{fig:projected}
 \end{figure}
@@ -252,7 +248,6 @@ The \cCreateActor{} operation initializes an actor, which is equivalent to the \
 %
 Risk scores and contacts have finite relevance, which is parametrized by a \emph{liveness} or \emph{relevance duration} $\pScoreTtl, \pContactTtl > 0$, respectively. The relevance of risk scores and contacts is important, because it influences how actors pass messages. For example, actors do not send irrelevant risk scores or relevant risk scores to irrelevant contacts. The \emph{time-to-live} (TTL) of a risk score or contact is the remaining duration of its relevance. In the following operations, $\aScoreTime$ denotes the time at which the risk score was originally computed, $\aContactTime$ is the contact time, and $\vRefTime$ is the current time.
 %
-% TODO Define risk score and contact notation and standard attributes
 \begin{function}{\nScoreTtl}[\vScore]
     \State \Return $\pScoreTtl - (\vRefTime - \aScoreTime)$
 \end{function}
@@ -268,9 +263,6 @@ There are two ways in which a user actor can receive a contact message. The firs
 
 The \cHandleContactMessage operation defines how a user actor processes a contact message. A contact is assumed to have finite relevance which is parametrized by the \emph{contact time-to-live} $\pContactTtl > 0$. A contact whose contact time occurred no longer than $\pContactTtl$ time ago is said to be \emph{alive}. Thus, a user actor only adds a contact if it is alive.
 %
-% TODO In practice, the two actors could establish trusted communication to
-% avoid adding contacts the user did not actually come into contact with. Perhaps
-% also requiring the Bluetooth ID received at the time of contact?
 \begin{function}{\nHandleContactMessage}[\vActor, \vContact]
     \If{$\cContactTtl[\vContact] > 0$}
     	\State $\aContactKey \assign \aContactName$
@@ -546,102 +538,46 @@ Given the multivariate nature of message reachability, it is helpful to visualiz
 \begin{tikzpicture}
     \begin{groupplot}[
     group style={
-    	group size=3 by 4,
+    	group size=2 by 2,
     	xlabels at=edge bottom,
     	ylabels at=edge left,
-    	vertical sep=0.07\textheight,
+    	vertical sep=0.1\textheight,
     },
     legend style={nodes={scale=0.75, transform shape}},
     legend pos = north west,
     xlabel = $\vScoreValue(u)$,
     ylabel = {$\vEstMsgReach(u)$},
     ytick distance=4,
-    width=0.36\textwidth,
-    height=0.22\textheight,
+    width=0.4\textwidth,
+    height=0.4\textheight,
     xmin=0,
     xmax=1,
     ymin=0,
     ymax=16
     ]
     % Format: log2(scoeff * (trate * cval(v)) / (trate * cval(u))) / log2(trate)
-    \nextgroupplot[title={$\pSendCoeff = 0.2$, $\vScoreValue(v) = 0.2$}, ymax=24, ytick distance=6]
-    \addplot [domain=0:1, samples=100, color=black, thick, dotted]{log2(0.2 * (0.2 * 0.2) / (0.2 * x)) / log2(0.2)};
-    \addplot [domain=0:1, samples=100, color=blue, thick, densely dashed]{log2(0.2 * (0.4 * 0.2) / (0.4 * x)) / log2(0.4)};
-    \addplot [domain=0:1, samples=100, color=orange, thick, loosely dashed]{log2(0.2 * (0.6 * 0.2) / (0.6 * x)) / log2(0.6)};
-    \addplot [domain=0:1, samples=100, color=green, thick, dashdotted]{log2(0.2 * (0.8 * 0.2) / (0.8 * x)) / log2(0.8)};
-    \legend{$\pTransRate = 0.2$, $\pTransRate = 0.4$, $\pTransRate = 0.6$, $\pTransRate = 0.8$};
-    
-    \nextgroupplot[title={$\pTransRate = 0.2$, $\vScoreValue(v) = 0.2$}, ymax=8, ytick distance=2]
-    \addplot [domain=0:1, samples=100, color=black, thick, dotted]{log2(0.2 * (0.2 * 0.2) / (0.2 * x)) / log2(0.2)};
-    \addplot [domain=0:1, samples=100, color=blue, thick, densely dashed]{log2(0.4 * (0.2 * 0.2) / (0.2 * x)) / log2(0.2)};
-    \addplot [domain=0:1, samples=100, color=orange, thick, loosely dashed]{log2(0.6 * (0.2 * 0.2) / (0.2 * x)) / log2(0.2)};
-    \addplot [domain=0:1, samples=100, color=green, thick, dashdotted]{log2(0.8 * (0.2 * 0.2) / (0.2 * x)) / log2(0.2)};
-    \legend{$\pSendCoeff = 0.2$, $\pSendCoeff = 0.4$, $\pSendCoeff = 0.6$, $\pSendCoeff = 0.8$};
-    
-    \nextgroupplot[title={$\pTransRate = 0.2$, $\pSendCoeff = 0.2$}, ymax=8, ytick distance=2]
-    \addplot [domain=0:1, samples=100, color=black, thick, dotted]{log2(0.2 * (0.2 * 0.2) / (0.2 * x)) / log2(0.2)};
-    \addplot [domain=0:1, samples=100, color=blue, thick, densely dashed]{log2(0.2 * (0.2 * 0.4) / (0.2 * x)) / log2(0.2)};
-    \addplot [domain=0:1, samples=100, color=orange, thick, loosely dashed]{log2(0.2 * (0.2 * 0.6) / (0.2 * x)) / log2(0.2)};
-    \addplot [domain=0:1, samples=100, color=green, thick, dashdotted]{log2(0.2 * (0.2 * 0.8) / (0.2 * x)) / log2(0.2)};
-    \legend{$\vScoreValue(v) = 0.2$, $\vScoreValue(v) = 0.4$, $\vScoreValue(v) = 0.6$, $\vScoreValue(v) = 0.8$};
-    
-    \nextgroupplot[title={$\pSendCoeff = 0.2$, $\vScoreValue(v) = 0.8$}, ymax=12, ytick distance=3]
-    \addplot [domain=0:1, samples=100, color=black, thick, dotted]{log2(0.2 * (0.2 * 0.8) / (0.2 * x)) / log2(0.2)};
-    \addplot [domain=0:1, samples=100, color=blue, thick, densely dashed]{log2(0.2 * (0.4 * 0.8) / (0.4 * x)) / log2(0.4)};
-    \addplot [domain=0:1, samples=100, color=orange, thick, loosely dashed]{log2(0.2 * (0.6 * 0.8) / (0.6 * x)) / log2(0.6)};
-    \addplot [domain=0:1, samples=100, color=green, thick, dashdotted]{log2(0.2 * (0.8 * 0.8) / (0.8 * x)) / log2(0.8)};
-    \legend{$\pTransRate = 0.2$, $\pTransRate = 0.4$, $\pTransRate = 0.6$, $\pTransRate = 0.8$};
-    
-    \nextgroupplot[title={$\pTransRate = 0.2$, $\vScoreValue(v) = 0.8$}, ymax=4, ytick distance=1]
-    \addplot [domain=0:1, samples=100, color=black, thick, dotted]{log2(0.2 * (0.2 * 0.8) / (0.2 * x)) / log2(0.2)};
-    \addplot [domain=0:1, samples=100, color=blue, thick, densely dashed]{log2(0.4 * (0.2 * 0.8) / (0.2 * x)) / log2(0.2)};
-    \addplot [domain=0:1, samples=100, color=orange, thick, loosely dashed]{log2(0.6 * (0.2 * 0.8) / (0.2 * x)) / log2(0.2)};
-    \addplot [domain=0:1, samples=100, color=green, thick, dashdotted]{log2(0.8 * (0.2 * 0.8) / (0.2 * x)) / log2(0.2)};
-    \legend{$\pSendCoeff = 0.2$, $\pSendCoeff = 0.4$, $\pSendCoeff = 0.6$, $\pSendCoeff = 0.8$};
-    
-    \nextgroupplot[title={$\pTransRate = 0.2$, $\pSendCoeff = 0.8$}, ymax=4, ytick distance=1]
-    \addplot [domain=0:1, samples=100, color=black, thick, dotted]{log2(0.8 * (0.2 * 0.2) / (0.2 * x)) / log2(0.2)};
-    \addplot [domain=0:1, samples=100, color=blue, thick, densely dashed]{log2(0.8 * (0.2 * 0.4) / (0.2 * x)) / log2(0.2)};
-    \addplot [domain=0:1, samples=100, color=orange, thick, loosely dashed]{log2(0.8 * (0.2 * 0.6) / (0.2 * x)) / log2(0.2)};
-    \addplot [domain=0:1, samples=100, color=green, thick, dashdotted]{log2(0.8 * (0.2 * 0.8) / (0.2 * x)) / log2(0.2)};
-    \legend{$\vScoreValue(v) = 0.2$, $\vScoreValue(v) = 0.4$, $\vScoreValue(v) = 0.6$, $\vScoreValue(v) = 0.8$};%
-    
-    \nextgroupplot[title={$\pSendCoeff = 0.8$, $\vScoreValue(v) = 0.2$}]
-    \addplot [domain=0:1, samples=100, color=black, thick, dotted]{log2(0.8 * (0.2 * 0.2) / (0.2 * x)) / log2(0.2)};
-    \addplot [domain=0:1, samples=100, color=blue, thick, densely dashed]{log2(0.8 * (0.4 * 0.2) / (0.4 * x)) / log2(0.4)};
-    \addplot [domain=0:1, samples=100, color=orange, thick, loosely dashed]{log2(0.8 * (0.6 * 0.2) / (0.6 * x)) / log2(0.6)};
-    \addplot [domain=0:1, samples=100, color=green, thick, dashdotted]{log2(0.8 * (0.8 * 0.2) / (0.8 * x)) / log2(0.8)};
-    \legend{$\pTransRate = 0.2$, $\pTransRate = 0.4$, $\pTransRate = 0.6$, $\pTransRate = 0.8$};
-    
-    \nextgroupplot[title={$\pTransRate = 0.8$, $\vScoreValue(v) = 0.2$}, ymax=24, ytick distance=6]
+    \nextgroupplot[title={$\vScoreValue(v) = 0.2$}, ymax=24, ytick distance=6]
     \addplot [domain=0:1, samples=100, color=black, thick, dotted]{log2(0.2 * (0.8 * 0.2) / (0.8 * x)) / log2(0.8)};
     \addplot [domain=0:1, samples=100, color=blue, thick, densely dashed]{log2(0.4 * (0.8 * 0.2) / (0.8 * x)) / log2(0.8)};
     \addplot [domain=0:1, samples=100, color=orange, thick, loosely dashed]{log2(0.6 * (0.8 * 0.2) / (0.8 * x)) / log2(0.8)};
     \addplot [domain=0:1, samples=100, color=green, thick, dashdotted]{log2(0.8 * (0.8 * 0.2) / (0.8 * x)) / log2(0.8)};
     \legend{$\pSendCoeff = 0.2$, $\pSendCoeff = 0.4$, $\pSendCoeff = 0.6$, $\pSendCoeff = 0.8$};
     
-    \nextgroupplot[title={$\pTransRate = 0.8$, $\pSendCoeff = 0.2$}, ymax=24, ytick distance=6]
+    \nextgroupplot[title={$\pSendCoeff = 0.2$}, ymax=24, ytick distance=6]
     \addplot [domain=0:1, samples=100, color=black, thick, dotted]{log2(0.2 * (0.8 * 0.2) / (0.8 * x)) / log2(0.8)};
     \addplot [domain=0:1, samples=100, color=blue, thick, densely dashed]{log2(0.2 * (0.8 * 0.4) / (0.8 * x)) / log2(0.8)};
     \addplot [domain=0:1, samples=100, color=orange, thick, loosely dashed]{log2(0.2 * (0.8 * 0.6) / (0.8 * x)) / log2(0.8)};
     \addplot [domain=0:1, samples=100, color=green, thick, dashdotted]{log2(0.2 * (0.8 * 0.8) / (0.8 * x)) / log2(0.8)};
     \legend{$\vScoreValue(v) = 0.2$, $\vScoreValue(v) = 0.4$, $\vScoreValue(v) = 0.6$, $\vScoreValue(v) = 0.8$};%
     
-    \nextgroupplot[title={$\pSendCoeff = 0.8$, $\vScoreValue(v) = 0.8$}, ymax=4, ytick distance=1]
-    \addplot [domain=0:1, samples=100, color=black, thick, dotted]{log2(0.8 * (0.2 * 0.8) / (0.2 * x)) / log2(0.2)};
-    \addplot [domain=0:1, samples=100, color=blue, thick, densely dashed]{log2(0.8 * (0.4 * 0.8) / (0.4 * x)) / log2(0.4)};
-    \addplot [domain=0:1, samples=100, color=orange, thick, loosely dashed]{log2(0.8 * (0.6 * 0.8) / (0.6 * x)) / log2(0.6)};
-    \addplot [domain=0:1, samples=100, color=green, thick, dashdotted]{log2(0.8 * (0.8 * 0.8) / (0.8 * x)) / log2(0.8)};
-    \legend{$\pTransRate = 0.2$, $\pTransRate = 0.4$, $\pTransRate = 0.6$, $\pTransRate = 0.8$};
-    
-    \nextgroupplot[title={$\pTransRate = 0.8$, $\vScoreValue(v) = 0.8$}, ymax=12, ytick distance=3]
+    \nextgroupplot[title={$\vScoreValue(v) = 0.8$}, ymax=12, ytick distance=3]
     \addplot [domain=0:1, samples=100, color=black, thick, dotted]{log2(0.2 * (0.8 * 0.8) / (0.8 * x)) / log2(0.8)};
     \addplot [domain=0:1, samples=100, color=blue, thick, densely dashed]{log2(0.4 * (0.8 * 0.8) / (0.8 * x)) / log2(0.8)};
     \addplot [domain=0:1, samples=100, color=orange, thick, loosely dashed]{log2(0.6 * (0.8 * 0.8) / (0.8 * x)) / log2(0.8)};
     \addplot [domain=0:1, samples=100, color=green, thick, dashdotted]{log2(0.8 * (0.8 * 0.8) / (0.8 * x)) / log2(0.8)};
     \legend{$\pSendCoeff = 0.2$, $\pSendCoeff = 0.4$, $\pSendCoeff = 0.6$, $\pSendCoeff = 0.8$};
     
-    \nextgroupplot[title={$\pTransRate = 0.8$, $\pSendCoeff = 0.8$}, ymax=12, ytick distance=3]
+    \nextgroupplot[title={$\pSendCoeff = 0.8$}, ymax=12, ytick distance=3]
     \addplot [domain=0:1, samples=100, color=black, thick, dotted]{log2(0.8 * (0.8 * 0.2) / (0.8 * x)) / log2(0.8)};
     \addplot [domain=0:1, samples=100, color=blue, thick, densely dashed]{log2(0.8 * (0.8 * 0.4) / (0.8 * x)) / log2(0.8)};
     \addplot [domain=0:1, samples=100, color=orange, thick, loosely dashed]{log2(0.8 * (0.8 * 0.6) / (0.8 * x)) / log2(0.8)};
@@ -653,23 +589,15 @@ Given the multivariate nature of message reachability, it is helpful to visualiz
 \label{fig:reach}
 \end{figure}
 
-%Let $\delta \in \reals_{\leq 0}$ be the time between when the contact occurred and when the user actor receives the corresponding message. Assuming $B \leq L$, there are 3 cases to consider: $\delta \leq B$, $B < \delta \leq L$, and $\delta > L$.
-
-%For each risk-score message that a user receives,
-
-%If $\delta \leq B$, then there is no effect on what risk score the contacted user receives. The user will send
-
 \section{System Model}\label{sec:system-model}
 
 % TODO - security, privacy, mobile crowd-sensing
 % TODO - centralized vs distributed - https://en.wikipedia.org/wiki/Distributed_computing
 % TODO - PDAs vs local computation
 
-%
 %The system model is similar to that in previous work \cite{Ayday2020, Ayday2021}. \Cref{fig:actor-dataflow} illustrates the corresponding data flow\footnote{A \emph{data-flow diagram} consists of data processors (circles), directed data flow (arrows), data stores (parallel lines), and external entities (rectangles) \cite[pp. 437--438]{Fowler2004}\label{foot:dataflow}.}.
 %
 %\begin{itemize}
-%    % TODO A more formal set of definitions for distributed, co-located, centralized, and decentralized computing is in order.
 %    % TODO More conceptual detail should be introduced before this point. Add a section in the Introduction that defines self-sovereignty concepts.
 %    \item Each user owns a \emph{personal data store} (PDS), a form of cloud storage that empowers the user with ownership and access control over their data.
 %    \item Symptom scores are computed in a user's PDS to support integrating multiple streams of personal data \cite{Ayday2020}. While local symptom-score computation \cite{Ayday2020, Ayday2021} is more privacy-preserving, it is assumed that the user's PDS is a trusted entity.
