@@ -74,21 +74,23 @@
 \graphicspath{{assets/}}
 \usetikzlibrary{bayesnet, plotmarks, calc, angles, quotes, arrows}
 
+% If using Texifier, use LuaLaTex and disable 'Hide intermediate files'.
 \usepackage{pgfplots}
 \usepgfplotslibrary{groupplots, statistics}
 \pgfplotsset{
-	compat=1.15,
-	table/search path={./assets/},
-	only if/.style args={entry of #1 is #2}{
-		/pgfplots/boxplot/data filter/.code={
-			\edef\tempa{\thisrow{#1}}
-			\edef\tempb{#2}
-			\ifx\tempa\tempb
-			\else
-			\def\pgfmathresult{}
-			\fi
-		}
-	}
+  compat=1.9,
+  colormap={black}{gray=(0) gray=(0)},
+  table/search path={./assets/},
+  only if/.style args={entry of #1 is #2}{
+    /pgfplots/boxplot/data filter/.code={
+    	\edef\tempa{\thisrow{#1}}
+    	\edef\tempb{#2}
+    	\ifx\tempa\tempb
+    	\else
+    	\def\pgfmathresult{}
+    	\fi
+    }
+  }
 }
 
 % ALGORITHM AND PSEUDOCODE
