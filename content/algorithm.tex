@@ -1,9 +1,5 @@
 \chapter{Risk Propagation}\label{ch:risk-propagation}
 
-\NewDocumentCommand{\pr}{mo}{\IfValueTF{#2}{p_{#2}(#1)}{p(#1)}}
-\newcommand{\eventSpace}{\Omega}
-\newcommand{\event}{\omega}
-
 Risk propagation is a message-passing algorithm that estimates an individual's infection risk by considering their demographics, symptoms, diagnosis, and contact with others. Formally, a \define{risk score} $\vScore_t$ is a timestamped infection probability where $\vScore \in [0, 1]$ and $t \in \naturals$ is the time of its computation. Thus, an individual with a high risk score is likely to test positive for the infection and poses a significant health risk to others. There are two types of risk scores: \define{symptom scores}, or prior infection probabilities, which account for an individual's demographics, symptoms, and diagnosis \citep{Menni2020}; and \define{exposure scores}, or posterior infection probabilities, which incorporate the risk of direct and indirect contact with others.
 
 Given their recent risk scores and contacts, an individual's exposure score is derived by marginalizing over the joint infection probability distribution. Naively computing this marginalization scales exponentially with the number of variables (i.e., individuals). To circumvent this intractability, the joint distribution is modeled as a factor graph, and an efficient message-passing procedure is employed to compute the marginal probabilities with a time complexity that scales linearly in the number of factor nodes (i.e., contacts).
@@ -60,34 +56,34 @@ defines the transmission of infection risk between two contacts. Specifically, c
     {\vSet{R}_{#1}}
     {\vSet{R}}
 }
-\newcommand{\vMaxExpScore}{r}
-\newcommand{\vIndexedExpScores}[2]{\vExpScores[#1]^{(#2)}}
-\NewDocumentCommand{\vIndexedMaxExpScores}{om}{
+\newcommand{\vMaxExposureScore}{r}
+\newcommand{\vRiskScores}[2]{\vExpScores[#1]^{(#2)}}
+\NewDocumentCommand{\vExposureScores}{om}{
   \IfValueTF{#1}
-    {\vMaxExpScore_{#1}^{(#2)}}
-    {\mathbf{\vMaxExpScore}^{(#2)}}
+    {\vMaxExposureScore_{#1}^{(#2)}}
+    {\mathbf{\vMaxExposureScore}^{(#2)}}
 }
 \newcommand{\dist}{d}
 
 \citet{Ayday2021} first proposed risk propagation as a synchronous, iterative message-passing algorithm that uses the factor graph to compute exposure scores. The first input to \cRiskPropagation{} is the set family $\vScores$, where
 %
 \begin{equation} \label{eq:score-set}
-  \vScores_i =\setBuilder{\vScore_t}{\vRefTime - t < \pScoreTtl} \in \vScores
+  \vScores_i =\setBuilder{\vScore_t}{\vRefTime - t < \pScoreExpiry} \in \vScores
 \end{equation}
 %
 is the set of recent risk scores of \indexed{i}{individual}. The second input to \cRiskPropagation{} is the contact set
 %
 \begin{equation} \label{eq:contact-set}
-  \vContacts = \setBuilder{(i, j, t)}{i \neq j, \vRefTime - t < \pContactTtl}
+  \vContacts = \setBuilder{(i, j, t)}{i \neq j, \vRefTime - t < \pContactExpiry}
 \end{equation}
 %
-such that $(i, j, t)$ is the \emph{most recent} contact between \twoindexed{i}{j}{individual} that occurred from time $t$ until at least time $t + \pMinContactDuration$, where $\pMinContactDuration \in \naturals$ is the \define{minimum contact duration}\footnote{While \citet{Ayday2021} require contact over a $\pMinContactDuration$-contiguous period of time, the Centers for Disease Control and Prevention \citeyearpar{CDC2021} account for contact over a 24-hour period.}. Naturally, risk scores and contacts have finite relevance, so \eqref{eq:score-set} and \eqref{eq:contact-set} are constrained by the \define{risk score expiry} $\pScoreTtl \in \naturals$ and the \define{contact expiry} $\pContactTtl \in \naturals$, respectively. The \define{reference time} $\vRefTime \in \naturals$ defines the relevance of the inputs and is assumed to be the time at which \cRiskPropagation{} is invoked. For notational simplicity in \cRiskPropagation{}, $\max \vSomeSet = 0$ if $\vSomeSet = \emptyset$.
+such that $(i, j, t)$ is the \emph{most recent} contact between \twoindexed{i}{j}{individual} that occurred from time $t$ until at least time $t + \pMinContactDuration$, where $\pMinContactDuration \in \naturals$ is the \define{minimum contact duration}\footnote{While \citet{Ayday2021} require contact over a $\pMinContactDuration$-contiguous period of time, the Centers for Disease Control and Prevention \citeyearpar{CDC2021} account for contact over a 24-hour period.}. Naturally, risk scores and contacts have finite relevance, so \eqref{eq:score-set} and \eqref{eq:contact-set} are constrained by the \define{risk score expiry} $\pScoreExpiry \in \naturals$ and the \define{contact expiry} $\pContactExpiry \in \naturals$, respectively. The \define{reference time} $\vRefTime \in \naturals$ defines the relevance of the inputs and is assumed to be the time at which \cRiskPropagation{} is invoked. For notational simplicity in \cRiskPropagation{}, $\max \vSomeSet = 0$ if $\vSomeSet = \emptyset$.
 
-\subsection{Variable Message Computation}
+\subsection{Variable Messages}
 
-The current exposure score of \indexed{i}{individual} is defined as $\max \vScores_i$. Hence, a \define{variable message} $\vVariableMsg{i}{j}{n}$ from the variable node $\vVariable[i]$ to the factor node $\vFactor[ij]$ during \indexed{n}{iteration} is the set of maximal risk scores $\vIndexedExpScores{i}{n - 1}$ from the previous $n - 1$ iterations that were not derived by $\vFactor[ij]$. In this way, risk propagation is reminiscent of the max-sum algorithm; however, risk propagation aims to maximize \emph{individual} marginal probabilities rather than the joint distribution \cite[pp. 411--415]{Bishop2006}.
+The current exposure score of \indexed{i}{individual} is defined as $\max \vScores_i$. Hence, a \define{variable message} $\vVariableMsg{i}{j}{n}$ from the variable node $\vVariable[i]$ to the factor node $\vFactor[ij]$ during \indexed{n}{iteration} is the set of maximal risk scores $\vRiskScores{i}{n - 1}$ from the previous $n - 1$ iterations that were not derived by $\vFactor[ij]$. In this way, risk propagation is reminiscent of the max-sum algorithm; however, risk propagation aims to maximize \emph{individual} marginal probabilities rather than the joint distribution \cite[pp. 411--415]{Bishop2006}.
 
-\subsection{Factor Message Computation}
+\subsection{Factor Messages}
 
 \newcommand{\vMessageSet}{\vSet{M}}
 
@@ -102,15 +98,15 @@ where $\dist(u, v)$ is the distance between the nodes $u, v$. The computation of
 \begin{enumerate}
   \item Contacts have a nondecreasing effect on an individual's exposure score.
   \item A risk score $\vScore_t$ is \define{relevant} to the contact $(i, j, t_{ij})$ if $t < t_{ij} +\pTimeBuffer$, where $\pTimeBuffer \in \naturals$ is a \define{time buffer} that accounts for delayed reporting of symptom scores and contacts. The expression $t_{ij} +\pTimeBuffer$ is called the \define{buffered contact time}.
-  \item Risk transmission between contacts is incomplete. Thus, a risk score decays exponentially along its transmission path in $\vGraph$ at a rate of $\log(\pTransRate)$, where $\pTransRate \in (0, 1)$ is the \define{transmission rate}.
+  \item Risk transmission between contacts is incomplete. Thus, a risk score decays exponentially along its transmission path in $\vGraph$ at a rate of $\log \pTransmissionRate$, where $\pTransmissionRate \in (0, 1)$ is the \define{transmission rate}.
 \end{enumerate}
 %
-To summarize, a factor message $\vFactorMsg{i}{j}{n}$ is the maximum relevant risk score in the variable message $\vVariableMsg{i}{j}{n}$ (or 0) that is scaled by the transmission rate $\pTransRate$.
+To summarize, a factor message $\vFactorMsg{i}{j}{n}$ is the maximum relevant risk score in the variable message $\vVariableMsg{i}{j}{n}$ (or 0) that is scaled by the transmission rate $\pTransmissionRate$.
 
 \citet{Ayday2021} assume that the contact set $\vContacts$ may contain (1) multiple contacts between the same two individuals and (2) \define{invalid} contacts, or those lasting less than $\pMinContactDuration$ time. However, these assumptions introduce unnecessary complexity. Regarding assumption 1, suppose \twoindexed{i}{j}{individual} come into contact $q$ times such that $t_k < t_\ell$ for $1 \leq k < \ell \leq q$. Let $\vMessageSet_k$ be the set of relevant risk scores, according to the contact time $t_k$, where
 %
 \begin{equation*}
-  \vMessageSet_k = \setBuilder{\pTransRate \cdot \vScore_t}{\vScore_t \in \vVariableMsg{i}{j}{n}, t < t_k + \pTimeBuffer}.
+  \vMessageSet_k = \setBuilder{\pTransmissionRate \vScore_t}{\vScore_t \in \vVariableMsg{i}{j}{n}, t < t_k + \pTimeBuffer}.
 \end{equation*}
 %
 Then $\vMessageSet_k \subseteq \vMessageSet_\ell$ if and only if $\max \vMessageSet_k \leq \max \vMessageSet_\ell$. Therefore, only the most recent contact time $t_q$ is required to compute the factor message $\vFactorMsg{i}{j}{n}$. With respect to assumption 2, there are two possibilities.
@@ -122,47 +118,49 @@ Then $\vMessageSet_k \subseteq \vMessageSet_\ell$ if and only if $\max \vMessage
 %
 In either case, a set $\vContacts$ containing only valid contacts implies fewer factor nodes and edges in the factor graph $\vGraph$. Consequently, the complexity of \cRiskPropagation{} is reduced by a constant factor since fewer messages must be computed.
 
-\subsection{Termination Detection}
+\subsection{Termination}
 
-To detect convergence, the normed difference between the current and previous exposure scores is compared to the threshold $\pDiff \in \reals$. Note that $\vIndexedMaxExpScores{n}$ is the vector of exposure scores in the \indexed{n}{iteration} such that $\vIndexedMaxExpScores[i]{n}$ is \indexed{i}{component} of $\vIndexedMaxExpScores{n}$. The $\ell^1$ and $\ell^\infty$ norms are sensible choices for detecting convergence. \citet{Ayday2021} use the $\ell^1$ norm, which ensures that an individual's exposure score changed by at most $\pDiff$ after the penultimate iteration.
+To detect convergence, the normed difference between the current and previous exposure scores is compared to the threshold $\pDiff \in \reals$. Note that $\vExposureScores{n}$ is the vector of exposure scores in the \indexed{n}{iteration} such that $\vExposureScores[i]{n}$ is \indexed{i}{component} of $\vExposureScores{n}$. The $\ell^1$ and $\ell^\infty$ norms are sensible choices for detecting convergence. \citet{Ayday2021} use the $\ell^1$ norm, which ensures that an individual's exposure score changed by at most $\pDiff$ after the penultimate iteration.
 
 \begin{function}[H]{\nRiskPropagation}[\vScores, \vContacts]
-  \State $(\vVariables, \vFactors, \vEdges) \assign \Call{Factor-Graph}{\vContacts}$
+  \State $(\vVariables, \vFactors, \vEdges) \assign \cCreateFactorGraph[\vContacts]$
   \State $n \assign 1$
   \ForEach{$\vVariable[i] \in \vVariables$}
-    \State $\vIndexedExpScores{i}{n - 1} \assign \topK{\vScores_i}$
-    \State $\vIndexedMaxExpScores[i]{n - 1} \assign \max \vIndexedExpScores{i}{n - 1}$
-    \State $\vIndexedMaxExpScores[i]{n} \assign \infty$
+    \State $\vRiskScores{i}{n - 1} \assign \topK{\vScores_i}$
+    \State $\vExposureScores[i]{n - 1} \assign \max \vRiskScores{i}{n - 1}$
+    \State $\vExposureScores[i]{n} \assign \infty$
   \EndFor
-  \While{$\| \vIndexedMaxExpScores{n} - \vIndexedMaxExpScores{n - 1} \| > \pDiff$}
+  \While{$\| \vExposureScores{n} - \vExposureScores{n - 1} \| > \pDiff$}
     \ForEach{$\{\vVariable[i], \vFactor[ij]\} \in \vEdges$}
-      \State $\vVariableMsg{i}{j}{n} \assign \vIndexedExpScores{i}{n - 1} \setminus \setBuilder{\vFactorMsg{j}{i}{k}}{k \in [1 \ltwodots n - 1]}$
+      \State $\vVariableMsg{i}{j}{n} \assign \vRiskScores{i}{n - 1} \setminus \setBuilder{\vFactorMsg{j}{i}{k}}{k \in [1 \twodots n - 1]}$
     \EndFor
     \ForEach{$\{\vVariable[i], \vFactor[ij]\} \in \vEdges$}
-      \State $\vFactorMsg{i}{j}{n} \assign \max \setBuilder{\pTransRate \cdot \vScore_t}{\vScore_t \in \vVariableMsg{i}{j}{n}, t < t_{ij} + \pTimeBuffer}$
+      \State $\vFactorMsg{i}{j}{n} \assign \max \setBuilder{\pTransmissionRate \vScore_t}{\vScore_t \in \vVariableMsg{i}{j}{n}, t < t_{ij} + \pTimeBuffer}$
     \EndFor
     \ForEach{$\vVariable[i] \in \vVariables$}
-      \State $\vIndexedExpScores{i}{n} \assign \topK{\setBuilder{\vFactorMsg{j}{i}{n}}{\vFactor[ij] \in \vNeighbors_i}}$
+      \State $\vRiskScores{i}{n} \assign \topK{\setBuilder{\vFactorMsg{j}{i}{n}}{\vFactor[ij] \in \vNeighbors_i}}$
     \EndFor
     \ForEach{$\vVariable[i] \in \vVariables$}
-      \State $\vIndexedMaxExpScores[i]{n - 1} \assign \vIndexedMaxExpScores[i]{n}$
-      \State $\vIndexedMaxExpScores[i]{n} \assign \max \vIndexedExpScores{i}{n}$
+      \State $\vExposureScores[i]{n - 1} \assign \vExposureScores[i]{n}$
+      \State $\vExposureScores[i]{n} \assign \max \vRiskScores{i}{n}$
     \EndFor
     \State $n \assign n + 1$
   \EndWhile
-  \State \Return $\vIndexedMaxExpScores{n}$
+  \State \Return $\vExposureScores{n}$
 \end{function}
 
 \section{Asynchronous Risk Propagation}\label{sec:asynchronous}
 
-While straightforward to specify, the description of risk propagation in \Cref{sec:synchronous}, is not a viable implementation for real-world application. \cRiskPropagation{} is an \define{offline algorithm} because it requires all individuals' recent contacts and risk scores to run. As \citet{Ayday2021} note, this is not privacy-preserving. An offline design is also suboptimal with respect computational efficiency and human safety. Specifically, most exposure scores may not change across invocations of \cRiskPropagation{}, which implies communication overhead and computational redundancy. As a mitigation, \cRiskPropagation{} can only be executed once or twice daily, which was originally proposed by \citet{Ayday2020}. However, this causes substantial delay in reporting to individuals their new exposure score; and in the face of a pandemic, timely information is essential for individual and collective health.
+While straightforward to specify, the description of risk propagation in \Cref{sec:synchronous}, is not a viable implementation for real-world application. \cRiskPropagation{} is an \define{offline algorithm} because it requires all individuals' recent contacts and risk scores to run. As \citet{Ayday2021} note, this is not privacy-preserving. An offline design is also suboptimal with respect computational efficiency and human safety. Specifically, most exposure scores may not change across invocations of \cRiskPropagation{}, which implies communication overhead and computational redundancy. As a mitigation, \cRiskPropagation{} can only be executed once or twice daily, which was originally proposed by \citet{Ayday2020}. However, this causes substantial delay in reporting to individuals their new exposure scores; and in the face of a pandemic, timely information is essential for individual and collective health.
 
-\cite{Ayday2021} provide a brief proposal 
+\citet{Ayday2021} propose distributing the computation amongst the devices or ``personal clouds'' of individuals such that each computing element is responsible for maintaining the individual's variable node and neighboring factor nodes. However, their proposal does not address the aspects of synchronization, termination, and communication efficiency; all of which are necessary to consider in a distributed setting.
 
-\begin{enumerate}
-  \item How does message passing terminate?
-  \item How are exposure scores computed?
-\end{enumerate}
+Key observations:
+
+- Message passing can be asynchronous...but how do ensure termination?
+- Asynchronous message passing amongst stateful entities is the essence of the actor model, so we can use it to describe risk propagation as an online algorithm
+- By applying one-mode projection, the factor graph is equivalent to a contact network. Thus, we can extend the concepts of reachability in temporal network to account for message-passing semantics and measure the communication complexity of risk propagation.
+
 %
 \begin{figure}[htbp]
 \centering
@@ -208,19 +206,19 @@ Factor graphs are useful for decomposing complex probability distributions and a
 
 However, as with risk propagation, and generally any application of a factor graph in which the variable vertices represent entities of interest (i.e., of which the marginal probability of a variable is desired), applying one-mode projection is a .
 
-\subsection{ShareTrace Actor System}
+\subsection*{ShareTrace Actor System}
 
 As a distributed algorithm, risk propagation is specified from the perspective of an \emph{actor}, which is equivalent to the paradiagm of \emph{think- like-a-vertex} graph-processing algorithms \cite{McCune2015}. Some variation exists on exactly how actor behavior is defined \cite{Agha1985, Koster2016}. Perhaps the simplest definition is that the \emph{behavior of an actor} is both its \emph{interface} (i.e., the types of messages it can receive) and \emph{state} (i.e., the internal data it uses to process messages) \cite{Koster2016}. An \emph{actor system}\footnote{This is technically referred to as an \emph{actor system configuration}.} is defined as the set of actors it contains and the set of unprocessed messages\footnote{Formally, a \emph{message} is called a \emph{task} and is defined by a \emph{tag}, a unique identifier; a \emph{target}, the mail address to which the message is delivered; and a \emph{communication}, the message content \cite{Agha1985}.} in the actor mailboxes. An expanded definition of an actor system also includes a \emph{local states function} that maps mail addresses to behaviors, the set of \emph{receptionist actors} that can receive communication that is external to the actor system, and the set of \emph{external actors} that exist outside of the actor system \cite{Agha1985}. Practically, a local states function is unnecessary to specify, so the narrower definition of an actor system is used. The remainder of this section describes the components of the ShareTrace actor system.
 
-\subsubsection{User Actor Behavior}\label{sec:behavior}
+\subsection{Actor Behavior}\label{sec:behavior}
 
 Each user corresponds to an actor that participates in the message-passing protocol of risk propagation. Herein, the user of an actor will only be referred to as an \emph{actor}. The following variant of the concurrent, object-oriented actor model is assumed to define actor behavior \cite{Agha1990}.
 %
 \begin{itemize}
 	\item An actor follows the \emph{active object pattern} \cite{Lavender1996, Koster2016} and the \emph{Isolated Turn Principle} \cite{Koster2016}. Specifically, the state change of an actor is carried out by instance- variable assignment, instead of the canonical \cBecome{} primitive that provides a functional construct for pipelining actor behavior replacement \cite{Agha1985, Agha1990}. The interface of a user actor is fixed in risk propagation, so the more general semantics of \cBecome{} is unnecessary.
-	\item The term ``name'' \cite{Hewitt1977, Agha1985} is preferred over ``mail address'' \cite{Agha1985, Agha1990} to refer to the sender of a message. Generally, the mail address that is included in a message need not correspond to the actor that sent it. Risk propagation, however, requires this actor is identified in a risk-score message. Therefore, to emphasize this requirement, ``name'' is used to refer to both the identity of an actor and its mail address.
+	\item The term ``name'' \cite{Hewitt1977, Agha1985} is preferred over ``mail address'' \cite{Agha1985, Agha1990} to refer to the sender of a message. Generally, the mail address that is included in a message need not correspond to the actor that sent it. Risk propagation, however, requires this actor is identified in a risk score message. Therefore, to emphasize this requirement, ``name'' is used to refer to both the identity of an actor and its mail address.
 	\item An actor is allowed to include a loop with finite iteration in its behavior definition; this is traditionally prohibited in the actor model \cite{Agha1985, Agha1990}.
-	\item Because the following pseudocode to describe actor behavior mostly follows the conventions of \cite{Cormen2022} (see \Cref{sec:conventions}), the behavior definition is implied by all procedures that take as input an actor.
+	\item The behavior definition is implied by all procedures that take as input an actor.
 \end{itemize}
 %
 The \cCreateActor{} operation initializes an actor, which is equivalent to the \emph{new expression} \cite{Agha1985} or \cCreate{} primitive \cite{Agha1990} with the exception that it only specifies the attributes (i.e., state) of an actor. As mentioned earlier, the behavior description of an actor is implied by the procedures that require an actor as input. Every actor $\vActor$ has the following attributes.
@@ -232,7 +230,7 @@ The \cCreateActor{} operation initializes an actor, which is equivalent to the \
 	\item $\aActorScores$: a dictionary that maps a time interval to a risk score; used to tolerate synchronization delays between a user's device and actor (see \Cref{sec:caching}).
 \end{itemize}
 %
-\begin{function}{\nInitializeActor}
+\begin{function}{\nCreateActor}
     \State $\aActorName \assign \cGenerateName$
     \State $\aActorContacts \assign \emptyset$
     \State $\aActorScores \assign \emptyset$
@@ -243,119 +241,119 @@ The \cCreateActor{} operation initializes an actor, which is equivalent to the \
 \begin{function}{\nNullRiskScore}[\vActor]
     \State $\aScoreValue \assign 0$
     \State $\aScoreTime \assign 0$
-    \State $\aScoreExpiry \assign 0$
     \State $\aScoreSender \assign \aActorName$
     \State \Return $\vScore$
 \end{function}
 %
-Risk scores and contacts have finite relevance, which is parametrized by a \emph{liveness} or \emph{relevance duration} $\pScoreTtl, \pContactTtl > 0$, respectively. The relevance of risk scores and contacts is important, because it influences how actors pass messages. For example, actors do not send irrelevant risk scores or relevant risk scores to irrelevant contacts. The \emph{time-to-live} (TTL) of a risk score or contact is the remaining duration of its relevance. In the following operations, $\aScoreTime$ denotes the time at which the risk score was originally computed, $\aContactTime$ is the contact time, and $\vRefTime$ is the current time.
+Risk scores and contacts have finite relevance, which is parametrized by a \emph{liveness} or \emph{relevance duration} $\pScoreExpiry, \pContactExpiry > 0$, respectively. The relevance of risk scores and contacts is important, because it influences how actors pass messages. For example, actors do not send irrelevant risk scores or relevant risk scores to irrelevant contacts. The \emph{time-to-live} (TTL) of a risk score or contact is the remaining duration of its relevance. In the following operations, $\aScoreTime$ denotes the time at which the risk score was originally computed, $\aContactTime$ is the contact time, and $\vRefTime$ is the current time.
 %
-\begin{function}{\nScoreTtl}[\vScore]
-    \State \Return $\pScoreTtl - (\vRefTime - \aScoreTime)$
+\begin{function}{\nRiskScoreTtl}[\vScore]
+    \State \Return $\pScoreExpiry - (\vRefTime - \aScoreTime)$
 \end{function}
 \begin{function}{\nContactTtl}[\vContact]
-    \State \Return $\pContactTtl - (\vRefTime - \aContactTime)$
+    \State \Return $\pContactExpiry - (\vRefTime - \aContactTime)$
 \end{function}
 %
-The interface of a user actor is defined by two types of messages: contact messages and risk-score messages. A \emph{contact message} $\vContact$ contains the name $\aContactName$ of the actor whose user was contacted and the contact time $\aContactTime$. A \emph{risk-score message} $\vScore$ is simply a risk score along with the actor's name $\aScoreSender$ that sent it. A risk score previously defined as the ordered pair $(\vScoreValue, t)$ (see \Cref{sec:asynchronous}) is represented as the attributes $\vScoreValue$ and $\aScoreTime$. The following sections discuss how a contact message and risk-message are processed by an actor.
+The interface of a user actor is defined by two types of messages: contact messages and risk score messages. A \emph{contact message} $\vContact$ contains the name $\aContactName$ of the actor whose user was contacted and the contact time $\aContactTime$. A \emph{risk score message} $\vScore$ is simply a risk score along with the actor's name $\aScoreSender$ that sent it. A risk score previously defined as the ordered pair $(\vScoreValue, t)$ (see \Cref{sec:asynchronous}) is represented as the attributes $\vScoreValue$ and $\aScoreTime$. The following sections discuss how a contact message and risk-message are processed by an actor.
 
-\paragraph{Handling Contact Messages}\label{sec:contact-message-handling}
+\subsubsection{Contacts}
 
 There are two ways in which a user actor can receive a contact message. The first, technically correct approach is for a receptionist actor to mediate the communication between the user actor and the PDS so that the user actor can retrieve its user's contacts. The second approach is to relax this formality and allow the user actor to communicate with the PDS directly\footnote{If the PDS itself is an actor, then a push-oriented dataflow could be implemented, where the user actor receives contact messages (and symptom-score messages). This would be more efficient and timely than a pull-oriented dataflow in which the PDS is a passive data store that requires the user actor or receptionist to poll it for new data.}.
 
-The \cHandleContactMessage operation defines how a user actor processes a contact message. A contact is assumed to have finite relevance which is parametrized by the \emph{contact time-to-live} $\pContactTtl > 0$. A contact whose contact time occurred no longer than $\pContactTtl$ time ago is said to be \emph{alive}. Thus, a user actor only adds a contact if it is alive.
+The \cHandleContactMessage operation defines how a user actor processes a contact message. A contact is assumed to have finite relevance which is parametrized by the \emph{contact time-to-live} $\pContactExpiry > 0$. A contact whose contact time occurred no longer than $\pContactExpiry$ time ago is said to be \emph{alive}. Thus, a user actor only adds a contact if it is alive.
 %
-\begin{function}{\nHandleContactMessage}[\vActor, \vContact]
-    \If{$\cContactTtl[\vContact] > 0$}
-    	\State $\aContactKey \assign \aContactName$
-    	\State $\cCacheInsert[\aActorContacts, \vContact]$
-    \EndIf
-    \State $\aContactThreshold \assign \cNullRiskScore[\vActor]$
-    \State $\cCacheRefresh[\aActorScores]$
-    \State $\vScore \assign \cCacheMax[\aActorScores, \aContactTime + \pTimeBuffer] \OR \cNullRiskScore[\vActor]$
-    \State $\cSend[\vActor, \vContact, \vScore]$
+\begin{function}{Handle-Contact}[\vActor, \vContact]
+  \If{$\cContactTtl[c] > 0$}
+    \State $\aContactKey \assign \aContactName$
+    \State $\cCacheInsert[\aActorContacts, \vContact]$
+    \State $\vScore \assign \cCacheMaxOlderThan[\aActorScores, \aContactTime + \pTimeBuffer]$
+    \State $\cApplyRiskScore[\vActor, \vContact, \vScore]$
+  \EndIf
 \end{function}
 %
-Regardless of whether the contact is alive, the user actor attempts to send a risk-score message that is derived from its current exposure score or a cached risk score (see \Cref{sec:caching}):
+Regardless of whether the contact is alive, the user actor attempts to send a risk score message that is derived from its current exposure score or a cached risk score (see \Cref{sec:caching}):
 %
-\begin{function}{\nSend}[\vActor, \vContact, \vScore]
-    \State $\cRefreshThreshold[\vActor, \vContact]$
-    \If{$\cShouldReceive[\vContact, \vScore]$}
-        \State $\aNewScoreValue \assign \aScoreValue \cdot \pTransRate$
-        \State $\cSend[\vContact, \vNewScore]$
-        \State $\cSetThreshold[\vContact, \vNewScore]$
-    \EndIf
+\begin{function}{\nApplyRiskScore}[\vActor, \vContact, \vScore]
+  \State $\cRefreshSendThreshold[\vActor, \vContact]$
+  \If{$\cShouldContactReceive[\vContact, \vScore]$}
+    \State $\aNewScoreValue \assign \aScoreValue \cdot \pTransmissionRate$
+    \State $\aContactBuffered \assign \vNewScore$
+    \State $\cSetSendThreshold[\vContact, \vNewScore]$
+  \EndIf
 \end{function}
 %
-\begin{function}{\nShouldReceive}[\vContact, \vScore]
-    \State \Return $\aValue{\aContactThreshold} < \aScoreValue$
+\begin{function}{\nShouldContactReceive}[\vContact, \vScore]
+    \State \Return $\aContactThresholdValue < \aScoreValue$
     \Statex $\AND \aContactTime + \pTimeBuffer > \aScoreTime$
     \Statex $\AND \aContactName \notEquals \aScoreSender$
 \end{function}
-\begin{function}{\nSetThreshold}[\vContact, \vScore]
-    \State $\aNewScoreValue \assign \pSendCoeff \cdot \aScoreValue$
+\begin{function}{\nSetSendThreshold}[\vContact, \vScore]
+    \State $\aNewScoreValue \assign \pSendCoefficient \cdot \aScoreValue$
     \State $\aContactThreshold \assign \vNewScore$
 \end{function}
 %
-\begin{function}{\nRefreshThreshold}[\vActor, \vContact]
-    \If{$\aValue{\aContactThreshold} > 0 \AND \cScoreTtl[\aContactThreshold] \leq 0$}
-        \State $\cCacheRefresh[\aActorScores]$
-        \State $\vScore \assign \cCacheMax[\aActorScores, \aContactTime + \pTimeBuffer] \OR \cNullRiskScore[\vActor]$
-        \State $\aNewScoreValue \assign \aScoreValue \cdot \pTransRate$
-        \State $\cSetThreshold[\vContact, \vNewScore]$    
+\begin{function}{\nRefreshSendThreshold}[\vActor, \vContact]
+    \If{$\aContactThresholdValue > 0 \AND \cRiskScoreTtl[\aContactThreshold] \leq 0$}
+        \State $\vScore \assign \cCacheMaxOlderThan[\aActorScores, \aContactTime + \pTimeBuffer]$
+        \State $\aNewScoreValue \assign \aScoreValue \cdot \pTransmissionRate$
+        \State $\cSetSendThreshold[\vContact, \vNewScore]$    
     \EndIf
 \end{function}
 %
-Like contacts, each risk score is assumed to have finite relevance that is parametrized by the \emph{score time-to-live} $\pScoreTtl > 0$ and evaluated by the operation \Call{Is-Score-Alive}{}. To send an actor's current exposure score, the contact must be sufficiently recent. It is assumed that risk scores computed after a contact occurred have no effect on the user's exposure score.
+\begin{function}{Handle-Flush-Timeout}[\vActor]
+  \ForEach{$\vContact \in \aActorContacts$}
+    \If{$\aContactBuffered \notEquals \nil$}
+      \State $\cSend[\aContactName, \aContactBuffered]$
+      \State $\aContactBuffered \assign \nil$
+    \EndIf
+  \EndFor
+  \State $\cCacheRefresh[\aActorContacts]$
+\end{function}
+%
+Like contacts, each risk score is assumed to have finite relevance that is parametrized by the \emph{score time-to-live} $\pScoreExpiry > 0$ and evaluated by the operation \Call{Is-Score-Alive}{}. To send an actor's current exposure score, the contact must be sufficiently recent. It is assumed that risk scores computed after a contact occurred have no effect on the user's exposure score.
 
 To account for the disease incubation period, a delay in reporting symptoms, or a delay in establishing actor communication, a time buffer $\pTimeBuffer \geq 0$ is considered. That is, a risk score is not sent to a contact if \Call{Is-Contact-Recent}{} returns \false.
 
-The \Call{Transmitted}{} operation is used to generate risk scores that are sent to other actors. It is assumed that contact only implies an incomplete transmission of risk between users. Thus, when sending a risk score to another actor, the value of the risk score is scaled by the \emph{transmission rate} $\pTransRate \in (0, 1)$. Notice that the time of the risk score is left unchanged; the act of sending a risk-score message is independent of when the risk score was first computed.
+The \Call{Transmitted}{} operation is used to generate risk scores that are sent to other actors. It is assumed that contact only implies an incomplete transmission of risk between users. Thus, when sending a risk score to another actor, the value of the risk score is scaled by the \emph{transmission rate} $\pTransmissionRate \in (0, 1)$. Notice that the time of the risk score is left unchanged; the act of sending a risk score message is independent of when the risk score was first computed.
 
-%If line \ref{step:send-current} of \cSendCurrentOrCached[] evaluates to \false, then the actor attempts to retrieve the maximum cached risk-score message based on the buffered contact time. If such a message exists and is alive, a risk-score message is derived and sent to the contact. The \cSend[] operation follows the semantics of the \Call{Send-To}{} primitive \cite{Agha1985, Agha1990}.
+%If line \ref{step:send-current} of \cSendCurrentOrCached[] evaluates to \false, then the actor attempts to retrieve the maximum cached risk score message based on the buffered contact time. If such a message exists and is alive, a risk score message is derived and sent to the contact. The \cSend[] operation follows the semantics of the \Call{Send-To}{} primitive \cite{Agha1985, Agha1990}.
 
-\paragraph{Handling Risk-Score Messages}
+\subsubsection{Risk Scores}
 
-Upon receiving a risk-score message, an actor executes the following operation.
+Upon receiving a risk score message, an actor executes the following operation.
 %
-\begin{function}{\nHandleScoreMessage}[\vActor, \vScore]
-    \If{$\cScoreTtl[\vScore] > 0$}
-        \State $\aScoreKey \assign [\aScoreTime, \aScoreExpiry)$
-        \State $\cCacheInsert[\aActorScores, \vScore]$
-        \State $\Call{Update-Exposure-Score}{\vActor, \vScore}$
-        \State $\cCacheRefresh[\aActorContacts]$
-        \State $\cPropagate[\vActor, \vScore]$
-    \EndIf
+\begin{function}{Handle-Risk-Score}[\vActor, \vScore]
+  \If{$\cRiskScoreTtl[\vScore] > 0$}
+    \State $\aScoreKey \assign [\aScoreTime, \aScoreTime + \pScoreExpiry)$
+    \State $\cCacheInsert[\aActorScores, \vScore]$
+    \State $\cUpdateExposureScore[\vActor, \vScore]$
+    \ForEach{$\vContact \in \aActorContacts$}
+      \State $\cApplyRiskScore[\vActor, \vContact, \vScore]$
+    \EndFor
+  \EndIf
 \end{function}
 %
 \begin{function}{\nUpdateExposureScore}[\vActor, \vScore]
-    \If{$\aActorScoreValue < \aScoreValue$}
-        \State $\aActorScore \assign \vScore$
-    \ElsIf{$\cScoreTtl[\aActorScore] \leq 0$}
-        \State $\cCacheRefresh[\aActorScores]$
-        \State $\aActorScore \assign \cCacheMax[\aActorScores] \OR \cNullRiskScore[\vActor]$
-    \EndIf
+  \If{$\aActorScoreValue < \aScoreValue$}
+    \State $\aActorScore \assign \vScore$
+  \ElsIf{$\cRiskScoreTtl[\aActorScore] \leq 0$}
+    \State $\aActorScore \assign \cCacheMax[\aActorScores]$
+  \EndIf
 \end{function}
 %
-The \Call{Update-Actor}{} operation is responsible for updating an actor's state, based on a received risk-score message. Specifically, it stores the message inside the actor's interval cache $\aActorScores$, assigns the actor a new exposure score and send coefficient (discussed below) if the received risk-score value exceeds that of the current exposure score, and removes expired contacts.
+The \Call{Update-Actor}{} operation is responsible for updating an actor's state, based on a received risk score message. Specifically, it stores the message inside the actor's interval cache $\aActorScores$, assigns the actor a new exposure score and send coefficient (discussed below) if the received risk score value exceeds that of the current exposure score, and removes expired contacts.
 
-In previous work \cite{Ayday2021}, risk propagation assumes synchronous message passing, so the notion of an iteration or inter-iteration difference threshold can be used as stopping conditions. However, as a streaming algorithm that relies on asynchronous message passing, such stopping criteria are unnatural. Instead, the following heuristic is applied and empirically optimized to minimize accuracy loss and maximize efficiency. Let $\pSendCoeff > 0$ be the \define{send coefficient} such that an actor only sends a risk-score message if its value exceeds the actor's \emph{send threshold} $\aThreshold{\vActor}$ (line \ref{step:send-condition} in \cPropagate).
+%In previous work \cite{Ayday2021}, risk propagation assumes synchronous message passing, so the notion of an iteration or inter-iteration difference threshold can be used as stopping conditions. However, as a streaming algorithm that relies on asynchronous message passing, such stopping criteria are unnatural. Instead, the following heuristic is applied and empirically optimized to minimize accuracy loss and maximize efficiency. Let $\pSendCoefficient > 0$ be the \define{send coefficient} such that an actor only sends a risk score message if its value exceeds the actor's \emph{send threshold} $\aContactThreshold$ (line \ref{step:send-condition} in \cPropagate).
 
-Assuming a finite number of actors, any positive send coefficient $\pSendCoeff$ guarantees that a risk-score message will be propagated a finite number of times. Because the value of a risk score that is sent to another actor is scaled by the transmission rate $\pTransRate$, its value exponentially decreases as it propagates away from the source actor with a rate constant $\log \pTransRate$.
+Assuming a finite number of actors, any positive send coefficient $\pSendCoefficient$ guarantees that a risk score message will be propagated a finite number of times. Because the value of a risk score that is sent to another actor is scaled by the transmission rate $\pTransmissionRate$, its value exponentially decreases as it propagates away from the source actor with a rate constant $\log \pTransmissionRate$.
 
-%As with the \cSendCurrentOrCached[] operation, a risk-score message must be alive and relatively recent for it to be propagated. As in previous work \cite{Ayday2021}, factor marginalization is achieved by not propagating the received message to the actor who sent it. The logic of \cPropagate[] differs, however, in two ways. First, it is possible that no message is not propagated to a contact. The intent of sending a risk-score message is to update the exposure score of other actors. However, previous work \cite{Ayday2021} required that a ``null'' message with a risk-score value of 0 is sent. Sending such ineffective messages incurs additional communication overhead. The second difference is that only the \emph{most recent} contact time is used to determine if a message should be propagated to a contact. Contact times determine what messages are relevant. Given two contact times $t_1, t_2$ such that $t_1 \leq t_2$, then any risk score with time $t \leq t_1 + \pTimeBuffer$ also satisfies $t \leq t_2 + \pTimeBuffer$. Thus, storing multiple contact times is unnecessary.
+%As with the \cSendCurrentOrCached[] operation, a risk score message must be alive and relatively recent for it to be propagated. As in previous work \cite{Ayday2021}, factor marginalization is achieved by not propagating the received message to the actor who sent it. The logic of \cPropagate[] differs, however, in two ways. First, it is possible that no message is not propagated to a contact. The intent of sending a risk score message is to update the exposure score of other actors. However, previous work \cite{Ayday2021} required that a ``null'' message with a risk score value of 0 is sent. Sending such ineffective messages incurs additional communication overhead. The second difference is that only the \emph{most recent} contact time is used to determine if a message should be propagated to a contact. Contact times determine what messages are relevant. Given two contact times $t_1, t_2$ such that $t_1 \leq t_2$, then any risk score with time $t \leq t_1 + \pTimeBuffer$ also satisfies $t \leq t_2 + \pTimeBuffer$. Thus, storing multiple contact times is unnecessary.
 %
-\begin{function}{\nPropagate}[\vActor, \vScore]
-    \ForEach{$\vContact \in \aActorContacts$}
-    	\State $\cSend[\vActor, \vContact, \vScore]$
-    \EndFor
-\end{function}
-
-\subsubsection{Risk Score Caching}\label{sec:caching}
+%\subsubsection{Risk Score Caching}\label{sec:caching}
 %
 %For two actors to communicate, each must have the other actor in their contacts (see \Cref{sec:behavior}). Recall that an actor must retrieve these contacts from the user's PDS, which subsequently requires synchronization with the user's mobile device (see \Cref{fig:actor-dataflow}). While the user's device can locally store contacts from proximal devices and symptoms of the user, an internet connection is needed to synchronize with the PDS and thus the user's actor. Therefore, it is not only possible but a reality that the user's mobile device and actor will not always be synchronized.
 %
-%In the best case, this ``lag'' may only be a few seconds; in the worst case, the user's device is offline for several days. If $\delta_i$ ($\delta_j$) is the delay between when the device of user $i$ (ref. $j$) records a contact with user $j$ (ref. $i$) and when its actor receives the corresponding contact message, then the delay between when actors $\vActor_i$ and $\vActor_j$ can communicate bidirectionally and when the contact actually occurred is $\delta_{ij} = \max(\delta_i, \delta_j)$. Such dissonance between the ``true'' state of the world (i.e., when users actually came in contact) and that known to the network of actors could impact the accuracy of risk propagation, which assumes such delays are nonexistent. To address this issue, each actor maintains a cache of received risk-score messages such that it can still send a message that reflects its previous state to a contact that was significantly delayed.
+%In the best case, this ``lag'' may only be a few seconds; in the worst case, the user's device is offline for several days. If $\delta_i$ ($\delta_j$) is the delay between when the device of user $i$ (ref. $j$) records a contact with user $j$ (ref. $i$) and when its actor receives the corresponding contact message, then the delay between when actors $\vActor_i$ and $\vActor_j$ can communicate bidirectionally and when the contact actually occurred is $\delta_{ij} = \max(\delta_i, \delta_j)$. Such dissonance between the ``true'' state of the world (i.e., when users actually came in contact) and that known to the network of actors could impact the accuracy of risk propagation, which assumes such delays are nonexistent. To address this issue, each actor maintains a cache of received risk score messages such that it can still send a message that reflects its previous state to a contact that was significantly delayed.
 %
 %An \emph{interval cache} $\vCache$ is a dictionary that maps a finite time interval (key) to a data element (value). In a typical cache, the \emph{time-to-live} (TTL) of an element is a fixed duration after which the element is removed or \emph{evicted}. In an interval cache, however, the TTL of an element is determined by its associated interval and the current time. That is, an interval cache is like a series of sliding windows, where each window corresponds to an interval that can hold a single element. Thus, the TTL of an element is the duration between the start of its interval and the start of the earliest interval in the cache.
 %
@@ -482,10 +480,10 @@ Similarly, the cardinality of the source set for node $j$ is the number of nonze
 For risk propagation, let $\vPathSet$ is the set of edges along the shortest path from $u$ to $v$ such that the actors are enumerated $1, \ldots, \card{\vPathSet}$. Then message reachability is defined as
 %
 \begin{equation}\label{eq:reach}
-    \vMsgReach(u, v) = \sum_{(i, j) \in \vPathSet} [\pTransRate^{i} \vScore_u > \pSendCoeff \pTransRate \vScore_i] \cdot [t_u < t_{ij} + \pTimeBuffer]
+    \vMsgReach(u, v) = \sum_{(i, j) \in \vPathSet} [\pTransmissionRate^{i} \vScore_u > \pSendCoefficient \pTransmissionRate \vScore_{ij}] \cdot [t_u < t_{ij} + \pTimeBuffer]
 \end{equation}
 %
-are the value and contact-time constraints in the \cShouldReceive[] operation (see \Cref{sec:behavior}), where $(\vScore_i, t_i)$ is the current exposure score for actor $i$ and $t_{ij}$ is the most recent contact time between actors $i$ and $j$.
+are the value and contact-time constraints in the \cShouldContactReceive[] operation (see \Cref{sec:behavior}), where $(\vScore_i, t_i)$ is the current exposure score for actor $i$ and $t_{ij}$ is the most recent contact time between actors $i$ and $j$.
 
 The value of \eqref{eq:reach} can be found by associating with each symptom score a unique identifier. If each actor maintains a log of the risk scores it receives, then the set of actors that receive the symptom score or a propagated risk score thereof can be identified. This set of actors defines the induced subgraph on which to compute \eqref{eq:reach} using a shortest-path algorithm \cite{Johnson1977}. 
 
@@ -494,7 +492,7 @@ Regarding efficiency, \labelcref{eq:vreach,eq:source-size,eq:influence-size} pro
 By relaxing the constraint \eqref{eq:contact-const}, it is possible to estimate \eqref{eq:reach} with \eqref{eq:value-const}. The \define{estimated message reachability} of node $u$ to node $v$, denoted $\vEstMsgReach(u, v)$, is defined as follows. Based on \eqref{eq:value-const},
 %
 \begin{equation*}
-    \pTransRate^{\vEstMsgReach(u, v)} \cdot \vScoreValue_u \leq \pSendCoeff \cdot \vScoreValue_v,
+    \pTransmissionRate^{\vEstMsgReach(u, v)} \cdot \vScoreValue_u \leq \pSendCoefficient \cdot \vScoreValue_v,
 \end{equation*}
 %
 where the left-hand side is the value of the propagated symptom score for actor $u$ when $\vEstMsgReach(u, v) = 1$, and the right-hand side is the value required by some message-reachable actor $v$ to propagate the message received by actor $u$ or some intermediate actor. Solving for $\vEstMsgReach(u, v)$,
@@ -510,11 +508,11 @@ where
     \begin{cases} 
         0 & \text{if $\vScore_u = 0$} \\
         \card{\vPathSet} & \text{if $\vScore_v = 0$} \\
-        \log_{\pTransRate}\pSendCoeff + \log_{\pTransRate}\vScoreValue_v - \log_{\pTransRate}\vScoreValue_u & \text{otherwise.}
+        \log_{\pTransmissionRate}\pSendCoefficient + \log_{\pTransmissionRate}\vScoreValue_v - \log_{\pTransmissionRate}\vScoreValue_u & \text{otherwise.}
     \end{cases}
 \end{equation*}
 %
-Equation \eqref{eq:estreach} indicates that a lower send coefficient $\pSendCoeff$ will generally result in higher message reachability, at the cost of sending possibly ineffective messages (i.e., risk scores that do not update the exposure score of another actor). Equation \eqref{eq:estreach} also quantifies the effect of the transmission rate $\pTransRate$. Unlike the send coefficient, however, the transmission rate is intended to be derived from epidemiology to quantify disease infectivity and should not be optimized to improve performance.
+Equation \eqref{eq:estreach} indicates that a lower send coefficient $\pSendCoefficient$ will generally result in higher message reachability, at the cost of sending possibly ineffective messages (i.e., risk scores that do not update the exposure score of another actor). Equation \eqref{eq:estreach} also quantifies the effect of the transmission rate $\pTransmissionRate$. Unlike the send coefficient, however, the transmission rate is intended to be derived from epidemiology to quantify disease infectivity and should not be optimized to improve performance.
 
 Given the multivariate nature of message reachability, it is helpful to visualize how it with various combinations of parameter values. \Cref{fig:reach} includes several line plots of estimated message reachability $\vEstMsgReach(u, v)$ with respect to the initial risk score magnitude of actor $u$.
 
@@ -548,7 +546,7 @@ Given the multivariate nature of message reachability, it is helpful to visualiz
   ] {log2(y / x) / log2(0.8)};
 \end{semilogyaxis}
 \end{tikzpicture}
-\caption[Estimated risk propagation message reachability]{Estimated risk propagation message reachability $\vEstMsgReach(u)$ for different values of the transmission rate $\pTransRate$, the send tolerance $\pSendCoeff$, and the initial magnitude $\vScoreValue(v) = \vInitScoreValue(v) / \pTransRate$ of the destination user $v$ with respect to the initial magnitude $\vScore_u = \vInitScoreValue(u) / \pTransRate$ of the source user $u$.}
+\caption[Estimated risk propagation message reachability]{Estimated risk propagation message reachability $\vEstMsgReach(u)$ for different values of the transmission rate $\pTransmissionRate$, the send tolerance $\pSendCoefficient$, and the initial magnitude $\vScoreValue(v) = \vInitScoreValue(v) / \pTransmissionRate$ of the destination user $v$ with respect to the initial magnitude $\vScore_u = \vInitScoreValue(u) / \pTransmissionRate$ of the source user $u$.}
 \label{fig:reach}
 \end{figure}
 

@@ -3,6 +3,7 @@
 % GENERAL
 
 \usepackage[utf8]{inputenc}
+
 \usepackage[english]{babel}
 
 \usepackage[margin=1.5in]{geometry}
@@ -23,17 +24,34 @@
 % Math symbols and fonts
 \usepackage{amsmath, amssymb, amsfonts}
 
-% Convenience commands for proper bracket formatting
-\usepackage{braket}
-
 % Customize itemize and enumerate environments 
 \usepackage{enumitem}
 
-% Set section depth to paragraph level
+% SI unit formatting
+\usepackage{siunitx}
+
+% Use to define key terms in-text
+\newcommand{\define}[1]{\emph{#1}}
+
+
+% TABLE OF CONTENTS
+
+\usepackage[nottoc]{tocbibind}
+
+% Include subsubsections in the table of contents
+\setcounter{tocdepth}{3}
+
+% Number sections down to subsubsections
 \setcounter{secnumdepth}{4}
 
+% Add appendices to the table of contents
+\usepackage[titletoc]{appendix}
+
+
+% CROSS REFERENCING
+
 % Citations and cross-referencing
-\usepackage[hidelinks, hypertexnames=false]{hyperref}
+\usepackage[hidelinks]{hyperref}
 
  % Bibliography citations
 \usepackage[sort&compress, round]{natbib}
@@ -46,25 +64,22 @@
 
 % Unified cross-referencing for figures, tables, and equations
 \usepackage[nameinlink, noabbrev]{cleveref}
-\newcommand\crefconjunction{\textendash}
+\newcommand{\crefconjunction}{\textendash}
 \crefformat{equation}{(#2#1#3)}
 
-% SI unit formatting
-\usepackage{siunitx}
-
-% Specifies how to format key terms in text
-\newcommand{\define}[1]{\emph{#1}}
-
-% Add appendices to the table of contents
-\usepackage[titletoc]{appendix}
 
 % TABLES AND FIGURES
+
+% TODO Remove?
 \usepackage{booktabs}
 
+% TODO Remove?
 \usepackage{tabularx}
 
+% TODO Remove?
 \usepackage{multirow}
 
+% TODO Remove?
 \newcommand{\rowgroup}[1]{\hspace{-1em}#1}
 
 \usepackage{subcaption}
@@ -143,52 +158,55 @@
 \newcommand{\false}{\textsc{false}}
 
 % Usage:
-%	\begin{function}[position]{title}[args]
-%	...
-%	\end{function}
+%   \begin{function}[position]{title}[args]
+%     ...
+%   \end{function}
 \newcommand{\Title}[2]{\item[$\Call{#1}{#2}$]}
 \NewDocumentEnvironment{function}{O{ht!} m O{}}{
-	\begin{algorithm}[#1]
-   	\label{#1}
-	\capstart
+  \begin{algorithm}[#1]
+    \label{#1}
+    \capstart
     \captionlistentry{\Call{#2}{}}
-   	\begin{algorithmic}[1]
-   	\Title{#2}{#3}
+    \begin{algorithmic}[1]
+      \Title{#2}{#3}
 }{
-	\end{algorithmic}
-	\end{algorithm}
+    \end{algorithmic}
+  \end{algorithm}
 }
 
 % PSEUDOCODE and MATH SYMBOLS
 
+% Sets
 \newcommand{\vSet}[1]{#1}
+
+\newcommand{\vContacts}{\vSet{C}}
+\newcommand{\vVertices}{\vSet{V}}
+\newcommand{\vEdges}{\vSet{E}}
+\newcommand{\vFactors}{\vSet{F}}
+\newcommand{\vNeighbors}{\vSet{N}}
+\newcommand{\vSomeSet}{\vSet{X}}
+\newcommand{\vVariables}{\vSet{X}}
+\newcommand{\vScores}{\vSet{S}}
+\newcommand{\vSourceSet}{\vSet{S}}
+\newcommand{\vInfluenceSet}{\vSet{I}}
 
 % Variables
 \newcommand{\vActor}{A}
 \newcommand{\vCacheItem}{x}
 \newcommand{\vCache}{C}
-\newcommand{\vContacts}{\vSet{C}}
 \newcommand{\vContact}{c}
-\newcommand{\vEdges}{\vSet{E}}
-\newcommand{\vFactors}{\vSet{F}}
 \newcommand{\vGraph}{G}
-\newcommand{\vInfluenceSet}{I}
+\newcommand{\vGraphVertex}{v}
 \newcommand{\vMsg}{m}
-\newcommand{\vNeighbors}{\vSet{N}}
 \newcommand{\vNewScore}{s'}
 \newcommand{\vNew}[1]{#1_{\textit{new}}}
-\newcommand{\vOldest}{\var{oldest}}
 \newcommand{\vOld}[1]{#1_{\textit{old}}}
 \newcommand{\vPathSet}{P}
 \newcommand{\vReachRatio}{f}
 \newcommand{\vRefTime}{\tau}
 \newcommand{\vScoreValue}{r}
-\newcommand{\vScores}{\vSet{S}}
 \newcommand{\vScore}{s}
 \newcommand{\vSomeElement}{x}
-\newcommand{\vSomeSet}{\vSet{X}}
-\newcommand{\vSourceSet}{S}
-\newcommand{\vVariables}{\vSet{V}}
 
 \newcommand{\vOldCacheItem}{\vOld{\vCacheItem}}
 \newcommand{\vNewCacheItem}{\vNew{\vCacheItem}}
@@ -200,7 +218,7 @@
 \newcommand{\vMsgReach}{\vMsg}
 \newcommand{\vMsgSourceSet}{\vSourceSet_\vMsg}
 \newcommand{\vPath}[2]{#1 \rightarrow #2}
-\NewDocumentCommand{\vVariable}{o}{\IfValueTF{#1}{v_{#1}}{v}}
+\NewDocumentCommand{\vVariable}{o}{\IfValueTF{#1}{x_{#1}}{v}}
 \NewDocumentCommand{\vFactor}{o}{\IfValueTF{#1}{f_{#1}}{f}}
 \newcommand{\vScoreMsg}[2]{\vMsg_{#1 \rightarrow #2}}
 \newcommand{\vVariableMsg}[3]{\mu_{#1#2}^{(#3)}}
@@ -209,32 +227,28 @@
 % Parameters
 \newcommand{\pDuration}{T}
 \newcommand{\pNumActors}{K}
-\newcommand{\pSendCoeff}{\gamma}
+\newcommand{\pSendCoefficient}{\gamma}
 \newcommand{\pTimeBuffer}{\beta}
 \newcommand{\pTimeout}{T}
-\newcommand{\pTransRate}{\alpha}
-\newcommand{\pTtl}{\pDuration}
+\newcommand{\pTransmissionRate}{\alpha}
+\newcommand{\pExpiry}{\pDuration}
 \newcommand{\pMinContactDuration}{\delta}
 
-\newcommand{\pContactTtl}{\pTtl_\vContact}
-\newcommand{\pScoreTtl}{\pTtl_\vScore}
+\newcommand{\pContactExpiry}{\pExpiry_\vContact}
+\newcommand{\pScoreExpiry}{\pExpiry_\vScore}
 
 % Attributes
 \algnewcommand{\attr}[2]{#1.\var{#2}}
 
+\newcommand{\aBuffered}[1]{\attr{#1}{buffered}}
 \newcommand{\aContacts}[1]{\attr{#1}{contacts}}
-\newcommand{\aContact}[1]{\attr{#1}{contact}}
-\newcommand{\aEnd}[1]{\attr{#1}{end}}
-\newcommand{\aExpiry}[1]{\attr{#1}{expiry}}
 \newcommand{\aKey}[1]{\attr{#1}{key}}
 \newcommand{\aName}[1]{\attr{#1}{name}}
-\newcommand{\aRefresh}[1]{\attr{#1}{refresh}}
 \newcommand{\aScores}[1]{\attr{#1}{scores}}
 \newcommand{\aScore}[1]{\attr{#1}{score}}
 \newcommand{\aSender}[1]{\attr{#1}{sender}}
-\newcommand{\aStart}[1]{\attr{#1}{start}}
 \newcommand{\aThreshold}[1]{\attr{#1}{threshold}}
-\newcommand{\aTime}[1]{\attr{#1}{time}}
+\newcommand{\aTime}[1]{\attr{#1}{t}}
 \newcommand{\aValue}[1]{\attr{#1}{value}}
 
 \newcommand{\aActorContacts}{\aContacts{\vActor}}
@@ -242,12 +256,13 @@
 \newcommand{\aActorScoreValue}{\aValue{\aScore{\vActor}}}
 \newcommand{\aActorScores}{\aScores{\vActor}}
 \newcommand{\aActorScore}{\aScore{\vActor}}
+\newcommand{\aContactBuffered}{\aBuffered{\vContact}}
 \newcommand{\aContactKey}{\aKey{\vContact}}
 \newcommand{\aContactName}{\aName{\vContact}}
 \newcommand{\aContactThreshold}{\aThreshold{\vContact}}
+\newcommand{\aContactThresholdValue}{\aValue{\aContactThreshold}}
 \newcommand{\aContactTime}{\aTime{\vContact}}
 \newcommand{\aNewScoreValue}{\aValue{\vNewScore}}
-\newcommand{\aScoreExpiry}{\aExpiry{\vScore}}
 \newcommand{\aScoreKey}{\aKey{\vScore}}
 \newcommand{\aScoreSender}{\aSender{\vScore}}
 \newcommand{\aScoreTime}{\aTime{\vScore}}
@@ -258,27 +273,30 @@
 \newcommand{\nCacheInsert}{Cache-Insert}
 \newcommand{\nCacheKey}{Cache-Key}
 \newcommand{\nCacheMax}{Cache-Max}
+\newcommand{\nCacheMaxOlderThan}{Cache-Max-Older-Than}
 \newcommand{\nCacheRefresh}{Cache-Refresh}
 \newcommand{\nContactTtl}{Contact-Ttl}
 \newcommand{\nCreate}{Create}
+\newcommand{\nCreateFactorGraph}{Create-Factor-Graph}
 \newcommand{\nNullRiskScore}{Null-Risk-Score}
 \newcommand{\nDelete}{Delete}
 \newcommand{\nGenerateName}{Generate-Name}
 \newcommand{\nHandleContactMessage}{Handle-Contact-Message}
 \newcommand{\nHandleScoreMessage}{Handle-Risk-Score-Message}
-\newcommand{\nInitializeActor}{Initialize-Actor}
+\newcommand{\nCreateActor}{Create-Actor}
 \newcommand{\nInsert}{Insert}
 \newcommand{\nMaximum}{Maximum}
 \newcommand{\nMerge}{Merge}
 \newcommand{\nMinimum}{Minimum}
 \newcommand{\nPredicate}{Predicate}
-\newcommand{\nPropagate}{Propagate}
-\newcommand{\nRefreshThreshold}{Refresh-Threshold}
-\newcommand{\nScoreTtl}{Score-Ttl}
+\newcommand{\nRefreshSendThreshold}{Refresh-Send-Threshold}
+\newcommand{\nRiskScoreTtl}{Risk-Score-Ttl}
 \newcommand{\nSearch}{Search}
 \newcommand{\nSend}{Send}
-\newcommand{\nSetThreshold}{Set-Threshold}
-\newcommand{\nShouldReceive}{Should-Receive}
+\newcommand{\nApplyRiskScore}{Apply-Risk-Score}
+\newcommand{\nFlush}{Flush}
+\newcommand{\nSetSendThreshold}{Set-Send-Threshold}
+\newcommand{\nShouldContactReceive}{Should-Receive}
 \newcommand{\nRiskPropagation}{Risk-Propagation}
 \newcommand{\nUpdateExposureScore}{Update-Exposure-Score}
 
@@ -288,9 +306,11 @@
 \newcommand{\cCacheInsert}[1][]{\Call{\nCacheInsert}{#1}}
 \newcommand{\cCacheKey}[1][]{\Call{\nCacheKey}{#1}}
 \newcommand{\cCacheMax}[1][]{\Call{\nCacheMax}{#1}}
+\newcommand{\cCacheMaxOlderThan}[1][]{\Call{\nCacheMaxOlderThan}{#1}}
 \newcommand{\cCacheRefresh}[1][]{\Call{\nCacheRefresh}{#1}}
 \newcommand{\cContactTtl}[1][]{\Call{\nContactTtl}{#1}}
-\newcommand{\cCreateActor}[1][]{\Call{\nInitializeActor}{#1}}
+\newcommand{\cCreateActor}[1][]{\Call{\nCreateActor}{#1}}
+\newcommand{\cCreateFactorGraph}[1][]{\Call{\nCreateFactorGraph}{#1}}
 \newcommand{\cCreate}[1][]{\Call{\nCreate}{#1}}
 \newcommand{\cNullRiskScore}[1][]{\Call{\nNullRiskScore}{#1}}
 \newcommand{\cDelete}[1][]{\Call{\nDelete}{#1}}
@@ -302,19 +322,25 @@
 \newcommand{\cMerge}[1][]{\Call{\nMerge}{#1}}
 \newcommand{\cMinimum}[1][]{\Call{\nMinimum}{#1}}
 \newcommand{\cPredicate}[1][]{\Call{\nPredicate}{#1}}
-\newcommand{\cPropagate}[1][]{\Call{\nPropagate}{#1}}
-\newcommand{\cRefreshThreshold}[1][]{\Call{\nRefreshThreshold}{#1}}
-\newcommand{\cScoreTtl}[1][]{\Call{\nScoreTtl}{#1}}
+\newcommand{\cRefreshSendThreshold}[1][]{\Call{\nRefreshSendThreshold}{#1}}
+\newcommand{\cRiskScoreTtl}[1][]{\Call{\nRiskScoreTtl}{#1}}
 \newcommand{\cSearch}[1][]{\Call{\nSearch}{#1}}
 \newcommand{\cSend}[1][]{\Call{\nSend}{#1}}
-\newcommand{\cSetThreshold}[1][]{\Call{\nSetThreshold}{#1}}
-\newcommand{\cShouldReceive}[1][]{\Call{\nShouldReceive}{#1}}
+\newcommand{\cApplyRiskScore}[1][]{\Call{\nApplyRiskScore}{#1}}
+\newcommand{\cFlush}[1][]{\Call{\nFlush}{#1}}
+\newcommand{\cSetSendThreshold}[1][]{\Call{\nSetSendThreshold}{#1}}
+\newcommand{\cShouldContactReceive}[1][]{\Call{\nShouldContactReceive}{#1}}
 \newcommand{\cRiskPropagation}[1][]{\Call{\nRiskPropagation}{#1}}
 \newcommand{\cUpdateExposureScore}[1][]{\Call{\nUpdateExposureScore}{#1}}
 
 % Standard number sets
 \newcommand{\reals}{\mathbb{R}} 
 \newcommand{\naturals}{\mathbb{N}}
+
+% Probability theory
+\NewDocumentCommand{\pr}{mo}{\IfValueTF{#2}{p_{#2}(#1)}{p(#1)}}
+\newcommand{\eventSpace}{\Omega}
+\newcommand{\event}{\omega}
 
 % Math functions
 \DeclareMathOperator{\aeMsgReachRatio}{mrr}
@@ -324,11 +350,11 @@
 \newcommand{\card}[1]{\left\vert #1 \right\vert}
 \newcommand{\ceil}[1]{\left\lceil #1 \right\rceil}
 \newcommand{\floor}[1]{\left\lfloor #1 \right\rfloor}
+
+% Convenience commands for proper bracket formatting
+\usepackage{braket}
 \newcommand{\setBuilder}[2]{\set{ #1 | #2}}
 \newcommand{\SetBuilder}[2]{\Set{ #1 | #2}}
-\newcommand{\ltwodots}{\mathinner {\ldotp \ldotp}}
 
-% TABLE OF CONTENTS
-\usepackage[nottoc]{tocbibind}
-\renewcommand{\listalgorithmname}{List of Functions}
-\setcounter{tocdepth}{2}
+% Ref: https://tex.stackexchange.com/questions/304662/typesetting-an-integer-interval
+\newcommand{\twodots}{\mathinner {\ldotp \ldotp}}

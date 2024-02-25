@@ -3,7 +3,7 @@
 \newcommand{\vKey}{k}
 \newcommand{\aSomeElementKey}{\aKey{\vSomeElement}}
 
-Let a \define{dynamic set} $\vSomeSet$ be a mutable collection of distinct elements. Let $\vSomeElement$ be a pointer to an element in $\vSomeSet$ such that $\aSomeElementKey$ uniquely identifies the element in $\vSomeSet$ \citep{Cormen2022}. Let a \define{dictionary} be a dynamic set that supports insertion, deletion, and membership querying \citep{Cormen2022}:
+Let a \define{dynamic set} $\vSomeSet$ be a mutable collection of distinct elements. Let $\vSomeElement$ be a pointer to an element in $\vSomeSet$ such that $\aSomeElementKey$ uniquely identifies the element in $\vSomeSet$. Let a \define{dictionary} be a dynamic set that supports insertion, deletion, and membership querying \citep{Cormen2022}.
 %
 \begin{itemize}
     \item $\cSearch[\vSomeSet, \vKey]$ returns a pointer $\vSomeElement$ to an element in the set $\vSomeSet$ such that $\aSomeElementKey \equals \vKey$; or $\nil$, if no such element exists in $\vSomeSet$.
