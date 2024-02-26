@@ -38,11 +38,11 @@
 
 \usepackage[nottoc]{tocbibind}
 
-% Include subsubsections in the table of contents
-\setcounter{tocdepth}{3}
+% Include subsections in the table of contents
+\setcounter{tocdepth}{2}
 
-% Number sections down to subsubsections
-\setcounter{secnumdepth}{4}
+% Number sections down to subsections
+\setcounter{secnumdepth}{3}
 
 % Add appendices to the table of contents
 \usepackage[titletoc]{appendix}
@@ -189,40 +189,36 @@
 \newcommand{\vScores}{\vSet{S}}
 \newcommand{\vSourceSet}{\vSet{S}}
 \newcommand{\vInfluenceSet}{\vSet{I}}
+\newcommand{\vFactorMessages}{\varLambda}
 
 % Variables
-\newcommand{\vActor}{A}
+\newcommand{\vActor}{a}
 \newcommand{\vCacheItem}{x}
 \newcommand{\vCache}{C}
 \newcommand{\vContact}{c}
 \newcommand{\vGraph}{G}
-\newcommand{\vGraphVertex}{v}
-\newcommand{\vMsg}{m}
+\newcommand{\vVertex}{v}
+\newcommand{\vMessage}{m}
 \newcommand{\vNewScore}{s'}
 \newcommand{\vNew}[1]{#1_{\textit{new}}}
 \newcommand{\vOld}[1]{#1_{\textit{old}}}
 \newcommand{\vPathSet}{P}
 \newcommand{\vReachRatio}{f}
 \newcommand{\vRefTime}{\tau}
-\newcommand{\vScoreValue}{r}
 \newcommand{\vScore}{s}
 \newcommand{\vSomeElement}{x}
 
 \newcommand{\vOldCacheItem}{\vOld{\vCacheItem}}
 \newcommand{\vNewCacheItem}{\vNew{\vCacheItem}}
 
-\newcommand{\vEstMsgReach}{\hat{\vMsgReach}}
-\newcommand{\vInitScoreValue}{\vScoreValue_0}
-\newcommand{\vMsgInfluenceSet}{\vInfluenceSet_\vMsg}
-\newcommand{\vMsgReachRatio}{\vReachRatio_\vMsg}
-\newcommand{\vMsgReach}{\vMsg}
-\newcommand{\vMsgSourceSet}{\vSourceSet_\vMsg}
+\newcommand{\vEstMsgReach}{\hat{\vMessageReachability}}
+\newcommand{\vInitScore}{\vScore^0}
+\newcommand{\vMessageReachability}{\vMessage}
 \newcommand{\vPath}[2]{#1 \rightarrow #2}
-\NewDocumentCommand{\vVariable}{o}{\IfValueTF{#1}{x_{#1}}{v}}
+\NewDocumentCommand{\vVariable}{o}{\IfValueTF{#1}{x_{#1}}{x}}
 \NewDocumentCommand{\vFactor}{o}{\IfValueTF{#1}{f_{#1}}{f}}
-\newcommand{\vScoreMsg}[2]{\vMsg_{#1 \rightarrow #2}}
-\newcommand{\vVariableMsg}[3]{\mu_{#1#2}^{(#3)}}
-\newcommand{\vFactorMsg}[3]{\lambda_{#1#2}^{(#3)}}
+\newcommand{\vVariableMessage}[3]{\mu_{#1#2}^{(#3)}}
+\newcommand{\vFactorMessage}[3]{\lambda_{#1#2}^{(#3)}}
 
 % Parameters
 \newcommand{\pDuration}{T}
@@ -245,7 +241,7 @@
 \newcommand{\aKey}[1]{\attr{#1}{key}}
 \newcommand{\aName}[1]{\attr{#1}{name}}
 \newcommand{\aScores}[1]{\attr{#1}{scores}}
-\newcommand{\aScore}[1]{\attr{#1}{score}}
+\newcommand{\aExposure}[1]{\attr{#1}{exposure}}
 \newcommand{\aSender}[1]{\attr{#1}{sender}}
 \newcommand{\aThreshold}[1]{\attr{#1}{threshold}}
 \newcommand{\aTime}[1]{\attr{#1}{t}}
@@ -253,9 +249,9 @@
 
 \newcommand{\aActorContacts}{\aContacts{\vActor}}
 \newcommand{\aActorName}{\aName{\vActor}}
-\newcommand{\aActorScoreValue}{\aValue{\aScore{\vActor}}}
+\newcommand{\aActorExposure}{\aExposure{\vActor}}
+\newcommand{\aActorExposureValue}{\aValue{\aExposure{\vActor}}}
 \newcommand{\aActorScores}{\aScores{\vActor}}
-\newcommand{\aActorScore}{\aScore{\vActor}}
 \newcommand{\aContactBuffered}{\aBuffered{\vContact}}
 \newcommand{\aContactKey}{\aKey{\vContact}}
 \newcommand{\aContactName}{\aName{\vContact}}
@@ -281,8 +277,9 @@
 \newcommand{\nNullRiskScore}{Null-Risk-Score}
 \newcommand{\nDelete}{Delete}
 \newcommand{\nGenerateName}{Generate-Name}
-\newcommand{\nHandleContactMessage}{Handle-Contact-Message}
-\newcommand{\nHandleScoreMessage}{Handle-Risk-Score-Message}
+\newcommand{\nHandleContact}{Handle-Contact}
+\newcommand{\nHandleFlushTimeout}{Handle-Flush-Timeout}
+\newcommand{\nHandleRiskScore}{Handle-Risk-Score}
 \newcommand{\nCreateActor}{Create-Actor}
 \newcommand{\nInsert}{Insert}
 \newcommand{\nMaximum}{Maximum}
@@ -294,9 +291,8 @@
 \newcommand{\nSearch}{Search}
 \newcommand{\nSend}{Send}
 \newcommand{\nApplyRiskScore}{Apply-Risk-Score}
-\newcommand{\nFlush}{Flush}
 \newcommand{\nSetSendThreshold}{Set-Send-Threshold}
-\newcommand{\nShouldContactReceive}{Should-Receive}
+\newcommand{\nShouldContactReceive}{Should-Contact-Receive}
 \newcommand{\nRiskPropagation}{Risk-Propagation}
 \newcommand{\nUpdateExposureScore}{Update-Exposure-Score}
 
@@ -315,8 +311,9 @@
 \newcommand{\cNullRiskScore}[1][]{\Call{\nNullRiskScore}{#1}}
 \newcommand{\cDelete}[1][]{\Call{\nDelete}{#1}}
 \newcommand{\cGenerateName}[1][]{\Call{\nGenerateName}{#1}}
-\newcommand{\cHandleContactMessage}[1][]{\Call{\nHandleContactMessage}{#1}}
-\newcommand{\cHandleScoreMessage}[1][]{\Call{\nHandleScoreMessage}{#1}}
+\newcommand{\cHandleContact}[1][]{\Call{\nHandleContact}{#1}}
+\newcommand{\cHandleFlushTimeout}[1][]{\Call{\nHandleFlushTimeout}{#1}}
+\newcommand{\cHandleRiskScore}[1][]{\Call{\nHandleRiskScore}{#1}}
 \newcommand{\cInsert}[1][]{\Call{\nInsert}{#1}}
 \newcommand{\cMaximum}[1][]{\Call{\nMaximum}{#1}}
 \newcommand{\cMerge}[1][]{\Call{\nMerge}{#1}}
@@ -327,7 +324,6 @@
 \newcommand{\cSearch}[1][]{\Call{\nSearch}{#1}}
 \newcommand{\cSend}[1][]{\Call{\nSend}{#1}}
 \newcommand{\cApplyRiskScore}[1][]{\Call{\nApplyRiskScore}{#1}}
-\newcommand{\cFlush}[1][]{\Call{\nFlush}{#1}}
 \newcommand{\cSetSendThreshold}[1][]{\Call{\nSetSendThreshold}{#1}}
 \newcommand{\cShouldContactReceive}[1][]{\Call{\nShouldContactReceive}{#1}}
 \newcommand{\cRiskPropagation}[1][]{\Call{\nRiskPropagation}{#1}}
