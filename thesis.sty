@@ -176,21 +176,6 @@
 
 % PSEUDOCODE and MATH SYMBOLS
 
-% Sets
-\newcommand{\vSet}[1]{#1}
-
-\newcommand{\vContacts}{\vSet{C}}
-\newcommand{\vVertices}{\vSet{V}}
-\newcommand{\vEdges}{\vSet{E}}
-\newcommand{\vFactors}{\vSet{F}}
-\newcommand{\vNeighbors}{\vSet{N}}
-\newcommand{\vSomeSet}{\vSet{X}}
-\newcommand{\vVariables}{\vSet{X}}
-\newcommand{\vScores}{\vSet{S}}
-\newcommand{\vSourceSet}{\vSet{S}}
-\newcommand{\vInfluenceSet}{\vSet{I}}
-\newcommand{\vFactorMessages}{\varLambda}
-
 % Variables
 \newcommand{\vActor}{a}
 \newcommand{\vCacheItem}{x}
@@ -207,6 +192,7 @@
 \newcommand{\vRefTime}{\tau}
 \newcommand{\vScore}{s}
 \newcommand{\vSomeElement}{x}
+\newcommand{\vAlphabet}{\Sigma}
 
 \newcommand{\vOldCacheItem}{\vOld{\vCacheItem}}
 \newcommand{\vNewCacheItem}{\vNew{\vCacheItem}}
@@ -219,6 +205,22 @@
 \NewDocumentCommand{\vFactor}{o}{\IfValueTF{#1}{f_{#1}}{f}}
 \newcommand{\vVariableMessage}[3]{\mu_{#1#2}^{(#3)}}
 \newcommand{\vFactorMessage}[3]{\lambda_{#1#2}^{(#3)}}
+
+% Sets
+\newcommand{\vSet}[1]{#1}
+
+\newcommand{\vContacts}{\vSet{C}}
+\newcommand{\vVertices}{\vSet{V}}
+\newcommand{\vEdges}{\vSet{E}}
+\newcommand{\vFactors}{\vSet{F}}
+\newcommand{\vNeighbors}{\vSet{N}}
+\newcommand{\vSomeSet}{\vSet{X}}
+\newcommand{\vVariables}{\vSet{X}}
+\newcommand{\vScores}{\vSet{S}}
+\newcommand{\vSourceSet}{\vSet{S}}
+\newcommand{\vInfluenceSet}{\vSet{I}}
+\newcommand{\vFactorMessages}{\varLambda}
+\newcommand{\vFiniteStrings}{\vAlphabet^*}
 
 % Parameters
 \newcommand{\pDuration}{T}
@@ -270,7 +272,6 @@
 \newcommand{\nCacheKey}{Cache-Key}
 \newcommand{\nCacheMax}{Cache-Max}
 \newcommand{\nCacheMaxOlderThan}{Cache-Max-Older-Than}
-\newcommand{\nCacheRefresh}{Cache-Refresh}
 \newcommand{\nContactTtl}{Contact-Ttl}
 \newcommand{\nCreate}{Create}
 \newcommand{\nCreateFactorGraph}{Create-Factor-Graph}
@@ -292,7 +293,6 @@
 \newcommand{\nSend}{Send}
 \newcommand{\nApplyRiskScore}{Apply-Risk-Score}
 \newcommand{\nSetSendThreshold}{Set-Send-Threshold}
-\newcommand{\nShouldContactReceive}{Should-Contact-Receive}
 \newcommand{\nRiskPropagation}{Risk-Propagation}
 \newcommand{\nUpdateExposureScore}{Update-Exposure-Score}
 
@@ -303,7 +303,6 @@
 \newcommand{\cCacheKey}[1][]{\Call{\nCacheKey}{#1}}
 \newcommand{\cCacheMax}[1][]{\Call{\nCacheMax}{#1}}
 \newcommand{\cCacheMaxOlderThan}[1][]{\Call{\nCacheMaxOlderThan}{#1}}
-\newcommand{\cCacheRefresh}[1][]{\Call{\nCacheRefresh}{#1}}
 \newcommand{\cContactTtl}[1][]{\Call{\nContactTtl}{#1}}
 \newcommand{\cCreateActor}[1][]{\Call{\nCreateActor}{#1}}
 \newcommand{\cCreateFactorGraph}[1][]{\Call{\nCreateFactorGraph}{#1}}
@@ -325,7 +324,6 @@
 \newcommand{\cSend}[1][]{\Call{\nSend}{#1}}
 \newcommand{\cApplyRiskScore}[1][]{\Call{\nApplyRiskScore}{#1}}
 \newcommand{\cSetSendThreshold}[1][]{\Call{\nSetSendThreshold}{#1}}
-\newcommand{\cShouldContactReceive}[1][]{\Call{\nShouldContactReceive}{#1}}
 \newcommand{\cRiskPropagation}[1][]{\Call{\nRiskPropagation}{#1}}
 \newcommand{\cUpdateExposureScore}[1][]{\Call{\nUpdateExposureScore}{#1}}
 
