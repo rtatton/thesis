@@ -252,7 +252,7 @@ The interface of an actor is defined by two types of messages: contact messages 
 
 \subsubsection{Contact Messages}
 
-The \cHandleContact{} operation defines how an actor processes a contact message. A contact is assumed to have finite relevance which is parametrized by the \emph{contact time-to-live} $\pContactExpiry > 0$. A contact whose contact time occurred no longer than $\pContactExpiry$ time ago is said to be \emph{alive}. Thus, an actor only adds a contact if it is alive.
+The \cHandleContact{} operation defines how an actor processes a contact message.
 %
 \begin{function}{\nHandleContact}[\vActor, \vContact]
   \If{$\cContactTtl[c] > 0$}
@@ -262,8 +262,6 @@ The \cHandleContact{} operation defines how an actor processes a contact message
     \State $\cApplyRiskScore[\vActor, \vContact, \vScore]$
   \EndIf
 \end{function}
-%
-Regardless of whether the contact is alive, the actor attempts to send a risk score message that is derived from its current exposure score or a cached risk score (see \Cref{sec:caching}):
 %
 \begin{function}{\nApplyRiskScore}[\vActor, \vContact, \vScore]
   \State $\cRefreshSendThreshold[\vActor, \vContact]$
@@ -298,8 +296,6 @@ Regardless of whether the contact is alive, the actor attempts to send a risk sc
   \EndFor
   % TODO Assume that cache refreshing occurs automatically
 \end{function}
-
-The \Call{Transmitted}{} operation is used to generate risk scores that are sent to other actors. It is assumed that contact only implies an incomplete transmission of risk between users. Thus, when sending a risk score to another actor, the value of the risk score is scaled by the \emph{transmission rate} $\pTransmissionRate \in (0, 1)$. Notice that the time of the risk score is left unchanged; the act of sending a risk score message is independent of when the risk score was first computed.
 
 %If line \ref{step:send-current} of \cSendCurrentOrCached[] evaluates to \false, then the actor attempts to retrieve the maximum cached risk score message based on the buffered contact time. If such a message exists and is alive, a risk score message is derived and sent to the contact. The \cSend[] operation follows the semantics of the \Call{Send-To}{} primitive \citep{Agha1985}.
 
