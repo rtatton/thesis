@@ -164,9 +164,9 @@ The only purpose of a factor node is to compute and relay messages between varia
 \label{fig:projected}
 \end{figure}
 
-To send a message to variable node $\vVariable[i]$, variable node $\vVariable[j]$ applies the computation associated with the factor node $\vFactor[ij]$. This modification differs from the distributed extension of risk propagation \citep{Ayday2021} in that we do not create duplicate factor vertices and messages in each user's PDS. By storing the contact time between users on the edge incident to their variable vertices, this modified topology is identical to the \emph{contact-sequence} representation of a \emph{contact network}, a kind of \emph{time-varying} or \emph{temporal network} in which a node represents a person and an edge indicates that two persons came in contact:
+To send a message to variable node $\vVariable[i]$, variable node $\vVariable[j]$ applies the computation associated with the factor node $\vFactor[ij]$. This modification differs from the distributed extension of risk propagation \citep{Ayday2021} in that we do not create duplicate factor vertices and messages in each user's PDS. By storing the contact time between users on the edge incident to their variable vertices, this modified topology is identical to the \define{contact-sequence} representation of a \define{contact network}, a kind of \define{temporal network} in which a node represents a person and an edge indicates that two persons came in contact:
 \begin{equation}
-  \setBuilder{(u, v, t)}{u, v \in \vVertices; u \neq v; t \in \naturals}, \label{eq:contact-seq}
+  \setBuilder{(u, v, t)}{u, v \in \vVertices; u \neq v; t \in \naturals}, \label{eq:contact-sequence}
 \end{equation}
 where a triple $(u, v, t)$ is called a \emph{contact} \citep{Holme2012}. Specific to risk propagation, $t$ is the time at which users $u$ and $v$ \emph{most recently} came in contact (see \Cref{sec:asynchronous}).
 
@@ -194,8 +194,8 @@ Each individual corresponds to an actor that participates in the message-passing
 The \cCreateActor{} operation initializes an actor \citep{Agha1985}. An actor $\vActor$ has the following attributes.
 \begin{itemize}
   \item $\aActorExposure$: the current exposure score of the individual that this actor represents. This attribute is either a symptom score, a risk score sent by another actor, or the null risk score (see \cNullRiskScore).
-  \item $\aActorContacts$: a \define{dictionary} (\Cref{ch:data-structures}) that maps an actor name to a contact. In the context of an actor, a \define{contact} is a \define{proxy} \citep{Gamma1995} of the actor that represents an individual with which the individual represented by this actor was physically proximal. That is, if \indexed{i}{individual} was physically proximal to \indexed{j}{individual}, then $\aContacts{\vActor_i}$ contains a name of \indexed{j}{actor} and the most recent time of contact. This attribute extends the concept of \emph{actor acquaintances} \citep{Hewitt1977a, Hewitt1977b, Agha1985} to be time-varying.
-  \item $\aActorScores$: a dictionary that maps a time interval to the maximum risk score (i.e., exposure score) received by this actor during that interval\footnote{This type of data structure is known as an \define{interval tree} and can be implemented by augmenting a red-black tree \citep[pp. 489--494]{Cormen2022}}. The null risk score is returned for queries in which the dictionary does not contain a key interval that intersects with the given query interval. \Cref{fig:exposure} depicts a hypothetical step function that $\aActorScores$ represents.
+  \item $\aActorContacts$: a \define{dictionary} (\Cref{ch:data-structures}) of contacts. In the context of an actor, a contact is a \define{proxy} \citep{Gamma1995} of the actor that represents an individual with which the individual represented by this actor was physically proximal. That is, if \indexed{i}{individual} interacted with \indexed{j}{individual}, then $\aContacts{\vActor_i}$ contains a contact $\vContact$ such that $\aContactKey = \aContactName$ is a name of \indexed{j}{actor} and $\aContactTime$ is the most recent time of contact. This attribute extends the concept of \emph{actor acquaintances} \citep{Hewitt1977a, Hewitt1977b, Agha1985} to be time-varying.
+  \item $\aActorScores$: a dictionary of exposure scores, such that $\aScoreKey$ for an exposure score $\vScore$ is the time interval during which $\aActorExposure = \vScore$. The null risk score is returned for queries in which the dictionary does not contain a risk score with a key that intersects with the given query interval. \Cref{fig:exposure} depicts a hypothetical step function that $\aActorScores$ represents.
 \end{itemize}
 
 \begin{figure}[htb]
@@ -218,7 +218,7 @@ The \cCreateActor{} operation initializes an actor \citep{Agha1985}. An actor $\
   };
 \end{axis}
 \end{tikzpicture}
-\caption[An actor's exposure score over time]{An actor's exposure score over time.}
+\caption[Historical exposure scores of an actor]{Historical exposure scores of an actor.}
 \label{fig:exposure}
 \end{figure}
 
@@ -248,9 +248,9 @@ The interface of an actor is primarily defined by two types of messages: contact
   \State \Return $\pContactExpiry - (\vRefTime - \aContactTime)$
 \end{function}
 
-The \cHandleRiskScore{} operation defines the actions an actor performs upon receiving a risk score. The key associated with the risk score is the time interval during which it is relevant. For the dictionary $\aActorScores$, \cMerge{} preserves the mapping invariant defined above such that risk scores are ordered first by value and then by time. The \cUpdateExposureScore{} operation describes how $\aActorExposure$ is updated. Additional context is needed before specifying \cApplyRiskScore{} in detail. For now, it is sufficient to know that the operation uses the risk score to update the state of a contact.
+The \cHandleRiskScore{} operation defines the actions an actor performs upon receiving a risk score. The key initially associated with the risk score is the time interval for which it is relevant. For the dictionary $\aActorScores$, \cMerge{} preserves the mapping invariant defined above such that risk scores are ordered first by value and then by time. Thus, $\aScoreKey \subseteq [\aScoreTime, \aScoreTime + \pScoreExpiry)$ for all exposure scores in $\aActorScores$. The \cUpdateExposureScore{} operation describes how $\aActorExposure$ is updated. Additional context is needed before specifying \cApplyRiskScore{} in detail. For now, it is sufficient to know that the operation uses the risk score to update the state of a contact.
 
-\begin{function}{\nHandleRiskScore}[\vActor, \vScore]
+\begin{function}[H]{\nHandleRiskScore}[\vActor, \vScore]
   \If{$\cRiskScoreTtl[\vScore] > 0$}
     \State $\aScoreKey \assign [\aScoreTime, \aScoreTime + \pScoreExpiry)$
     \State $\cMerge[\aActorScores, \vScore]$
@@ -261,7 +261,7 @@ The \cHandleRiskScore{} operation defines the actions an actor performs upon rec
   \EndIf
 \end{function}
 
-\begin{function}{\nUpdateExposureScore}[\vActor, \vScore]
+\begin{function}[H]{\nUpdateExposureScore}[\vActor, \vScore]
   \If{$\aActorExposureValue < \aScoreValue$}
     \State $\aActorExposure \assign \vScore$
   \ElsIf{$\cRiskScoreTtl[\aActorExposure] \leq 0$}
@@ -269,29 +269,40 @@ The \cHandleRiskScore{} operation defines the actions an actor performs upon rec
   \EndIf
 \end{function}
 
-% Message optimizations - sender-side aggregation with flush timeouts
-% Message passing termination - send coefficient and send threshold
+For the moment, assume that \cApplyRiskScore{} is equivalent to computing a factor message (see \Cref{sec:synchronous}). Line \ref{step:scale-by-transmission-rate} indicates that the risk score $\vScore$ is copied and updated.
 
-% Contact (actor context) - a remote proxy of an actor that represents an individual with which the individual represented by the present actor came into physical proximity; a message filter and aggregator; employs sender-side aggregation (a message-passing optimization) to reduce communication complexity.
+\begin{function}[H]{\nApplyRiskScore}[\vActor, \vContact, \vScore]
+  \If{$\aContactTime + \pTimeBuffer > \aScoreTime$}
+    \State $\aNewScoreValue \assign \pTransmissionRate \cdot \aScoreValue$ \label{step:scale-by-transmission-rate}
+    \State $\cSend[\aContactName, \vNewScore]$
+  \EndIf
+\end{function}
 
-%In previous work \citep{Ayday2021}, risk propagation assumes synchronous message passing, so the notion of an iteration or inter-iteration difference threshold can be used as stopping conditions. However, as a streaming algorithm that relies on asynchronous message passing, such stopping criteria are unnatural. Instead, the following heuristic is applied and empirically optimized to minimize accuracy loss and maximize efficiency. Let $\pSendCoefficient > 0$ be the \define{send coefficient} such that an actor only sends a risk score message if its value exceeds the actor's \emph{send threshold} $\aContactThreshold$ (line \ref{step:send-condition} in \cPropagate).
+The problem with \cApplyRiskScore{} is that it causes risk scores to propagate \textit{ad infinitum}. For asynchronous risk propagation to be scalable and cost-efficient, actors should only send risk scores that offer new information to other actors. Unlike \cRiskPropagation{}, a global convergence test is not available to terminate message passing, so it is necessary to define a local condition that determines if a risk score should be sent to another actor.
 
-Assuming a finite number of actors, any positive send coefficient $\pSendCoefficient$ guarantees that a risk score message will be propagated a finite number of times. Because the value of a risk score that is sent to another actor is scaled by the transmission rate $\pTransmissionRate$, its value exponentially decreases as it propagates away from the source actor with a rate constant $\log \pTransmissionRate$.
-
-%As with the \cSendCurrentOrCached[] operation, a risk score message must be alive and relatively recent for it to be propagated. As in previous work \citep{Ayday2021}, factor marginalization is achieved by not propagating the received message to the actor who sent it. The logic of \cPropagate[] differs, however, in two ways. First, it is possible that no message is not propagated to a contact. The intent of sending a risk score message is to update the exposure score of other actors. However, previous work \citep{Ayday2021} required that a ``null'' message with a risk score value of 0 is sent. Sending such ineffective messages incurs additional communication overhead.
-
-%If line \ref{step:send-current} of \cSendCurrentOrCached[] evaluates to \false, then the actor attempts to retrieve the maximum cached risk score message based on the buffered contact time. If such a message exists and is alive, a risk score message is derived and sent to the contact. The \cSend[] operation follows the semantics of the \Call{Send-To}{} primitive \citep{Agha1985}.
-%
+The objective of sending a risk score to another actor is to update its exposure score. Based on \cHandleRiskScore{}, it is only necessary to send an actor risk scores with values greater than its current exposure score. However, an actor is only privy to the risk scores that it sends. Thus, an actor can associate a \define{send threshold} for a contact that must be exceeded for a risk score to be sent to the target actor. To permit a trade-off between accuracy and efficiency of asynchronous risk propagation, let the \define{send coefficient} $\pSendCoefficient \in \reals$ be a scaling factor that is applied to a risk score upon setting the send threshold.
 
 \begin{function}{\nSetSendThreshold}[\vContact, \vScore]
   \State $\aNewScoreValue \assign \pSendCoefficient \cdot \aScoreValue$
   \State $\aContactThreshold \assign \vNewScore$
 \end{function}
 
+An updated definition of \cApplyRiskScore{} that incorporates this new aspect of message passing is provided below. Assuming a finite number of actors, a positive send coefficient guarantees that a risk score has finite propagation.
+
+\begin{function}{\nApplyRiskScore}[\vActor, \vContact, \vScore]
+  \If{$\aContactThresholdValue < \aScoreValue \AND \aContactTime + \pTimeBuffer > \aScoreTime$}
+    \State $\aNewScoreValue \assign \pTransmissionRate \cdot \aScoreValue$
+    \State $\cSend[\aContactName, \vNewScore]$
+    \State $\cSetSendThreshold[\vContact, \vNewScore]$
+  \EndIf
+\end{function}
+
+% Message optimizations - sender-side aggregation \citep{McCune2015}
+
 \begin{function}{\nRefreshSendThreshold}[\vActor, \vContact]
   \If{$\aContactThresholdValue > 0 \AND \cRiskScoreTtl[\aContactThreshold] \leq 0$}
     \State $\vScore \assign \cMaximumOlderThan[\aActorScores, \aContactTime + \pTimeBuffer]$
-    \State $\aNewScoreValue \assign \aScoreValue \cdot \pTransmissionRate$
+    \State $\aNewScoreValue \assign \pTransmissionRate \cdot \aScoreValue$
     \State $\cSetSendThreshold[\vContact, \vNewScore]$
   \EndIf
 \end{function}
@@ -299,7 +310,7 @@ Assuming a finite number of actors, any positive send coefficient $\pSendCoeffic
 \begin{function}{\nApplyRiskScore}[\vActor, \vContact, \vScore]
   \State $\cRefreshSendThreshold[\vActor, \vContact]$
   \If{$\aContactThresholdValue < \aScoreValue \AND \aContactTime + \pTimeBuffer > \aScoreTime$}
-    \State $\aNewScoreValue \assign \aScoreValue \cdot \pTransmissionRate$
+    \State $\aNewScoreValue \assign \pTransmissionRate \cdot \aScoreValue$
     \State $\cSetSendThreshold[\vContact, \vNewScore]$
     \If{$\aContactName \notEquals \aScoreSender$}
       \State $\aContactBuffered \assign \vNewScore$
@@ -321,11 +332,17 @@ Assuming a finite number of actors, any positive send coefficient $\pSendCoeffic
     \State $\aContactThreshold \assign \cNullRiskScore$
     \State $\aContactBuffered \assign \nil$
     \State $\aContactKey \assign \aContactName$
-    \State $\cInsert[\aActorContacts, \vContact]$
+    \State $\cMerge[\aActorContacts, \vContact]$
     \State $\vScore \assign \cMaximumOlderThan[\aActorScores, \aContactTime + \pTimeBuffer]$
     \State $\cApplyRiskScore[\vActor, \vContact, \vScore]$
   \EndIf
 \end{function}
+
+%As with the \cSendCurrentOrCached[] operation, a risk score message must be alive and relatively recent for it to be propagated. As in previous work \citep{Ayday2021}, factor marginalization is achieved by not propagating the received message to the actor who sent it. The logic of \cPropagate[] differs, however, in two ways. First, it is possible that no message is not propagated to a contact. The intent of sending a risk score message is to update the exposure score of other actors. However, previous work \citep{Ayday2021} required that a ``null'' message with a risk score value of 0 is sent. Sending such ineffective messages incurs additional communication overhead.
+
+%If line \ref{step:send-current} of \cSendCurrentOrCached[] evaluates to \false, then the actor attempts to retrieve the maximum cached risk score message based on the buffered contact time. If such a message exists and is alive, a risk score message is derived and sent to the contact. The \cSend[] operation follows the semantics of the \Call{Send-To}{} primitive \citep{Agha1985}.
+
+% Thus, in addition to being a proxy, a contact is a message filter and aggregator (cite integration patterns book)
 
 %For two actors to communicate, each must have the other actor in their contacts (see \Cref{sec:actor-behavior}). Recall that an actor must retrieve these contacts from the user's PDS, which subsequently requires synchronization with the user's mobile device (see \Cref{fig:actor-dataflow}). While the user's device can locally store contacts from proximal devices and symptoms of the user, an internet connection is needed to synchronize with the PDS and thus the user's actor. Therefore, it is not only possible but a reality that the user's mobile device and actor will not always be synchronized.
 %
@@ -342,7 +359,6 @@ Assuming a finite number of actors, any positive send coefficient $\pSendCoeffic
 %The operation \cCacheInsert refreshes the cache, if necessary, and merges into the cache the element pointed to by $\vCacheItem$ if its timestamp $\aCacheItemTime$ is in the range. Keys in the interval cache are interval start times and are lazily computed (line \ref{step:key}) to avoid storing intervals with no associated element. By not storing all intervals explicitly, the interval cache only achieves $O(\pCacheNumIntervals)$ space complexity when each interval has an associated element. The \cMerge operation (line \ref{step:merge}) can be as trivial as replacing the existing value. For risk propagation, the interval cache associates with each interval the newest risk score of maximum value.
 
 %The intention of sending a cached risk score to a contacted user actor is to account for the delay between when the contact occurred and when the actors establish communication. Therefore, the cached risk score that should be sent is that which would have been the current exposure score at the time the users came into contact. That is, each user actor should send the maximum risk score whose cache interval ends at or before the time of contact, accounting for the time buffer $\pTimeBuffer$ (line \ref{step:cache-max} of \cSendCurrentOrCached in \Cref{sec:actor-behavior}). The operation \cCacheMax is used to carry out this query.
-%
 
 \section{Message Reachability}\label{sec:reachability}
 
@@ -421,19 +437,14 @@ The value of \eqref{eq:reach} can be found by associating with each symptom scor
 Regarding efficiency, \labelcref{eq:vreach,eq:source-size,eq:influence-size} provide the means to quantify the communication overhead of a given message-passing algorithm on a temporal network. Moreover, because such metrics capture the temporality of message passing, they can better quantify complexity than traditional graph metrics.
 
 By relaxing the constraint \eqref{eq:contact-const}, it is possible to estimate \eqref{eq:reach} with \eqref{eq:value-const}. The \define{estimated message reachability} of node $u$ to node $v$, denoted $\vEstMsgReach(u, v)$, is defined as follows. Based on \eqref{eq:value-const},
-%
 \begin{equation*}
   \pTransmissionRate^{\vEstMsgReach(u, v)} \cdot \vScore_u \leq \pSendCoefficient \cdot \vScore_v,
 \end{equation*}
-%
 where the left-hand side is the value of the propagated symptom score for actor $u$ when $\vEstMsgReach(u, v) = 1$, and the right-hand side is the value required by some message-reachable actor $v$ to propagate the message received by actor $u$ or some intermediate actor. Solving for $\vEstMsgReach(u, v)$,
-%
 \begin{equation}\label{eq:estreach}
   \vEstMsgReach(u, v) \leq f(u, v),
 \end{equation}
-%
 where
-%
 \begin{equation*}
   f(u, v) = 
   \begin{cases} 
@@ -442,7 +453,6 @@ where
     \log_{\pTransmissionRate}\pSendCoefficient + \log_{\pTransmissionRate}\vScore_v - \log_{\pTransmissionRate}\vScore_u & \text{otherwise.}
   \end{cases}
 \end{equation*}
-%
 Equation \eqref{eq:estreach} indicates that a lower send coefficient $\pSendCoefficient$ will generally result in higher message reachability, at the cost of sending possibly ineffective messages (i.e., risk scores that do not update the exposure score of another actor). Equation \eqref{eq:estreach} also quantifies the effect of the transmission rate $\pTransmissionRate$. Unlike the send coefficient, however, the transmission rate is intended to be derived from epidemiology to quantify disease infectivity and should not be optimized to improve performance.
 
 Given the multivariate nature of message reachability, it is helpful to visualize how it with various combinations of parameter values. \Cref{fig:reach} includes several line plots of estimated message reachability $\vEstMsgReach(u, v)$ with respect to the initial risk score magnitude of actor $u$.
@@ -479,7 +489,7 @@ Given the multivariate nature of message reachability, it is helpful to visualiz
 \caption[Estimated message reachability]{Estimated message reachability. Contour lines are shown for integral reachability values. Given an initial risk score and message reachability, a contour line indicates an upper bound on the permissible send threshold.}
 \label{fig:reach}
 \end{figure}
-%
+
 \begin{figure}[htb]
 \centering
 \begin{tikzpicture}
