@@ -288,28 +288,51 @@ The objective of sending a risk score to another actor is to update its exposure
   \State $\aContactThreshold \assign \vNewScore$
 \end{function}
 
-An updated definition of \cApplyRiskScore{} that incorporates this new aspect of message passing is provided below. Assuming a finite number of actors, a positive send coefficient guarantees that a risk score has finite propagation.
+Below is the definition of \cApplyRiskScore{} that incorporates this new aspect of message passing. Assuming a finite number of actors, a positive send coefficient guarantees that a risk score has finite propagation.
 
 \begin{function}{\nApplyRiskScore}[\vActor, \vContact, \vScore]
   \If{$\aContactThresholdValue < \aScoreValue \AND \aContactTime + \pTimeBuffer > \aScoreTime$}
     \State $\aNewScoreValue \assign \pTransmissionRate \cdot \aScoreValue$
-    \State $\cSend[\aContactName, \vNewScore]$
     \State $\cSetSendThreshold[\vContact, \vNewScore]$
+    \State $\cSend[\aContactName, \vNewScore]$
   \EndIf
 \end{function}
 
-% Message optimizations - sender-side aggregation \citep{McCune2015}
+The \cSetSendThreshold{} operation defines \emph{how} the send threshold is updated, but not \emph{when} it should be updated. The \cUpdateSendThreshold{} operation encapsulates this update behavior. The latter predicate of Line \ref{step:should-update-threshold} stems from the fact that the send threshold is a risk score and thus subject to expiry. The former predicate is more subtle and will be revisited shortly. The \cMaximumOlderThan{} is the same as \cMaximum{} with the additional restriction that the interval key intersects with the query interval $(-\infty, \aContactTime + \pTimeBuffer)$. In this way, the returned risk score is always relevant to the contact. As with \cApplyRiskScore{}, the risk score retrieved from $\aActorScores$ is also scaled by the transmission rate and set as the new send threshold.
 
-\begin{function}{\nRefreshSendThreshold}[\vActor, \vContact]
-  \If{$\aContactThresholdValue > 0 \AND \cRiskScoreTtl[\aContactThreshold] \leq 0$}
+\begin{function}{\nUpdateSendThreshold}[\vActor, \vContact]
+  \If{$\aContactThresholdValue > 0 \AND \cRiskScoreTtl[\aContactThreshold] \leq 0$} \label{step:should-update-threshold}
     \State $\vScore \assign \cMaximumOlderThan[\aActorScores, \aContactTime + \pTimeBuffer]$
     \State $\aNewScoreValue \assign \pTransmissionRate \cdot \aScoreValue$
     \State $\cSetSendThreshold[\vContact, \vNewScore]$
   \EndIf
 \end{function}
 
+The \cUpdateSendThreshold{} is invoked during \cApplyRiskScore{}, so another modification to the operation is defined below.
+
 \begin{function}{\nApplyRiskScore}[\vActor, \vContact, \vScore]
-  \State $\cRefreshSendThreshold[\vActor, \vContact]$
+  \State $\cUpdateSendThreshold[\vActor, \vContact]$
+  \If{$\aContactThresholdValue < \aScoreValue \AND \aContactTime + \pTimeBuffer > \aScoreTime$}
+    \State $\aNewScoreValue \assign \pTransmissionRate \cdot \aScoreValue$
+    \State $\cSetSendThreshold[\vContact, \vNewScore]$
+    \State $\cSend[\aContactName, \vNewScore]$
+  \EndIf
+\end{function}
+
+Returning to the first predicate on Line \ref{step:should-update-threshold} of \cUpdateSendThreshold{}, there are two cases in which the send threshold has a value of 0:
+\begin{enumerate}
+  \item when initially assigning the send threshold to be the null risk score; and
+  \item when no key interval in $\aActorScores$ intersects the query interval, and thus the null risk score again is assigned the send threshold.
+\end{enumerate}
+
+Suppose the first predicate is omitted from Line \ref{step:should-update-threshold}. Given that \cUpdateSendThreshold{} is the first statement in \cApplyRiskScore{}, it is possible that the send threshold is set prior to sending the contact a relevant risk score. In the worst case, this prevents \emph{any} risk score from being sent to the target actor, thus providing the individual associated with target actor a false sense of security that they are not at risk of being infected. From a broader message-passing perspective, updating the send threshold to a non-null risk score \emph{before} applying the risk score received by the actor may introduce a non-trivial amount of inaccuracy. To summarize, updating the send threshold only when its value is nonzero ensures correct message-passing behavior between actors.
+
+Up until this point, the refinements to \cApplyRiskScore{} have focused on ensuring that message passing terminates and correctly adjusts over time, as risk scores expire. Prior to concluding this section, a message-passing optimization is introduced. Over a given period of time, an actor may receive several risk scores that are then propagated to multiple contacts. Intuitively, rather than sending multiple risk scores, it would be more efficient to send just the final risk score. To increase the likelihood of that this occurs, \cApplyRiskScore{} can be modified so that a contact ``buffers'' a single risk score that is intended to be sent to the target actor. Upon receiving a \define{flush timeout} message, the actor then ``flushes'' all contacts by sending the buffered message of each contact to the respective target actor. This is also known as \define{sender-side aggregation} in which the contact is an \define{aggregator} of risk scores. 
+
+The final iteration \cApplyRiskScore{} integrates sender-side aggregation. Moreover, \cHandleFlushTimeout{} clarifies the concept of ``flushing'' a contact. A flush timeout is assumed to be a periodically occurring ``self'' message.
+
+\begin{function}{\nApplyRiskScore}[\vActor, \vContact, \vScore]
+  \State $\cUpdateSendThreshold[\vActor, \vContact]$
   \If{$\aContactThresholdValue < \aScoreValue \AND \aContactTime + \pTimeBuffer > \aScoreTime$}
     \State $\aNewScoreValue \assign \pTransmissionRate \cdot \aScoreValue$
     \State $\cSetSendThreshold[\vContact, \vNewScore]$
@@ -327,6 +350,8 @@ An updated definition of \cApplyRiskScore{} that incorporates this new aspect of
     \EndIf
   \EndFor
 \end{function}
+
+To conclude the specification of actor behavior, the \cHandleContact{} operation indicates how an actor responds when a new contact or contact with a newer contact time is received. Similar to \cHandleRiskScore{}, expired contacts are not processed. The \cMerge{} operation for $\aActorContacts$ differs from how its used for $\aActorScores$. Specifically, if a contact with the same key already exists, its contact time is updated to that of the new contact; all other state of the previous contact is maintained.
 
 \begin{function}{\nHandleContact}[\vActor, \vContact]
   \If{$\cContactTtl[c] > 0$}
@@ -490,30 +515,3 @@ Given the multivariate nature of message reachability, it is helpful to visualiz
 \caption[Exponential decay of risk scores]{Exponential decay of risk scores.}
 \label{fig:decay}
 \end{figure}
-
-%\section{System Model}\label{sec:system-model}
-
-% TODO - security, privacy, mobile crowd-sensing
-% TODO - PDAs vs local computation
-
-%The system model is similar to that in previous work \citep{Ayday2020, Ayday2021}. \Cref{fig:actor-dataflow} illustrates the corresponding data flow\footnote{A \emph{data-flow diagram} consists of data processors (circles), directed data flow (arrows), data stores (parallel lines), and external entities (rectangles) \cite[pp. 437--438]{Fowler2004}\label{foot:dataflow}.}.
-%
-%\begin{itemize}
-%    \item Each user owns a \emph{personal data store} (PDS), a form of cloud storage that empowers the user with ownership and access control over their data.
-%    \item Symptom scores are computed in a user's PDS to support integrating multiple streams of personal data \citep{Ayday2020}. While local symptom-score computation \citep{Ayday2020, Ayday2021} is more privacy-preserving, it is assumed that the user's PDS is a trusted entity.
-%    \item User device interactions serve as a proxy for proximal human interactions. This work does not assume a specific protocol, but does assume that the protocol can approximate the duration of contact with relative accuracy and that communication with the actors of those contacted users can be established in a privacy-preserving manner.
-%    \item No geolocation data is collected \citep{Ayday2020}. As a decentralized, proximity-based solution, it is not necessary to collect user geolocation data. See \Cref{sec:location-based} for a discussion of a geolocation-based design that was considered.
-%    \item Actor-based risk propagation is a distributed, online algorithm \cite[pp. 791--818]{Cormen2022}. Previous work \citep{Ayday2020, Ayday2021} (see also \Cref{sec:previous-designs}) formulates risk propagation as a centralized, offline algorithm that periodically aggregates all user data to estimate infection risk. To improve the privacy, scalability, and responsiveness of ShareTrace, this work designs risk propagation to avoid data aggregation and to estimate infection risk in near real-time.
-%\end{itemize}
-%
-%\begin{figure}[htb]
-%    \includegraphics[width=\textwidth]{distributed-dataflow}
-%    \caption[Distributed ShareTrace data flow]{Distributed ShareTrace data flow. \emph{Contacts} include the actor name and contact time of all users with which the user came into close proximity. \emph{Personal data} includes the user's demographics, reported symptoms, and diagnosis. It may also include machine-generated biomarkers and electronic health record data \citep{Ayday2020}.}
-%    \label{fig:distributed-dataflow}
-%\end{figure}
-%
-%\begin{figure}[htb]
-%    \includegraphics[width=\textwidth]{centralized-dataflow}
-%    \caption[Centralized ShareTrace data flow]{Centralized ShareTrace data flow. \emph{Contacts} include the actor name and contact timestamp of all users with which the user came into close proximity. \emph{Personal data} includes the user's demographics, reported symptoms, and diagnosis. It may also include machine-generated biomarkers and electronic health record data \citep{Ayday2020}.}
-%    \label{fig:centralized-dataflow}
-%\end{figure}
