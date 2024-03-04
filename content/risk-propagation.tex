@@ -70,8 +70,34 @@ where $\dist(u, v)$ is the distance between the nodes $u, v$. The computation of
 \begin{enumerate}
   \item Contacts have a nondecreasing effect on an individual's exposure score.
   \item A risk score $\vScore_t$ is \define{relevant} to the contact $(i, j, t_{ij})$ if $t < t_{ij} +\pTimeBuffer$, where $\pTimeBuffer \in \naturals$ is a \define{time buffer} that accounts for the incubation period, along with the delayed reporting of symptom scores and contacts. The expression $t_{ij} +\pTimeBuffer$ is called the \define{buffered contact time}.
-  \item Risk transmission between contacts is incomplete. Thus, a risk score decays exponentially along its transmission path in $\vGraph$ at a rate of $\log \pTransmissionRate$, where $\pTransmissionRate \in (0, 1)$ is the \define{transmission rate}.
-\end{enumerate}
+  \item Risk transmission between contacts is incomplete. Thus, a risk score decays exponentially along its transmission path in $\vGraph$ at a rate of $\log \pTransmissionRate$, where $\pTransmissionRate \in (0, 1)$ is the \define{transmission rate}. \Cref{fig:decay} visualizes this decay.\end{enumerate}
+
+\begin{figure}[htb]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+  xlabel={Degree of separation},
+  ylabel={Risk score},
+  minor tick num=1,
+  width=0.6\textwidth,
+  smooth,
+  domain=1:5,
+  y domain=0.01:1,
+  samples=100,
+  black,
+  thick
+]
+  \addplot[] {e^(-0.8 * x)};
+  \addplot[dashed] {0.75 * e^(-0.8 * x)};
+  \addplot[dashdotted] {0.5 * e^(-0.8 * x)};
+  \addplot[dotted] {0.25 * e^(-0.8 * x)};
+  \legend{$1.00$, $0.50$, $0.75$, $0.25$};
+\end{axis}
+\end{tikzpicture}
+\caption[Exponential decay of risk scores]{Exponential decay of risk scores.}
+\label{fig:decay}
+\end{figure}
+
 To summarize, a factor message $\vFactorMessage{i}{j}{n}$ is the maximum relevant risk score in the variable message $\vVariableMessage{i}{j}{n}$ (or 0) that is scaled by the transmission rate $\pTransmissionRate$.
 
 \citet{Ayday2021} assume that the contact set $\vContacts$ may contain (1) multiple contacts between the same two individuals and (2) \define{invalid} contacts, or those lasting less than $\pMinContactDuration$ time. However, these assumptions introduce unnecessary complexity. Regarding assumption 1, suppose \twoindexed{i}{j}{individual} come into contact $m$ times such that $t_k < t_\ell$ for $1 \leq k < \ell \leq m$. Let $\vFactorMessages_k$ be the set of relevant risk scores, according to the contact time $t_k$, where
@@ -129,67 +155,25 @@ To address the privacy limitations of \cRiskPropagation{}, \citet{Ayday2021} pro
   \item How private is decentralized risk propagation?
 \end{enumerate}
 
-%Key observations:
+%%Key observations:
+%%
+%%- Asynchronous message passing amongst stateful entities is the essence of the actor model, so we can use it to describe risk propagation as an online algorithm
+%%- By applying one-mode projection, the factor graph is equivalent to a contact network. Thus, we can extend the concepts of reachability in temporal network to account for message-passing semantics and measure the communication complexity of risk propagation.
+
+%\subsection{Actor System}
 %
-%- Asynchronous message passing amongst stateful entities is the essence of the actor model, so we can use it to describe risk propagation as an online algorithm
-%- By applying one-mode projection, the factor graph is equivalent to a contact network. Thus, we can extend the concepts of reachability in temporal network to account for message-passing semantics and measure the communication complexity of risk propagation.
-
-The only purpose of a factor node is to compute and relay messages between variable vertices. Thus, one-mode projection onto the variable vertices can be applied such that variable vertices $\vVariable[i],\vVariable[j] \in \vVariables$ are adjacent if the factor node $\vFactor[ij] \in \vFactors$ exists \citep{Zhou2007}. \Cref{fig:projected} shows the modified topology.
-
-\begin{figure}[htb]
-\centering
-\begin{tikzpicture}[ampersand replacement=\&]
-  \matrix[row sep=7em, column sep=2em] {
-    \node[latent, minimum size=2em] (v1) {$\vVariable[1]$}; \&\&\&
-    \node[latent, minimum size=2em] (v2) {$\vVariable[2]$}; \&\&\&
-    \node[latent, minimum size=2em] (v3) {$\vVariable[3]$}; \\
-  };
-  \factor[minimum size=1em, above= of v1] {f12_1} {above:$\vFactor[12]$} {} {};
-  \factor[minimum size=1em, above= of v2, xshift=-3em] {f12_2} {above:$\vFactor[12]$} {} {};
-  \factor[minimum size=1em, above= of v2, xshift=3em] {f23_2} {above:$\vFactor[23]$} {} {};
-  \factor[minimum size=1em, above= of v3] {f23_3} {above:$\vFactor[23]$} {} {};
-  
-  \plate{p1} {(v1)(f12_1)(f12_1-caption)} {};
-  \plate{p2} {(v2)(f12_2)(f23_2)(f12_2-caption)(f23_2-caption)} {};
-  \plate{p3} {(v3)(f23_3)(f23_3-caption)} {};
-  
-  \edge[-] {v1} {f12_1};
-  \edge[-] {v2} {f12_2};
-  \edge[-] {v2} {f23_2};
-  \edge[-] {v3} {f23_3};
-  \edge[-] {p1} {p2};
-  \edge[-] {p2} {p3};
-\end{tikzpicture}
-\caption[One-mode projection of a factor graph]{One-mode projection onto the variable nodes in \Cref{fig:factor-graph}.}
-\label{fig:projected}
-\end{figure}
-
-To send a message to variable node $\vVariable[i]$, variable node $\vVariable[j]$ applies the computation associated with the factor node $\vFactor[ij]$. This modification differs from the distributed extension of risk propagation \citep{Ayday2021} in that we do not create duplicate factor vertices and messages in each user's PDS. By storing the contact time between users on the edge incident to their variable vertices, this modified topology is identical to the \define{contact-sequence} representation of a \define{contact network}, a kind of \define{temporal network} in which a node represents a person and an edge indicates that two persons came in contact:
-\begin{equation}
-  \setBuilder{(u, v, t)}{u, v \in \vVertices; u \neq v; t \in \naturals}, \label{eq:contact-sequence}
-\end{equation}
-where a triple $(u, v, t)$ is called a \emph{contact} \citep{Holme2012}. Specific to risk propagation, $t$ is the time at which users $u$ and $v$ \emph{most recently} came in contact (see \Cref{sec:asynchronous}).
-
-The usage of a temporal network in this work differs from its typical usage in epidemiology which focuses on modeling and analyzing the spreading dynamics of disease \citep{Riolo2001, Danon2011, Lokhov2014, Craft2015, Pastor-Satorras2015, Koher2019, Zino2021}. In contrast, this work uses a temporal network to infer a user's MPPI. As a result, \Cref{sec:reachability} extends temporal reachability to account for both the message-passing semantics and temporal dynamics of the network. As noted by \citet{Holme2012}, the transmission graph provided by \citet{Riolo2001} ``cannot handle edges where one node manages to not catch the disease.'' Notably, the usage of a temporal network in this work allows for such cases by modeling the possibility of infection as a continuous outcome.
-% TODO
-Factor graphs are useful for decomposing complex probability distributions and allowing for efficient inference algorithms.
-
-However, as with risk propagation, and generally any application of a factor graph in which the variable vertices represent entities of interest (i.e., of which the marginal probability of a variable is desired), applying one-mode projection is a .
-
-\subsection{Actor System}
-
-As a distributed algorithm, risk propagation is specified from the perspective of an \emph{actor}. Some variation exists on exactly how actor behavior is defined \citep{Agha1985, Koster2016}. Perhaps the simplest definition is that the \emph{behavior of an actor} is both its \emph{interface} (i.e., the types of messages it can receive) and \emph{state} (i.e., the internal data it uses to process messages) \citep{Koster2016}. An \emph{actor system}\footnote{This is technically referred to as an \emph{actor system configuration}.} is defined as the set of actors it contains and the set of unprocessed messages\footnote{Formally, a \emph{message} is called a \emph{task} and is defined by a \emph{tag}, a unique identifier; a \emph{target}, the mail address to which the message is delivered; and a \emph{communication}, the message content \citep{Agha1985}.} in the actor mailboxes. An expanded definition of an actor system also includes a \emph{local states function} that maps mail addresses to behaviors, the set of \emph{receptionist actors} that can receive communication that is external to the actor system, and the set of \emph{external actors} that exist outside of the actor system \citep{Agha1985}. Practically, a local states function is unnecessary to specify, so the narrower definition of an actor system is used. The remainder of this section describes the components of the ShareTrace actor system.
+%As a distributed algorithm, risk propagation is specified from the perspective of an \emph{actor}. Some variation exists on exactly how actor behavior is defined \citep{Agha1985, Koster2016}. Perhaps the simplest definition is that the \emph{behavior of an actor} is both its \emph{interface} (i.e., the types of messages it can receive) and \emph{state} (i.e., the internal data it uses to process messages) \citep{Koster2016}. An \emph{actor system}\footnote{This is technically referred to as an \emph{actor system configuration}.} is defined as the set of actors it contains and the set of unprocessed messages\footnote{Formally, a \emph{message} is called a \emph{task} and is defined by a \emph{tag}, a unique identifier; a \emph{target}, the mail address to which the message is delivered; and a \emph{communication}, the message content \citep{Agha1985}.} in the actor mailboxes. An expanded definition of an actor system also includes a \emph{local states function} that maps mail addresses to behaviors, the set of \emph{receptionist actors} that can receive communication that is external to the actor system, and the set of \emph{external actors} that exist outside of the actor system \citep{Agha1985}. Practically, a local states function is unnecessary to specify, so the narrower definition of an actor system is used. The remainder of this section describes the components of the ShareTrace actor system.
 
 \subsection{Actor Behavior}\label{sec:actor-behavior}
 
-Each individual corresponds to an actor that participates in the message-passing protocol of risk propagation. Herein, the user of an actor will only be referred to as an \emph{actor}. The following variant of the concurrent, object-oriented actor model is assumed to define actor behavior \citep{Agha1985}.
-
-\begin{itemize}
-  \item An actor follows the \define{active object pattern} \citep{Lavender1996, Koster2016} and the \define{Isolated Turn Principle} \citep{Koster2016}. Specifically, the state change of an actor is carried out by instance- variable assignment, instead of the canonical \cBecome{} primitive that provides a functional construct for pipelining actor behavior replacement \citep{Agha1985}. The interface of an actor is fixed in risk propagation, so the more general semantics of \cBecome{} is unnecessary.
-  \item The term ``name'' \citep{Hewitt1977, Agha1985} is preferred over ``mail address'' \citep{Agha1985} to refer to the sender of a message. Generally, the mail address that is included in a message need not correspond to the actor that sent it. Risk propagation, however, requires this actor is identified in a risk score message. Therefore, to emphasize this requirement, ``name'' is used to refer to both the identity of an actor and its mail address.
-  \item An actor is allowed to include a loop with finite iteration in its behavior definition; this is traditionally prohibited in the actor model \citep{Agha1985}.
-  \item The behavior definition is implied by all procedures that take as input an actor.
-\end{itemize}
+%Each individual corresponds to an actor that participates in the message-passing protocol of risk propagation. Herein, the user of an actor will only be referred to as an \emph{actor}. The following variant of the concurrent, object-oriented actor model is assumed to define actor behavior \citep{Agha1985}.
+%
+%\begin{itemize}
+%  \item An actor follows the \define{active object pattern} \citep{Lavender1996, Koster2016} and the \define{Isolated Turn Principle} \citep{Koster2016}. Specifically, the state change of an actor is carried out by instance- variable assignment, instead of the canonical \cBecome{} primitive that provides a functional construct for pipelining actor behavior replacement \citep{Agha1985}. The interface of an actor is fixed in risk propagation, so the more general semantics of \cBecome{} is unnecessary.
+%  \item The term ``name'' \citep{Hewitt1977, Agha1985} is preferred over ``mail address'' \citep{Agha1985} to refer to the sender of a message. Generally, the mail address that is included in a message need not correspond to the actor that sent it. Risk propagation, however, requires this actor is identified in a risk score message. Therefore, to emphasize this requirement, ``name'' is used to refer to both the identity of an actor and its mail address.
+%  \item An actor is allowed to include a loop with finite iteration in its behavior definition; this is traditionally prohibited in the actor model \citep{Agha1985}.
+%  \item The behavior definition is implied by all procedures that take as input an actor.
+%\end{itemize}
 
 The \cCreateActor{} operation initializes an actor \citep{Agha1985}. An actor $\vActor$ has the following attributes.
 \begin{itemize}
@@ -248,7 +232,6 @@ The interface of an actor is primarily defined by two types of messages: contact
   \State \Return $\pContactExpiry - (\vRefTime - \aContactTime)$
 \end{function}
 
-% TODO Note that expired contacts are assumed to be removed from \aActorContacts
 The \cHandleRiskScore{} operation defines the actions an actor performs upon receiving a risk score. The key initially associated with the risk score is the time interval for which it is relevant. For the dictionary $\aActorScores$, \cMerge{} preserves the mapping invariant defined above such that risk scores are ordered first by value and then by time. Thus, $\aScoreKey \subseteq [\aScoreTime, \aScoreTime + \pScoreExpiry)$ for all exposure scores in $\aActorScores$. The \cUpdateExposureScore{} operation describes how $\aActorExposure$ is updated. The dictionary $\aActorContacts$ is assumed to only contain unexpired contacts. Additional context is needed before specifying \cApplyRiskScore{} in detail. For now, it is sufficient to know that the operation uses the risk score to update the state of a contact.
 
 \begin{function}[H]{\nHandleRiskScore}[\vActor, \vScore]
@@ -376,86 +359,128 @@ To conclude the specification of actor behavior, the \cHandleContact{} operation
 
 \subsection{Message Reachability}\label{sec:reachability}
 
-A fundamental concept of reachability in temporal networks is the \define{time-respecting path}: a contiguous sequence of contacts with nondecreasing time. Thus, node $v$ is \define{temporally reachable} from node $u$ if there exists a time-respecting path from $u$ to $v$ \citep{Moody2002}. The following quantities are derived from the notion of a time-respecting path and help quantify reachability in a time-varying network \citep{Holme2012}.
-\begin{itemize}
-  \item The \define{influence set} $\vInfluenceSet_v$ of node $v$ is the set of nodes that $v$ can reach by a time-respecting path.
-  \item The \define{source set} $\vSourceSet_v$ of node $v$ is the set of nodes that can reach $v$ by a time-respecting path.
-  \item The \define{reachability ratio} $\vReachRatio(G)$ of a temporal network $G$ is the average influence-set cardinality of a node $v$.
-\end{itemize}
+%The only purpose of a factor node is to compute and relay messages between variable vertices. Thus, one-mode projection onto the variable vertices can be applied such that variable vertices $\vVariable[i],\vVariable[j] \in \vVariables$ are adjacent if the factor node $\vFactor[ij] \in \vFactors$ exists \citep{Zhou2007}. \Cref{fig:projected} shows the modified topology.
 
-Generally, a message-passing algorithm defines a set of constraints that determine when and what messages are sent from one node to another. Even if operating on a temporal network, those constraints may be more or less strict than requiring temporal reachability. As a dynamic process, message passing on a time-varying network requires a more general definition of reachability that can account for network topology \emph{and} message-passing semantics \citep{Barrat2013}.
+\begin{figure}[htb]
+\centering
+\begin{tikzpicture}[ampersand replacement=\&]
+  \matrix[row sep=7em, column sep=2em] {
+    \node[latent, minimum size=2em] (v1) {$\vVariable[1]$}; \&\&\&
+    \node[latent, minimum size=2em] (v2) {$\vVariable[2]$}; \&\&\&
+    \node[latent, minimum size=2em] (v3) {$\vVariable[3]$}; \\
+  };
+  \factor[minimum size=1em, above= of v1] {f12_1} {above:$\vFactor[12]$} {} {};
+  \factor[minimum size=1em, above= of v2, xshift=-3em] {f12_2} {above:$\vFactor[12]$} {} {};
+  \factor[minimum size=1em, above= of v2, xshift=3em] {f23_2} {above:$\vFactor[23]$} {} {};
+  \factor[minimum size=1em, above= of v3] {f23_3} {above:$\vFactor[23]$} {} {};
+  
+  \plate{p1} {(v1)(f12_1)(f12_1-caption)} {};
+  \plate{p2} {(v2)(f12_2)(f23_2)(f12_2-caption)(f23_2-caption)} {};
+  \plate{p3} {(v3)(f23_3)(f23_3-caption)} {};
+  
+  \edge[-] {v1} {f12_1};
+  \edge[-] {v2} {f12_2};
+  \edge[-] {v2} {f23_2};
+  \edge[-] {v3} {f23_3};
+  \edge[-] {p1} {p2};
+  \edge[-] {p2} {p3};
+\end{tikzpicture}
+\caption[One-mode projection of the factor graph]{One-mode projection onto the variable nodes in \Cref{fig:factor-graph}.}
+\label{fig:projected}
+\end{figure}
 
-Formally, the \emph{message reachability from node $u$ to node $v$} is the number of edges along the \define{shortest path} $\vPathSet$ that satisfy the message passing constraints,
-\begin{equation*}
-  \vMessageReachability(u, v) = \sum_{(i, j) \in \vPathSet} f(u, i, j, v),
-\end{equation*}
-where
-\begin{equation*}
-  f(u, i, j, v) = 
-    \begin{cases}
-      1 & \text{if all constraints are satisfied} \\ 
-      0 & \text{otherwise.}
-    \end{cases}
-\end{equation*}
+%To send a message to variable node $\vVariable[i]$, variable node $\vVariable[j]$ applies the computation associated with the factor node $\vFactor[ij]$. By storing the contact time between users on the edge incident to their variable vertices, this modified topology is identical to the \define{contact-sequence} representation of a \define{contact network}, a kind of \define{temporal network} in which a node represents a person and an edge indicates that two persons came in contact:
+%\begin{equation}
+%  \setBuilder{(u, v, t)}{u, v \in \vVertices; u \neq v; t \in \naturals}, \label{eq:contact-sequence}
+%\end{equation}
+%where a triple $(u, v, t)$ is called a \emph{contact} \citep{Holme2012}. Specific to risk propagation, $t$ is the time at which users $u$ and $v$ \emph{most recently} came in contact (see \Cref{sec:asynchronous}).
+%
+%The usage of a temporal network in this work differs from its typical usage in epidemiology which focuses on modeling and analyzing the spreading dynamics of disease \citep{Riolo2001, Danon2011, Lokhov2014, Craft2015, Pastor-Satorras2015, Koher2019, Zino2021}. In contrast, this work uses a temporal network to infer a user's MPPI. As a result, \Cref{sec:reachability} extends temporal reachability to account for both the message-passing semantics and temporal dynamics of the network. As noted by \citet{Holme2012}, the transmission graph provided by \citet{Riolo2001} ``cannot handle edges where one node manages to not catch the disease.'' Notably, the usage of a temporal network in this work allows for such cases by modeling the possibility of infection as a continuous outcome.
+%% TODO
+%Factor graphs are useful for decomposing complex probability distributions and allowing for efficient inference algorithms.
+%
+%However, as with risk propagation, and generally any application of a factor graph in which the variable vertices represent entities of interest (i.e., of which the marginal probability of a variable is desired), applying one-mode projection is a .
 
-Node $v$ is \define{message reachable} from node $u$ if there exists a shortest path such that $\vMessageReachability(u, v) > 0$. The \define{message reachability} of node $u$ is the maximum message reachability from node $u$:
-\begin{equation}\label{eq:vreach}
-  \vMessageReachability(u) = \max_{v \in \vVertices} \, \vMessageReachability(u, v).
-\end{equation}
-
-The temporal reachability metrics previously defined can be extended to message reachability by only considering the message-reachable vertices:
-\begin{align*}
-  \vInfluenceSet_u &= \setBuilder{v \in \vVertices}{\vMessageReachability(u, v) = \card{\vPathSet}} \\
-  \vSourceSet_v &= \setBuilder{u \in \vVertices}{\vMessageReachability(u, v) = \card{\vPathSet}} \\
-  \vReachRatio(G) &= \sum_{v \in \vVertices} \card{\vInfluenceSet_v} \cdot \card{\vVertices}^{-1}.
-\end{align*}
-Let $\mathbf{M}$ be the \define{message reachability matrix} of the temporal network $G$ such that nodes are enumerated $1, 2, \ldots, \card{\vVertices}$ and for each $\vMessage_{ij} \in \mathbf{M}$,
-\begin{equation*}
-  \vMessage_{ij} = 
-    \begin{cases}
-      1 & \text{if } \vMessageReachability(i, j) = \card{\vPathSet} \\
-      0 & \text{otherwise.}
-    \end{cases}
-\end{equation*}
-Then the cardinality of the influence set for node $i$ is the number of nonzero elements in \indexed{i}{row of $\mathbf{M}$}:
-\begin{equation}\label{eq:influence-size}
-  \card{\vInfluenceSet_i} = \sum_{j=1}^{\card{\vVertices}} \vMessage_{ij} .
-\end{equation}
-Similarly, the cardinality of the source set for node $j$ is the number of nonzero elements in \indexed{j}{column of $\mathbf{M}$}:
-\begin{equation}\label{eq:source-size}
-  \card{\vSourceSet_j} = \sum_{i=1}^{\card{\vVertices}} \vMessage_{ij} .
-\end{equation}
-
-For risk propagation, let $\vPathSet$ is the set of edges along the shortest path from $u$ to $v$ such that the actors are enumerated $1, \ldots, \card{\vPathSet}$. Then message reachability is defined as
-\begin{equation}\label{eq:reach}
-  \vMessageReachability(u, v) = \sum_{(i, j) \in \vPathSet} [\pTransmissionRate^{i} \vScore_u > \pSendCoefficient \pTransmissionRate \vScore_{ij}] \cdot [t_u < t_{ij} + \pTimeBuffer]
-\end{equation}
-%are the value and contact-time constraints in the \cShouldContactReceive[] operation (see \Cref{sec:actor-behavior}), where $(\vScore_i, t_i)$ is the current exposure score for actor $i$ and $t_{ij}$ is the most recent contact time between actors $i$ and $j$.
-
-The value of \eqref{eq:reach} can be found by associating with each symptom score a unique identifier. If each actor maintains a log of the risk scores it receives, then the set of actors that receive the symptom score or a propagated risk score thereof can be identified. This set of actors defines the induced subgraph on which to compute \eqref{eq:reach} using a shortest-path algorithm \citep{Johnson1977}. 
-
-Regarding efficiency, \labelcref{eq:vreach,eq:source-size,eq:influence-size} provide the means to quantify the communication overhead of a given message-passing algorithm on a temporal network. Moreover, because such metrics capture the temporality of message passing, they can better quantify complexity than traditional graph metrics.
-
-By relaxing the constraint \eqref{eq:contact-const}, it is possible to estimate \eqref{eq:reach} with \eqref{eq:value-const}. The \define{estimated message reachability} of node $u$ to node $v$, denoted $\vEstMsgReach(u, v)$, is defined as follows. Based on \eqref{eq:value-const},
-\begin{equation*}
-  \pTransmissionRate^{\vEstMsgReach(u, v)} \cdot \vScore_u \leq \pSendCoefficient \cdot \vScore_v,
-\end{equation*}
-where the left-hand side is the value of the propagated symptom score for actor $u$ when $\vEstMsgReach(u, v) = 1$, and the right-hand side is the value required by some message-reachable actor $v$ to propagate the message received by actor $u$ or some intermediate actor. Solving for $\vEstMsgReach(u, v)$,
-\begin{equation}\label{eq:estreach}
-  \vEstMsgReach(u, v) \leq f(u, v),
-\end{equation}
-where
-\begin{equation*}
-  f(u, v) = 
-  \begin{cases} 
-    0 & \text{if $\vScore_u = 0$} \\
-    \card{\vPathSet} & \text{if $\vScore_v = 0$} \\
-    \log_{\pTransmissionRate}\pSendCoefficient + \log_{\pTransmissionRate}\vScore_v - \log_{\pTransmissionRate}\vScore_u & \text{otherwise.}
-  \end{cases}
-\end{equation*}
-Equation \eqref{eq:estreach} indicates that a lower send coefficient $\pSendCoefficient$ will generally result in higher message reachability, at the cost of sending possibly ineffective messages (i.e., risk scores that do not update the exposure score of another actor). Equation \eqref{eq:estreach} also quantifies the effect of the transmission rate $\pTransmissionRate$. Unlike the send coefficient, however, the transmission rate is intended to be derived from epidemiology to quantify disease infectivity and should not be optimized to improve performance.
-
-Given the multivariate nature of message reachability, it is helpful to visualize how it with various combinations of parameter values. \Cref{fig:reach} includes several line plots of estimated message reachability $\vEstMsgReach(u, v)$ with respect to the initial risk score magnitude of actor $u$.
+%A fundamental concept of reachability in temporal networks is the \define{time-respecting path}: a contiguous sequence of contacts with nondecreasing time. Thus, node $v$ is \define{temporally reachable} from node $u$ if there exists a time-respecting path from $u$ to $v$ \citep{Moody2002}. The following quantities are derived from the notion of a time-respecting path and help quantify reachability in a time-varying network \citep{Holme2012}.
+%\begin{itemize}
+%  \item The \define{influence set} $\vInfluenceSet_v$ of node $v$ is the set of nodes that $v$ can reach by a time-respecting path.
+%  \item The \define{source set} $\vSourceSet_v$ of node $v$ is the set of nodes that can reach $v$ by a time-respecting path.
+%  \item The \define{reachability ratio} $\vReachRatio(G)$ of a temporal network $G$ is the average influence-set cardinality of a node $v$.
+%\end{itemize}
+%
+%Generally, a message-passing algorithm defines a set of constraints that determine when and what messages are sent from one node to another. Even if operating on a temporal network, those constraints may be more or less strict than requiring temporal reachability. As a dynamic process, message passing on a time-varying network requires a more general definition of reachability that can account for network topology \emph{and} message-passing semantics \citep{Barrat2013}.
+%
+%Formally, the \emph{message reachability from node $u$ to node $v$} is the number of edges along the \define{shortest path} $\vPathSet$ that satisfy the message passing constraints,
+%\begin{equation*}
+%  \vMessageReachability(u, v) = \sum_{(i, j) \in \vPathSet} f(u, i, j, v),
+%\end{equation*}
+%where
+%\begin{equation*}
+%  f(u, i, j, v) = 
+%    \begin{cases}
+%      1 & \text{if all constraints are satisfied} \\ 
+%      0 & \text{otherwise.}
+%    \end{cases}
+%\end{equation*}
+%
+%Node $v$ is \define{message reachable} from node $u$ if there exists a shortest path such that $\vMessageReachability(u, v) > 0$. The \define{message reachability} of node $u$ is the maximum message reachability from node $u$:
+%\begin{equation}\label{eq:vreach}
+%  \vMessageReachability(u) = \max_{v \in \vVertices} \, \vMessageReachability(u, v).
+%\end{equation}
+%
+%The temporal reachability metrics previously defined can be extended to message reachability by only considering the message-reachable vertices:
+%\begin{align*}
+%  \vInfluenceSet_u &= \setBuilder{v \in \vVertices}{\vMessageReachability(u, v) = \card{\vPathSet}} \\
+%  \vSourceSet_v &= \setBuilder{u \in \vVertices}{\vMessageReachability(u, v) = \card{\vPathSet}} \\
+%  \vReachRatio(G) &= \sum_{v \in \vVertices} \card{\vInfluenceSet_v} \cdot \card{\vVertices}^{-1}.
+%\end{align*}
+%Let $\mathbf{M}$ be the \define{message reachability matrix} of the temporal network $G$ such that nodes are enumerated $1, 2, \ldots, \card{\vVertices}$ and for each $\vMessage_{ij} \in \mathbf{M}$,
+%\begin{equation*}
+%  \vMessage_{ij} = 
+%    \begin{cases}
+%      1 & \text{if } \vMessageReachability(i, j) = \card{\vPathSet} \\
+%      0 & \text{otherwise.}
+%    \end{cases}
+%\end{equation*}
+%Then the cardinality of the influence set for node $i$ is the number of nonzero elements in \indexed{i}{row of $\mathbf{M}$}:
+%\begin{equation}\label{eq:influence-size}
+%  \card{\vInfluenceSet_i} = \sum_{j=1}^{\card{\vVertices}} \vMessage_{ij} .
+%\end{equation}
+%Similarly, the cardinality of the source set for node $j$ is the number of nonzero elements in \indexed{j}{column of $\mathbf{M}$}:
+%\begin{equation}\label{eq:source-size}
+%  \card{\vSourceSet_j} = \sum_{i=1}^{\card{\vVertices}} \vMessage_{ij} .
+%\end{equation}
+%
+%For risk propagation, let $\vPathSet$ is the set of edges along the shortest path from $u$ to $v$ such that the actors are enumerated $1, \ldots, \card{\vPathSet}$. Then message reachability is defined as
+%\begin{equation}\label{eq:reach}
+%  \vMessageReachability(u, v) = \sum_{(i, j) \in \vPathSet} [\pTransmissionRate^{i} \vScore_u > \pSendCoefficient \pTransmissionRate \vScore_{ij}] \cdot [t_u < t_{ij} + \pTimeBuffer]
+%\end{equation}
+%%are the value and contact-time constraints in the \cShouldContactReceive[] operation (see \Cref{sec:actor-behavior}), where $(\vScore_i, t_i)$ is the current exposure score for actor $i$ and $t_{ij}$ is the most recent contact time between actors $i$ and $j$.
+%
+%The value of \eqref{eq:reach} can be found by associating with each symptom score a unique identifier. If each actor maintains a log of the risk scores it receives, then the set of actors that receive the symptom score or a propagated risk score thereof can be identified. This set of actors defines the induced subgraph on which to compute \eqref{eq:reach} using a shortest-path algorithm \citep{Johnson1977}. 
+%
+%Regarding efficiency, \labelcref{eq:vreach, eq:source-size, eq:influence-size} provide the means to quantify the communication overhead of a given message-passing algorithm on a temporal network. Moreover, because such metrics capture the temporality of message passing, they can better quantify complexity than traditional graph metrics.
+%
+%By relaxing the constraint \eqref{eq:contact-const}, it is possible to estimate \eqref{eq:reach} with \eqref{eq:value-const}. The \define{estimated message reachability} of node $u$ to node $v$, denoted $\vEstMsgReach(u, v)$, is defined as follows. Based on \eqref{eq:value-const},
+%\begin{equation*}
+%  \pTransmissionRate^{\vEstMsgReach(u, v)} \cdot \vScore_u \leq \pSendCoefficient \cdot \vScore_v,
+%\end{equation*}
+%where the left-hand side is the value of the propagated symptom score for actor $u$ when $\vEstMsgReach(u, v) = 1$, and the right-hand side is the value required by some message-reachable actor $v$ to propagate the message received by actor $u$ or some intermediate actor. Solving for $\vEstMsgReach(u, v)$,
+%\begin{equation}\label{eq:estreach}
+%  \vEstMsgReach(u, v) \leq f(u, v),
+%\end{equation}
+%where
+%\begin{equation*}
+%  f(u, v) = 
+%  \begin{cases} 
+%    0 & \text{if $\vScore_u = 0$} \\
+%    \card{\vPathSet} & \text{if $\vScore_v = 0$} \\
+%    \log_{\pTransmissionRate}\pSendCoefficient + \log_{\pTransmissionRate}\vScore_v - \log_{\pTransmissionRate}\vScore_u & \text{otherwise.}
+%  \end{cases}
+%\end{equation*}
+%Equation \eqref{eq:estreach} indicates that a lower send coefficient $\pSendCoefficient$ will generally result in higher message reachability, at the cost of sending possibly ineffective messages (i.e., risk scores that do not update the exposure score of another actor). Equation \eqref{eq:estreach} also quantifies the effect of the transmission rate $\pTransmissionRate$. Unlike the send coefficient, however, the transmission rate is intended to be derived from epidemiology to quantify disease infectivity and should not be optimized to improve performance.
+%
+%Given the multivariate nature of message reachability, it is helpful to visualize how it with various combinations of parameter values. \Cref{fig:reach} includes several line plots of estimated message reachability $\vEstMsgReach(u, v)$ with respect to the initial risk score magnitude of actor $u$.
 
 \begin{figure}[htb]
 \centering
@@ -486,32 +511,7 @@ Given the multivariate nature of message reachability, it is helpful to visualiz
   ] {log2(y / x) / log2(0.8)};
 \end{semilogyaxis}
 \end{tikzpicture}
+% TODO "Estimated" doesn't make sense; this plot just shows the value constraint
 \caption[Estimated message reachability]{Estimated message reachability. Contour lines are shown for integral reachability values. Given an initial risk score and message reachability, a contour line indicates an upper bound on the permissible send threshold.}
 \label{fig:reach}
-\end{figure}
-
-\begin{figure}[htb]
-\centering
-\begin{tikzpicture}
-\begin{axis}[
-  xlabel={Path length},
-  ylabel={Risk score},
-  minor tick num=1,
-  width=0.6\textwidth,
-  smooth,
-  domain=1:5,
-  y domain=0.01:1,
-  samples=100,
-  black,
-  thick
-]
-  \addplot[] {e^(-0.8 * x)};
-  \addplot[dashed] {0.75 * e^(-0.8 * x)};
-  \addplot[dashdotted] {0.5 * e^(-0.8 * x)};
-  \addplot[dotted] {0.25 * e^(-0.8 * x)};
-  \legend{$1.00$, $0.50$, $0.75$, $0.25$};
-\end{axis}
-\end{tikzpicture}
-\caption[Exponential decay of risk scores]{Exponential decay of risk scores.}
-\label{fig:decay}
 \end{figure}
