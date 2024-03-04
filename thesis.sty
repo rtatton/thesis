@@ -47,7 +47,6 @@
 % Add appendices to the table of contents
 \usepackage[titletoc]{appendix}
 
-
 % CROSS REFERENCING
 
 % Citations and cross-referencing
@@ -110,7 +109,6 @@
 
 % ALGORITHM AND PSEUDOCODE
 
-% \indexed{index}{value}
 \newcommand{\indexed}[2]{the $#1$-th #2}
 \newcommand{\Indexed}[2]{The $#1$-th #2}
 \newcommand{\twoindexed}[3]{the $#1$-th and $#2$-th #3}
@@ -154,8 +152,6 @@
 
 % Constants
 \newcommand{\nil}{\textsc{nil}}
-\newcommand{\true}{\textsc{true}}
-\newcommand{\false}{\textsc{false}}
 
 % Usage:
 %   \begin{function}[position]{title}[args]
@@ -185,17 +181,11 @@
 \newcommand{\vVertex}{v}
 \newcommand{\vMessage}{m}
 \newcommand{\vNewScore}{s'}
-\newcommand{\vNew}[1]{#1_{\textit{new}}}
-\newcommand{\vOld}[1]{#1_{\textit{old}}}
 \newcommand{\vPathSet}{P}
 \newcommand{\vReachRatio}{f}
 \newcommand{\vRefTime}{\tau}
 \newcommand{\vScore}{s}
 \newcommand{\vSomeElement}{x}
-
-\newcommand{\vOldCacheItem}{\vOld{\vCacheItem}}
-\newcommand{\vNewCacheItem}{\vNew{\vCacheItem}}
-
 \newcommand{\vEstMsgReach}{\hat{\vMessageReachability}}
 \newcommand{\vInitScore}{\vScore^0}
 \newcommand{\vMessageReachability}{\vMessage}
@@ -292,7 +282,6 @@
 \newcommand{\nUpdateExposureScore}{Update-Exposure-Score}
 
 % Function calls
-
 \newcommand{\cBecome}[1][]{\Call{\nBecome}{#1}}
 \newcommand{\cContactTtl}[1][]{\Call{\nContactTtl}{#1}}
 \newcommand{\cCreateActor}[1][]{\Call{\nCreateActor}{#1}}

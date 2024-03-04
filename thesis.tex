@@ -7,8 +7,6 @@
 \frontmatter
 \pagestyle{plain}
 
-% TODO - fix citations to use \citet and \citep
-
 %\include{content/title}
 %\include{content/approval}
 %\include{content/table-of-contents}
@@ -23,18 +21,17 @@
 %\include{content/conclusions} % TODO
 
 \appendix
-\noappendicestocpagenum
-\addappheadtotoc
 
 %\include{content/previous-designs} % TODO
 %\include{content/evaluation} % TODO
 \include{content/pseudocode-conventions}
 \include{content/data-structures}
-\include{content/actor-model}
+%\include{content/actor-model}
 
 \backmatter
 
 \bibliographystyle{plainnat}
-% TODO - format and remove un-cited
+% TODO format and remove unused
+% TODO fix citations to use \citet and \citep
 \bibliography{content/references}
 \end{document}

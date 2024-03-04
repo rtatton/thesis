@@ -176,7 +176,7 @@ Factor graphs are useful for decomposing complex probability distributions and a
 
 However, as with risk propagation, and generally any application of a factor graph in which the variable vertices represent entities of interest (i.e., of which the marginal probability of a variable is desired), applying one-mode projection is a .
 
-\subsection{ShareTrace Actor System}
+\subsection{Actor System}
 
 As a distributed algorithm, risk propagation is specified from the perspective of an \emph{actor}. Some variation exists on exactly how actor behavior is defined \citep{Agha1985, Koster2016}. Perhaps the simplest definition is that the \emph{behavior of an actor} is both its \emph{interface} (i.e., the types of messages it can receive) and \emph{state} (i.e., the internal data it uses to process messages) \citep{Koster2016}. An \emph{actor system}\footnote{This is technically referred to as an \emph{actor system configuration}.} is defined as the set of actors it contains and the set of unprocessed messages\footnote{Formally, a \emph{message} is called a \emph{task} and is defined by a \emph{tag}, a unique identifier; a \emph{target}, the mail address to which the message is delivered; and a \emph{communication}, the message content \citep{Agha1985}.} in the actor mailboxes. An expanded definition of an actor system also includes a \emph{local states function} that maps mail addresses to behaviors, the set of \emph{receptionist actors} that can receive communication that is external to the actor system, and the set of \emph{external actors} that exist outside of the actor system \citep{Agha1985}. Practically, a local states function is unnecessary to specify, so the narrower definition of an actor system is used. The remainder of this section describes the components of the ShareTrace actor system.
 
@@ -248,7 +248,8 @@ The interface of an actor is primarily defined by two types of messages: contact
   \State \Return $\pContactExpiry - (\vRefTime - \aContactTime)$
 \end{function}
 
-The \cHandleRiskScore{} operation defines the actions an actor performs upon receiving a risk score. The key initially associated with the risk score is the time interval for which it is relevant. For the dictionary $\aActorScores$, \cMerge{} preserves the mapping invariant defined above such that risk scores are ordered first by value and then by time. Thus, $\aScoreKey \subseteq [\aScoreTime, \aScoreTime + \pScoreExpiry)$ for all exposure scores in $\aActorScores$. The \cUpdateExposureScore{} operation describes how $\aActorExposure$ is updated. Additional context is needed before specifying \cApplyRiskScore{} in detail. For now, it is sufficient to know that the operation uses the risk score to update the state of a contact.
+% TODO Note that expired contacts are assumed to be removed from \aActorContacts
+The \cHandleRiskScore{} operation defines the actions an actor performs upon receiving a risk score. The key initially associated with the risk score is the time interval for which it is relevant. For the dictionary $\aActorScores$, \cMerge{} preserves the mapping invariant defined above such that risk scores are ordered first by value and then by time. Thus, $\aScoreKey \subseteq [\aScoreTime, \aScoreTime + \pScoreExpiry)$ for all exposure scores in $\aActorScores$. The \cUpdateExposureScore{} operation describes how $\aActorExposure$ is updated. The dictionary $\aActorContacts$ is assumed to only contain unexpired contacts. Additional context is needed before specifying \cApplyRiskScore{} in detail. For now, it is sufficient to know that the operation uses the risk score to update the state of a contact.
 
 \begin{function}[H]{\nHandleRiskScore}[\vActor, \vScore]
   \If{$\cRiskScoreTtl[\vScore] > 0$}
@@ -338,9 +339,7 @@ An updated definition of \cApplyRiskScore{} that incorporates this new aspect of
   \EndIf
 \end{function}
 
-%As with the \cSendCurrentOrCached[] operation, a risk score message must be alive and relatively recent for it to be propagated. As in previous work \citep{Ayday2021}, factor marginalization is achieved by not propagating the received message to the actor who sent it. The logic of \cPropagate[] differs, however, in two ways. First, it is possible that no message is not propagated to a contact. The intent of sending a risk score message is to update the exposure score of other actors. However, previous work \citep{Ayday2021} required that a ``null'' message with a risk score value of 0 is sent. Sending such ineffective messages incurs additional communication overhead.
-
-%If line \ref{step:send-current} of \cSendCurrentOrCached[] evaluates to \false, then the actor attempts to retrieve the maximum cached risk score message based on the buffered contact time. If such a message exists and is alive, a risk score message is derived and sent to the contact. The \cSend[] operation follows the semantics of the \Call{Send-To}{} primitive \citep{Agha1985}.
+%The \cSend[] operation follows the semantics of the \Call{Send-To}{} primitive \citep{Agha1985}.
 
 % Thus, in addition to being a proxy, a contact is a message filter and aggregator (cite integration patterns book)
 
@@ -348,22 +347,11 @@ An updated definition of \cApplyRiskScore{} that incorporates this new aspect of
 %
 %In the best case, this ``lag'' may only be a few seconds; in the worst case, the user's device is offline for several days. If $\delta_i$ ($\delta_j$) is the delay between when the device of user $i$ (ref. $j$) records a contact with user $j$ (ref. $i$) and when its actor receives the corresponding contact message, then the delay between when actors $\vActor_i$ and $\vActor_j$ can communicate bidirectionally and when the contact actually occurred is $\delta_{ij} = \max(\delta_i, \delta_j)$. Such dissonance between the ``true'' state of the world (i.e., when users actually came in contact) and that known to the network of actors could impact the accuracy of risk propagation, which assumes such delays are nonexistent. To address this issue, each actor maintains a cache of received risk score messages such that it can still send a message that reflects its previous state to a contact that was significantly delayed.
 %
-%An \emph{interval cache} $\vCache$ is a dictionary that maps a finite time interval (key) to a data element (value). In a typical cache, the \emph{time-to-live} (TTL) of an element is a fixed duration after which the element is removed or \emph{evicted}. In an interval cache, however, the TTL of an element is determined by its associated interval and the current time. That is, an interval cache is like a series of sliding windows, where each window corresponds to an interval that can hold a single element. Thus, the TTL of an element is the duration between the start of its interval and the start of the earliest interval in the cache.
-%
-%An interval cache maintains $\pCacheNumIntervals$ contiguous, half-closed (start-inclusive) intervals, each of duration $\pDuration$. An interval cache contains $\pCacheNumLookAhead$ \emph{look-ahead intervals} and $\pCacheNumLookBack$ \emph{look-back intervals} such that $\pCacheNumIntervals = \pCacheNumLookBack + \pCacheNumLookAhead$. Look- ahead (resp. look-back) intervals allow elements to be associated with intervals whose start times are later (resp. earlier) than the current time $t$. The \emph{look-back duration} $\pCacheLookBack$ and \emph{look-ahead duration} $\pCacheLookAhead$ are defined as
-
-%and $\aCacheRefresh$ is the time at which the cache was last refreshed.
-%
-%An interval cache is a ``live'' data structure, so the range must be updated periodically to reflect the advancement of time. Furthermore, intervals and their associated elements that are no longer contained in the range must be evicted. This process of updating the range and evicting cached elements is called \emph{refreshing the cache}. The \emph{refresh period} $\pCacheRefreshPeriod > 0$ of an interval cache is the duration until the range is updated, based on the current time $t$. Depending on the interval duration $\pDuration$ and the nature of the data that is being cached, the refresh period may be on the order of seconds or days. To recognize when a refresh is necessary, the cache maintains the attribute $\aCacheRefresh$, which is the time of the previous refresh. The operation \cCacheRefresh updates the range if at least $\pCacheRefreshPeriod$ time has elapsed since the previous refresh and then removes all expired elements.
-%
-%The operation \cCacheInsert refreshes the cache, if necessary, and merges into the cache the element pointed to by $\vCacheItem$ if its timestamp $\aCacheItemTime$ is in the range. Keys in the interval cache are interval start times and are lazily computed (line \ref{step:key}) to avoid storing intervals with no associated element. By not storing all intervals explicitly, the interval cache only achieves $O(\pCacheNumIntervals)$ space complexity when each interval has an associated element. The \cMerge operation (line \ref{step:merge}) can be as trivial as replacing the existing value. For risk propagation, the interval cache associates with each interval the newest risk score of maximum value.
-
 %The intention of sending a cached risk score to a contacted user actor is to account for the delay between when the contact occurred and when the actors establish communication. Therefore, the cached risk score that should be sent is that which would have been the current exposure score at the time the users came into contact. That is, each user actor should send the maximum risk score whose cache interval ends at or before the time of contact, accounting for the time buffer $\pTimeBuffer$ (line \ref{step:cache-max} of \cSendCurrentOrCached in \Cref{sec:actor-behavior}). The operation \cCacheMax is used to carry out this query.
 
-\section{Message Reachability}\label{sec:reachability}
+\subsection{Message Reachability}\label{sec:reachability}
 
 A fundamental concept of reachability in temporal networks is the \define{time-respecting path}: a contiguous sequence of contacts with nondecreasing time. Thus, node $v$ is \define{temporally reachable} from node $u$ if there exists a time-respecting path from $u$ to $v$ \citep{Moody2002}. The following quantities are derived from the notion of a time-respecting path and help quantify reachability in a time-varying network \citep{Holme2012}.
-%
 \begin{itemize}
   \item The \define{influence set} $\vInfluenceSet_v$ of node $v$ is the set of nodes that $v$ can reach by a time-respecting path.
   \item The \define{source set} $\vSourceSet_v$ of node $v$ is the set of nodes that can reach $v$ by a time-respecting path.
@@ -373,13 +361,10 @@ A fundamental concept of reachability in temporal networks is the \define{time-r
 Generally, a message-passing algorithm defines a set of constraints that determine when and what messages are sent from one node to another. Even if operating on a temporal network, those constraints may be more or less strict than requiring temporal reachability. As a dynamic process, message passing on a time-varying network requires a more general definition of reachability that can account for network topology \emph{and} message-passing semantics \citep{Barrat2013}.
 
 Formally, the \emph{message reachability from node $u$ to node $v$} is the number of edges along the \define{shortest path} $\vPathSet$ that satisfy the message passing constraints,
-%
 \begin{equation*}
   \vMessageReachability(u, v) = \sum_{(i, j) \in \vPathSet} f(u, i, j, v),
 \end{equation*}
-%
 where
-%
 \begin{equation*}
   f(u, i, j, v) = 
     \begin{cases}
@@ -389,21 +374,17 @@ where
 \end{equation*}
 
 Node $v$ is \define{message reachable} from node $u$ if there exists a shortest path such that $\vMessageReachability(u, v) > 0$. The \define{message reachability} of node $u$ is the maximum message reachability from node $u$:
-%
 \begin{equation}\label{eq:vreach}
   \vMessageReachability(u) = \max_{v \in \vVertices} \, \vMessageReachability(u, v).
 \end{equation}
 
 The temporal reachability metrics previously defined can be extended to message reachability by only considering the message-reachable vertices:
-%
 \begin{align*}
   \vInfluenceSet_u &= \setBuilder{v \in \vVertices}{\vMessageReachability(u, v) = \card{\vPathSet}} \\
   \vSourceSet_v &= \setBuilder{u \in \vVertices}{\vMessageReachability(u, v) = \card{\vPathSet}} \\
   \vReachRatio(G) &= \sum_{v \in \vVertices} \card{\vInfluenceSet_v} \cdot \card{\vVertices}^{-1}.
 \end{align*}
-%
 Let $\mathbf{M}$ be the \define{message reachability matrix} of the temporal network $G$ such that nodes are enumerated $1, 2, \ldots, \card{\vVertices}$ and for each $\vMessage_{ij} \in \mathbf{M}$,
-%
 \begin{equation*}
   \vMessage_{ij} = 
     \begin{cases}
@@ -411,25 +392,19 @@ Let $\mathbf{M}$ be the \define{message reachability matrix} of the temporal net
       0 & \text{otherwise.}
     \end{cases}
 \end{equation*}
-%
 Then the cardinality of the influence set for node $i$ is the number of nonzero elements in \indexed{i}{row of $\mathbf{M}$}:
-%
 \begin{equation}\label{eq:influence-size}
   \card{\vInfluenceSet_i} = \sum_{j=1}^{\card{\vVertices}} \vMessage_{ij} .
 \end{equation}
-%
 Similarly, the cardinality of the source set for node $j$ is the number of nonzero elements in \indexed{j}{column of $\mathbf{M}$}:
-%
 \begin{equation}\label{eq:source-size}
   \card{\vSourceSet_j} = \sum_{i=1}^{\card{\vVertices}} \vMessage_{ij} .
 \end{equation}
 
 For risk propagation, let $\vPathSet$ is the set of edges along the shortest path from $u$ to $v$ such that the actors are enumerated $1, \ldots, \card{\vPathSet}$. Then message reachability is defined as
-%
 \begin{equation}\label{eq:reach}
   \vMessageReachability(u, v) = \sum_{(i, j) \in \vPathSet} [\pTransmissionRate^{i} \vScore_u > \pSendCoefficient \pTransmissionRate \vScore_{ij}] \cdot [t_u < t_{ij} + \pTimeBuffer]
 \end{equation}
-%
 %are the value and contact-time constraints in the \cShouldContactReceive[] operation (see \Cref{sec:actor-behavior}), where $(\vScore_i, t_i)$ is the current exposure score for actor $i$ and $t_{ij}$ is the most recent contact time between actors $i$ and $j$.
 
 The value of \eqref{eq:reach} can be found by associating with each symptom score a unique identifier. If each actor maintains a log of the risk scores it receives, then the set of actors that receive the symptom score or a propagated risk score thereof can be identified. This set of actors defines the induced subgraph on which to compute \eqref{eq:reach} using a shortest-path algorithm \citep{Johnson1977}. 
