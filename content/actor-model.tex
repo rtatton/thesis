@@ -48,3 +48,13 @@ Thus, the specification of an actor system consists of the following \citep{Hewi
   \item Deciding for each kind of actor what it should do when it receives each kind of message.
 \end{itemize}
 \end{quote}
+
+%
+% Some variation exists on exactly how actor behavior is defined \citep{Agha1985, Koster2016}. Perhaps the simplest definition is that the \emph{behavior of an actor} is both its \emph{interface} (i.e., the types of messages it can receive) and \emph{state} (i.e., the internal data it uses to process messages) \citep{Koster2016}. An \emph{actor system}\footnote{This is technically referred to as an \emph{actor system configuration}.} is defined as the set of actors it contains and the set of unprocessed messages\footnote{Formally, a \emph{message} is called a \emph{task} and is defined by a \emph{tag}, a unique identifier; a \emph{target}, the mail address to which the message is delivered; and a \emph{communication}, the message content \citep{Agha1985}.} in the actor mailboxes. An expanded definition of an actor system also includes a \emph{local states function} that maps mail addresses to behaviors, the set of \emph{receptionist actors} that can receive communication that is external to the actor system, and the set of \emph{external actors} that exist outside of the actor system \citep{Agha1985}. Practically, a local states function is unnecessary to specify, so the narrower definition of an actor system is used.
+
+%\begin{itemize}
+%  \item An actor follows the \define{active object pattern} \citep{Lavender1996, Koster2016} and the \define{Isolated Turn Principle} \citep{Koster2016}. Specifically, the state change of an actor is carried out by instance- variable assignment, instead of the canonical \cBecome{} primitive that provides a functional construct for pipelining actor behavior replacement \citep{Agha1985}. The interface of an actor is fixed in risk propagation, so the more general semantics of \cBecome{} is unnecessary.
+%  \item The term ``name'' \citep{Hewitt1977, Agha1985} is preferred over ``mail address'' \citep{Agha1985} to refer to the sender of a message. Generally, the mail address that is included in a message need not correspond to the actor that sent it. Risk propagation, however, requires this actor is identified in a risk score message. Therefore, to emphasize this requirement, ``name'' is used to refer to both the identity of an actor and its mail address.
+%  \item An actor is allowed to include a loop with finite iteration in its behavior definition; this is traditionally prohibited in the actor model \citep{Agha1985}.
+%  \item The behavior definition is implied by all procedures that take as input an actor.
+%\end{itemize}
