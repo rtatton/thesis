@@ -179,19 +179,18 @@
 \newcommand{\vVertex}{v}
 \newcommand{\vMessage}{m}
 \newcommand{\vNewScore}{s'}
-\newcommand{\vPathSet}{P}
-\newcommand{\vReachRatio}{f}
+\newcommand{\vReachRatio}{\rho}
 \newcommand{\vRefTime}{\tau}
 \newcommand{\vScore}{s}
 \newcommand{\vSomeElement}{x}
-\newcommand{\vEstMsgReach}{\hat{\vMessageReachability}}
-\newcommand{\vInitScore}{\vScore^0}
 \newcommand{\vMessageReachability}{\vMessage}
-\newcommand{\vPath}[2]{#1 \rightarrow #2}
 \NewDocumentCommand{\vVariable}{o}{\IfValueTF{#1}{x_{#1}}{x}}
 \NewDocumentCommand{\vFactor}{o}{\IfValueTF{#1}{f_{#1}}{f}}
 \newcommand{\vVariableMessage}[3]{\mu_{#1#2}^{(#3)}}
 \newcommand{\vFactorMessage}[3]{\lambda_{#1#2}^{(#3)}}
+
+\newcommand{\vEstMsgReach}{\hat{\vMessageReachability}}
+\newcommand{\vInitScore}{\vScore_0}
 
 % Sets
 \newcommand{\vSet}[1]{#1}
@@ -207,6 +206,7 @@
 \newcommand{\vSourceSet}{\vSet{S}}
 \newcommand{\vInfluenceSet}{\vSet{I}}
 \newcommand{\vFactorMessages}{\varLambda}
+\newcommand{\vPath}{\vSet{P}}
 
 % Parameters
 \newcommand{\pDuration}{T}
