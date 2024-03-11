@@ -177,20 +177,24 @@
 \newcommand{\vContact}{c}
 \newcommand{\vGraph}{G}
 \newcommand{\vVertex}{v}
+\newcommand{\vSourceVertex}{u}
+\newcommand{\vTargetVertex}{v}
 \newcommand{\vMessage}{m}
-\newcommand{\vNewScore}{s'}
-\newcommand{\vReachRatio}{\rho}
-\newcommand{\vRefTime}{\tau}
+\newcommand{\vReachabilityRatio}{\rho}
+\newcommand{\vReferenceTime}{\tau}
 \newcommand{\vScore}{s}
 \newcommand{\vSomeElement}{x}
-\newcommand{\vMessageReachability}{\vMessage}
+\newcommand{\vReachability}{r}
+\newcommand{\vTime}{t}
+
 \NewDocumentCommand{\vVariable}{o}{\IfValueTF{#1}{x_{#1}}{x}}
 \NewDocumentCommand{\vFactor}{o}{\IfValueTF{#1}{f_{#1}}{f}}
 \newcommand{\vVariableMessage}[3]{\mu_{#1#2}^{(#3)}}
 \newcommand{\vFactorMessage}[3]{\lambda_{#1#2}^{(#3)}}
 
-\newcommand{\vEstMsgReach}{\hat{\vMessageReachability}}
+\newcommand{\vNewScore}{\vScore'}
 \newcommand{\vInitScore}{\vScore_0}
+\newcommand{\vEstimatedReachability}{\hat{\vReachability}}
 
 % Sets
 \newcommand{\vSet}[1]{#1}
