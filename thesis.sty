@@ -108,15 +108,12 @@
 % ALGORITHM AND PSEUDOCODE
 
 \newcommand{\vertexName}{vertex}
-\newcommand{\VertexName}{Vertex}
 \newcommand{\verticesName}{vertices}
-\newcommand{\VerticesName}{Vertices}
 
 \newcommand{\indexed}[2]{the $#1$-th #2}
-\newcommand{\Indexed}[2]{The $#1$-th #2}
 \newcommand{\twoindexed}[3]{the $#1$-th and $#2$-th #3}
 
-\usepackage[plain, boxed]{algorithm}
+\usepackage[plain,boxed]{algorithm}
 
 % Provides good formatting and \Call command
 \usepackage[noend]{algpseudocode}
@@ -177,20 +174,19 @@
 
 % Variables
 \newcommand{\vActor}{a}
-\newcommand{\vCacheItem}{x}
-\newcommand{\vCache}{C}
 \newcommand{\vContact}{c}
 \newcommand{\vGraph}{G}
-\newcommand{\vVertex}{v}
-\newcommand{\vSourceVertex}{u}
-\newcommand{\vTargetVertex}{v}
 \newcommand{\vMessage}{m}
 \newcommand{\vReachabilityRatio}{\rho}
+\newcommand{\vReachability}{r}
 \newcommand{\vReferenceTime}{\tau}
 \newcommand{\vScore}{s}
 \newcommand{\vSomeElement}{x}
-\newcommand{\vReachability}{r}
 \newcommand{\vTime}{t}
+
+\newcommand{\vVertex}{v}
+\newcommand{\vSourceVertex}{u}
+\newcommand{\vTargetVertex}{v}
 
 \NewDocumentCommand{\vVariable}{o}{\IfValueTF{#1}{x_{#1}}{x}}
 \NewDocumentCommand{\vFactor}{o}{\IfValueTF{#1}{f_{#1}}{f}}
@@ -205,28 +201,25 @@
 \newcommand{\vSet}[1]{#1}
 
 \newcommand{\vContacts}{\vSet{C}}
-\newcommand{\vVertices}{\vSet{V}}
 \newcommand{\vEdges}{\vSet{E}}
-\newcommand{\vFactors}{\vSet{F}}
-\newcommand{\vNeighbors}{\vSet{N}}
-\newcommand{\vSomeSet}{\vSet{X}}
-\newcommand{\vVariables}{\vSet{X}}
-\newcommand{\vScores}{\vSet{S}}
-\newcommand{\vSourceSet}{\vSet{S}}
-\newcommand{\vInfluenceSet}{\vSet{I}}
 \newcommand{\vFactorMessages}{\varLambda}
-\newcommand{\vPath}{\vSet{P}}
+\newcommand{\vFactors}{\vSet{F}}
+\newcommand{\vInfluenceSet}{\vSet{I}}
 \newcommand{\vMessages}{\vSet{M}}
+\newcommand{\vNeighbors}{\vSet{N}}
+\newcommand{\vPath}{\vSet{P}}
+\newcommand{\vScores}{\vSet{S}}
+\newcommand{\vSomeSet}{\vSet{X}}
+\newcommand{\vSourceSet}{\vSet{S}}
+\newcommand{\vVariables}{\vSet{X}}
+\newcommand{\vVertices}{\vSet{V}}
 
 % Parameters
-\newcommand{\pDuration}{T}
-\newcommand{\pNumActors}{K}
+\newcommand{\pExpiry}{T}
+\newcommand{\pMinContactDuration}{\delta}
 \newcommand{\pSendCoefficient}{\gamma}
 \newcommand{\pTimeBuffer}{\beta}
-\newcommand{\pTimeout}{T}
 \newcommand{\pTransmissionRate}{\alpha}
-\newcommand{\pExpiry}{\pDuration}
-\newcommand{\pMinContactDuration}{\delta}
 
 \newcommand{\pContactExpiry}{\pExpiry_\vContact}
 \newcommand{\pScoreExpiry}{\pExpiry_\vScore}
@@ -236,25 +229,25 @@
 
 \newcommand{\aBuffered}[1]{\attr{#1}{buffered}}
 \newcommand{\aContacts}[1]{\attr{#1}{contacts}}
+\newcommand{\aExposure}[1]{\attr{#1}{exposure}}
 \newcommand{\aKey}[1]{\attr{#1}{key}}
 \newcommand{\aName}[1]{\attr{#1}{name}}
 \newcommand{\aScores}[1]{\attr{#1}{scores}}
-\newcommand{\aExposure}[1]{\attr{#1}{exposure}}
 \newcommand{\aSender}[1]{\attr{#1}{sender}}
 \newcommand{\aThreshold}[1]{\attr{#1}{threshold}}
 \newcommand{\aTime}[1]{\attr{#1}{time}}
 \newcommand{\aValue}[1]{\attr{#1}{value}}
 
 \newcommand{\aActorContacts}{\aContacts{\vActor}}
-\newcommand{\aActorName}{\aName{\vActor}}
-\newcommand{\aActorExposure}{\aExposure{\vActor}}
 \newcommand{\aActorExposureValue}{\aValue{\aExposure{\vActor}}}
+\newcommand{\aActorExposure}{\aExposure{\vActor}}
+\newcommand{\aActorName}{\aName{\vActor}}
 \newcommand{\aActorScores}{\aScores{\vActor}}
 \newcommand{\aContactBuffered}{\aBuffered{\vContact}}
 \newcommand{\aContactKey}{\aKey{\vContact}}
 \newcommand{\aContactName}{\aName{\vContact}}
-\newcommand{\aContactThreshold}{\aThreshold{\vContact}}
 \newcommand{\aContactThresholdValue}{\aValue{\aContactThreshold}}
+\newcommand{\aContactThreshold}{\aThreshold{\vContact}}
 \newcommand{\aContactTime}{\aTime{\vContact}}
 \newcommand{\aNewScoreValue}{\aValue{\vNewScore}}
 \newcommand{\aScoreKey}{\aKey{\vScore}}
@@ -263,62 +256,59 @@
 \newcommand{\aScoreValue}{\aValue{\vScore}}
 
 % Function names
-\newcommand{\nBecome}{Become}
-\newcommand{\nMaximumOlderThan}{Maximum-Older-Than}
+\newcommand{\nApplyRiskScore}{Apply-Risk-Score}
 \newcommand{\nContactTtl}{Contact-Ttl}
-\newcommand{\nCreate}{Create}
+\newcommand{\nCreateActor}{Create-Actor}
 \newcommand{\nCreateFactorGraph}{Create-Factor-Graph}
-\newcommand{\nNullRiskScore}{Null-Risk-Score}
+\newcommand{\nCreate}{Create}
 \newcommand{\nDelete}{Delete}
-\newcommand{\nGenerateName}{Generate-Name}
 \newcommand{\nHandleContact}{Handle-Contact}
 \newcommand{\nHandleFlushTimeout}{Handle-Flush-Timeout}
 \newcommand{\nHandleRiskScore}{Handle-Risk-Score}
-\newcommand{\nCreateActor}{Create-Actor}
 \newcommand{\nInsert}{Insert}
+\newcommand{\nMaximumOlderThan}{Maximum-Older-Than}
 \newcommand{\nMaximum}{Maximum}
 \newcommand{\nMerge}{Merge}
 \newcommand{\nMinimum}{Minimum}
+\newcommand{\nNullRiskScore}{Null-Risk-Score}
 \newcommand{\nPredicate}{Predicate}
-\newcommand{\nUpdateSendThreshold}{Update-Send-Threshold}
+\newcommand{\nRiskPropagation}{Risk-Propagation}
 \newcommand{\nRiskScoreTtl}{Risk-Score-Ttl}
 \newcommand{\nSearch}{Search}
 \newcommand{\nSend}{Send}
-\newcommand{\nApplyRiskScore}{Apply-Risk-Score}
 \newcommand{\nSetSendThreshold}{Set-Send-Threshold}
-\newcommand{\nRiskPropagation}{Risk-Propagation}
 \newcommand{\nUpdateExposureScore}{Update-Exposure-Score}
+\newcommand{\nUpdateSendThreshold}{Update-Send-Threshold}
 
 % Function calls
+\newcommand{\cApplyRiskScore}[1][]{\Call{\nApplyRiskScore}{#1}}
 \newcommand{\cBecome}[1][]{\Call{\nBecome}{#1}}
 \newcommand{\cContactTtl}[1][]{\Call{\nContactTtl}{#1}}
 \newcommand{\cCreateActor}[1][]{\Call{\nCreateActor}{#1}}
 \newcommand{\cCreateFactorGraph}[1][]{\Call{\nCreateFactorGraph}{#1}}
 \newcommand{\cCreate}[1][]{\Call{\nCreate}{#1}}
-\newcommand{\cNullRiskScore}[1][]{\Call{\nNullRiskScore}{#1}}
 \newcommand{\cDelete}[1][]{\Call{\nDelete}{#1}}
-\newcommand{\cGenerateName}[1][]{\Call{\nGenerateName}{#1}}
 \newcommand{\cHandleContact}[1][]{\Call{\nHandleContact}{#1}}
 \newcommand{\cHandleFlushTimeout}[1][]{\Call{\nHandleFlushTimeout}{#1}}
 \newcommand{\cHandleRiskScore}[1][]{\Call{\nHandleRiskScore}{#1}}
 \newcommand{\cInsert}[1][]{\Call{\nInsert}{#1}}
-\newcommand{\cMaximum}[1][]{\Call{\nMaximum}{#1}}
 \newcommand{\cMaximumOlderThan}[1][]{\Call{\nMaximumOlderThan}{#1}}
+\newcommand{\cMaximum}[1][]{\Call{\nMaximum}{#1}}
 \newcommand{\cMerge}[1][]{\Call{\nMerge}{#1}}
 \newcommand{\cMinimum}[1][]{\Call{\nMinimum}{#1}}
+\newcommand{\cNullRiskScore}[1][]{\Call{\nNullRiskScore}{#1}}
 \newcommand{\cPredicate}[1][]{\Call{\nPredicate}{#1}}
-\newcommand{\cUpdateSendThreshold}[1][]{\Call{\nUpdateSendThreshold}{#1}}
+\newcommand{\cRiskPropagation}[1][]{\Call{\nRiskPropagation}{#1}}
 \newcommand{\cRiskScoreTtl}[1][]{\Call{\nRiskScoreTtl}{#1}}
 \newcommand{\cSearch}[1][]{\Call{\nSearch}{#1}}
 \newcommand{\cSend}[1][]{\Call{\nSend}{#1}}
-\newcommand{\cApplyRiskScore}[1][]{\Call{\nApplyRiskScore}{#1}}
 \newcommand{\cSetSendThreshold}[1][]{\Call{\nSetSendThreshold}{#1}}
-\newcommand{\cRiskPropagation}[1][]{\Call{\nRiskPropagation}{#1}}
 \newcommand{\cUpdateExposureScore}[1][]{\Call{\nUpdateExposureScore}{#1}}
+\newcommand{\cUpdateSendThreshold}[1][]{\Call{\nUpdateSendThreshold}{#1}}
 
 % Standard number sets
-\newcommand{\reals}{\mathbb{R}} 
 \newcommand{\naturals}{\mathbb{N}}
+\newcommand{\reals}{\mathbb{R}} 
 
 % Probability theory
 \NewDocumentCommand{\pr}{mo}{\IfValueTF{#2}{p_{#2}(#1)}{p(#1)}}
@@ -330,6 +320,7 @@
 \DeclareMathOperator{\argmax}{\arg\max}
 \DeclareMathOperator{\hav}{hav}
 \DeclareMathOperator{\vers}{vers}
+
 \newcommand{\card}[1]{\left\vert #1 \right\vert}
 \newcommand{\ceil}[1]{\left\lceil #1 \right\rceil}
 \newcommand{\floor}[1]{\left\lfloor #1 \right\rfloor}
