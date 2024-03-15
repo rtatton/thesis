@@ -1,44 +1,50 @@
 \chapter{Previous Designs and Implementations}\label{sec:previous-designs}
 
-% TODO - add a note that all approaches are based on system model for synchronous risk propagation, and execute offline
-Before working on ShareTrace, I did not have experience developing distributed algorithms. The approach proposed in \Cref{ch:risk-propagation} is my \emph{fifth} attempt\footnote{In completing this thesis, I have learned two important rules: define requirements clearly and recognize when those requirements are (not) satisfied. The time and effort needed for this thesis could have been significantly reduced had I adhered to these two simple rules.} at defining a performant implementation of risk propagation that satisfies the requirements of being decentralized and online. The prior four attempts offered valuable learnings that guided me toward the proposed approach. In fact, the approach defined in \Cref{sec:projected-subgraphs} is the topic of published work \cite{Tatton2022}. To document my efforts in developing this thesis, prior designs and implementations are provided in this appendix.
+% Describe implementations in the past tense.
+
+Before working on ShareTrace, I did not have experience developing distributed algorithms. The approach proposed in \Cref{ch:risk-propagation} is my \emph{fifth} attempt at defining a performant implementation of risk propagation that is also decentralized and online. The prior four attempts offered valuable learnings that guided me toward the proposed approach; however, only the latter supports truly decentralized, privacy-preserving contact tracing. To document my efforts in developing this thesis, prior designs and implementations are provided in this appendix.
 
 \section{Thinking Like a Vertex}\label{sec:giraph}
 
-The first iteration of risk propagation \cite{Tatton2020} utilized Apache Giraph \cite{Giraph2020}, an open-source version of the iterative graph-processing library, Pregel \cite{Malewicz2010}, which is based on the bulk synchronous parallel model of distributed computing \cite{Valiant1990}. Giraph follows the \define{``think like a vertex'' paradigm} in which the algorithm is specified in terms of the local information available to a graph node \cite{McCune2015}.
+The first iteration of risk propagation\footnote{\url{https://github.com/cwru-xlab/sharetrace-giraph}} utilized Apache Giraph\footnote{\url{https://giraph.apache.org}}, an open-source version of the iterative graph-processing library, Pregel \citep{Malewicz2010}, which is based on the bulk synchronous parallel model of distributed computing \citep{Valiant1990}. Giraph follows the \define{``think like a vertex'' paradigm} in which the algorithm is specified in terms of the local information available to a graph \vertexName{} \citep{McCune2015}.
 
-% TODO - define Personal Data Accounts?
 % TODO - Add Google/Apple citation
-% TODO - is it ephemeral identifiers or EphID?
-Risk propagation was implemented as defined in \cite{Ayday2020,Ayday2021}, using the factor graph representation of the contact network. However, because the Google/Apple API does not permit remotely persisting ephemeral identifiers, the implementation assumed that user geolocation data would be analyzed to generate the factor nodes in the factor graph (\Cref{sec:location-based}). \Cref{fig:aws-architecture} describes the high-level architecture. Callouts 1, 2, and 4 were implemented using a fan-out design pattern in which a \define{ventilator} Lambda function divides the work amongst \define{worker} Lambda functions.
+Risk propagation was implemented as defined by \citet{Ayday2020,Ayday2021}, using the factor graph representation of the contact network. Moreover, the implementation assumed the use of Dataswyft Personal Data Accounts\footnote{\url{https://www.dataswyft.io}}, which provide a data-oriented interface to self-sovereign identity \citep[pp. 98--99]{Preukschat2021}. However, because the Google/Apple API does not permit remotely persisting ephemeral identifiers, the implementation assumed that user geolocation data would be analyzed to generate the factor \verticesName{} in the factor graph (\Cref{sec:location-based}). \Cref{fig:aws-architecture} describes the high-level architecture. Callouts 1, 2, and 4 were implemented using a fan-out design in which a \define{ventilator} Lambda function divides the work amongst \define{worker} Lambda functions.
 
 \begin{figure}[htbp]
 \centering
 \includegraphics[width=\textwidth]{aws-architecture}
-\caption[ShareTrace batch-processing architecture]{ShareTrace batch-processing architecture. (1) An AWS Lambda function retrieves the recent risk scores and location data from the Dataswyft Personal Data Accounts (PDAs) of ShareTrace users. Risk scores are formatted as Giraph nodes and stored in an Amazon Simple Storage Service (S3) bucket. Location data is stored in a separate S3 bucket. (2) A Lambda function performs a contact search over the location data and stores the contacts as Giraph edges in the same bucket that stores the Giraph nodes. (3) Amazon Elastic MapReduce (EMR) runs risk propagation as a Giraph job and stores the exposure scores in an S3 bucket. (4) A Lambda function stores the exposure score of each user in their respective PDA.}
+\caption[ShareTrace batch-processing architecture]{ShareTrace batch-processing architecture. \ding{202} An AWS Lambda function\protect\footnotemark{} retrieves the recent risk scores and location data from the Dataswyft Personal Data Accounts (PDAs) of ShareTrace users. Risk scores are formatted as Giraph \verticesName{} and stored in an Amazon Simple Storage Service\protect\footnotemark{} (S3) bucket. Location data is stored in a separate S3 bucket. \ding{203} A Lambda function performs a contact search over the location data and stores the contacts as Giraph edges in the same bucket that stores the Giraph \verticesName. \ding{204} Amazon Elastic MapReduce\protect\footnotemark{} (EMR) runs risk propagation as a Giraph job and stores the exposure scores in an S3 bucket. \ding{205} A Lambda function stores the exposure score of each user in their respective PDA.}
 \label{fig:aws-architecture}
 \end{figure}
 
-Several factors prompted me to search for an alternative implementation.
+\addtocounter{footnote}{-1}
+\addtocounter{footnote}{-1}
+\footnotetext[\thefootnote]{\url{https://aws.amazon.com/lambda}}
+\addtocounter{footnote}{1}
+\footnotetext[\thefootnote]{\url{https://aws.amazon.com/s3}}
+\addtocounter{footnote}{1}
+\footnotetext[\thefootnote]{\url{https://aws.amazon.com/emr}}
 
-\begin{enumerate}
-  \item \emph{Dependency management incompatibility}. A major cause for redesigning the implementation was the dependency version conflicts between Giraph and the other libraries. In spite of several attempts (e.g., using different library versions, using different versions of Giraph, and forcing specific transitive dependency versions) to resolve these conflicts, a lack of personal development experience and stalled progress prompted me pursue other approaches of implementation.
-  \item \emph{Implementation complexity}. For a relatively straightforward data flow, the architecture in \Cref{fig:aws-architecture} corresponds to over 4,000 lines of source code. In retrospect, AWS Step Functions could have been used to orchestrate the workflow, including the fan-out design pattern, which would have simplified the Lambda function implementations. Regarding the implementation of risk propagation, one-mode projection onto variable nodes (first used in \Cref{sec:projected-subgraphs}) would have simplified the implementation since it avoids multiple node types, multiple message types, and enables the encapsulation of state and message-passing behavior.
-  \item \emph{External data persistence}. One of the core tenets of Dataswyft is that the user fully controls the access to their data. However, as shown in \Cref{fig:aws-architecture}, user data is stored in S3 buckets. While it is possible to encrypt S3 objects at rest and enforce a short data retention policy, data persistence to any extent is suboptimal for \emph{privacy-preserving} digital contact tracing.
-\end{enumerate}
+\clearpage
+
+A couple factors prompted me to search for an alternative implementation.
+  \begin{enumerate}
+    \item \emph{Dependency management incompatibility}. The primary impetus for reimplementation was the dependency conflicts between Giraph and other libraries. Despite several attempts (e.g., using different library versions, using different versions of Giraph, and forcing specific versions of transitive dependencies) to resolve the conflicts, a lack of personal development experience and stalled progress prompted me pursue alternative implementations.
+    \item \emph{Implementation complexity}. For a relatively straightforward data flow, the architecture in \Cref{fig:aws-architecture} corresponded to over 4,000 lines of source code. In retrospect, AWS Step Functions\footnote{\url{https://aws.amazon.com/step-functions}} could have been used to orchestrate the workflow, including the fan-out design pattern, which would have simplified the Lambda function implementations. Regarding the implementation of risk propagation, one-mode projection (first used in \Cref{sec:projected-subgraphs}) would have simplified the implementation since it avoids types of \verticesName{} and messages.
+  \end{enumerate}
 
 \section{Subgraph Actors}\label{sec:subgraph-actors}
 
-In an attempt to simplify the design in \Cref{sec:giraph}, I rewrote risk propagation using Ray, a Python library that ``aims to provide a universal API for distributed computing'' \cite{RayArchitecture}. While it claims to support actor-based programming, Ray only offers coarse-grained concurrency, with each actor being mapped to a machine processor. As with \Cref{sec:giraph}, I assumed the factor graph representation of the contact network. To achieve parallelism, the factor graph is partitioned amongst the actors such that each actor maintains a subset of variable nodes \emph{or} factor nodes. The graph topology is stored in shared memory so that all actors can efficiently access it. The lifetime of this design was brief for the following reasons.
-
-\begin{enumerate}
-\item \emph{Poor performance}. Communication between Ray actors requires message serialization. Moreover, partitioning the factor graph into subsets of factor and variable nodes results in maximal interprocess communication. Unsurprisingly, this choice of partitioning manifested in slow runtime performance.
-\item \emph{Design complexity}. Not using a framework, like Giraph, meant that this implementation required more low-level code to implement actor functionality and message passing. Regardless of the performance, the overall design of this implementation was poorly organized and overthought.
-\end{enumerate}
+In an attempt to simplify the design in \Cref{sec:giraph}, I rewrote risk propagation using the Ray Python library\footnote{\url{https://www.ray.io}}. While it claims to support actor-based programming, Ray only offers coarse-grained concurrency, with each actor being mapped to a physical core. To achieve parallelism, the factor graph was partitioned amongst the actors such that each actor maintained a subset of variable \verticesName{} \emph{or} factor \verticesName. The graph topology was stored in shared memory since it was immutable. The lifetime of this design was brief for the following reasons.
+  \begin{enumerate}
+    \item \emph{Poor performance}. Communication between Ray actors requires message serialization. Moreover, partitioning the factor graph into subsets of factor \verticesName{} and variable \verticesName{} results in maximal interprocess communication. Unsurprisingly, this choice of partitioning manifested in poor runtime performance.
+    \item \emph{Design complexity}. Not using a framework, like Giraph, meant that this implementation required more low-level code to implement actor functionality and message passing. Regardless of the performance, the overall design of this implementation was poorly organized and overthought.
+  \end{enumerate}
 
 \section{Driver-Monitor-Worker Framework}\label{sec:mwd-framework}
 
-Based on the poor runtime performance and complexity of the approach taken in \Cref{sec:subgraph-actors}, I speculated that centralizing the mutable aspects of risk propagation (i.e., the current value of each variable node) would improve both metrics. With this is mind, I designed the \define{monitor-worker-driver} (MWD) \define{framework}, which draws inspiration from the \define{tree of actors} design pattern \cite{RayTreeOfActors}. \Cref{fig:mwd-framework} describes the framework.
+Based on the poor runtime performance and complexity of the approach taken in \Cref{sec:subgraph-actors}, I speculated that centralizing the mutable aspects of risk propagation (i.e., the current value of each variable \vertexName) would improve both metrics. With this is mind, I designed the \define{monitor-worker-driver} (MWD) \define{framework}, which draws inspiration from the \define{tree of actors} design pattern\footnote{\url{https://docs.ray.io/en/latest/ray-core/patterns/tree-of-actors.html}}. \Cref{fig:mwd-framework} describes the framework.
 
 \begin{figure}[htbp]
 \centering
@@ -47,11 +53,11 @@ Based on the poor runtime performance and complexity of the approach taken in \C
 \label{fig:mwd-framework}
 \end{figure}
 
-For risk propagation, the driver creates the factor graph from the set of risk scores $\vScores$ and contacts $\vContacts$, stores the factor graph in shared memory, sets the initial state of the monitor to be the maximum risk score of each user, and puts all risk scores in the monitor queue. During message passing, the monitor maintains the maximum risk score (i.e., exposure score) for each variable node.
+For risk propagation, the driver creates the factor graph from the set of risk scores $\vScores$ and contacts $\vContacts$, stores the factor graph in shared memory, sets the initial state of the monitor to be the maximum risk score of each user, and puts all risk scores in the monitor queue. During message passing, the monitor maintains the maximum risk score (i.e., exposure score) for each variable \vertexName.
 
 The MWD framework was the first approach that utilized the send coefficient to ensure the convergence and termination of message passing. However, because the MWD-based implementation assumed the factor graph representation of the contact network, the send coefficient was applied to both variable and factor messages.
 
-Compared to the approach in \Cref{sec:subgraph-actors}, this implementation provides a cleaner design and less communication overhead. However, what prompted me to consider (yet another) an alternative implementation was its scalability. Because the monitor processes messages serially, it is a bottleneck for algorithms in which the workers perform fine-grained tasks. Indeed, the Ray documentation notes that the parallelization of small tasks is an anti-pattern because the interprocess communication cost exceeds the benefit of multiprocessing \cite{RayFineGrainedTasks}. Unfortunately, the computation performed by factor nodes and variable nodes is too fine-grained, so the scalability of the MWD framework was demonstrably poor.
+Compared to \Cref{sec:subgraph-actors}, this implementation provides a cleaner design and less communication overhead. However, what prompted me to consider (yet another) an alternative implementation was its scalability. Because the monitor processes messages serially, it is a bottleneck for algorithms in which the workers perform fine-grained tasks. Indeed, the Ray documentation\footnote{\url{https://docs.ray.io/en/latest/ray-core/patterns/too-fine-grained-tasks.html}} notes that the parallelization of small tasks is an anti-pattern because the interprocess communication cost exceeds the benefit of multiprocessing. Unfortunately, the computation performed by factor \verticesName{} and variable \verticesName{} is too fine-grained, so the scalability of the MWD framework was demonstrably poor.
 
 \section{Projected Subgraph Actors}\label{sec:projected-subgraphs}
 
@@ -383,15 +389,15 @@ Note that the set of neighbors $\query(i)$ of user $i$ corresponds to the geoloc
 		\query(i) = \bigcup_{\ell \in \htwo_i} \query(\ell).
 	\end{equation*}
 On line \ref{step:to-users}, the operation \Call{Unique-Users}{} maps these near-neighbors back to the associated users, removing any duplicates that may arise from mapping multiple geolocations to the same user. Finally, line \ref{step:subset} maps the set of users $\users$ back to their geolocation histories and runs \Call{Naive-Contact-Search}{} on the resultant subset.
-	\begin{algorithm}[ht!]
-	\begin{algorithmic}[1]
-		\Title{Indexed-Contact-Search}{\histories}
-		\State $\sindex \assign \Call{Spatially-Index}{\histories}$
-		\State $\query \assign \Call{Fixed-Radius-Near-Neighbors}{\sindex, \epsilon}$ \label{step:query}
-		\State $\users \assign \Call{Unique-Users}{\query, \histories}$ \label{step:to-users}
-		\State \Return \Call{Naive-Contact-Search}{$\{\htwo_i \in \histories \mid i \in \users\}$} \label{step:subset}
-	\end{algorithmic}
-	\end{algorithm}
+\begin{algorithm}[ht!]
+\begin{algorithmic}[1]
+\Title{Indexed-Contact-Search}{\histories}
+\State $\sindex \assign \Call{Spatially-Index}{\histories}$
+\State $\query \assign \Call{Fixed-Radius-Near-Neighbors}{\sindex, \epsilon}$ \label{step:query}
+\State $\users \assign \Call{Unique-Users}{\query, \histories}$ \label{step:to-users}
+\State \Return \Call{Naive-Contact-Search}{$\{\htwo_i \in \histories \mid i \in \users\}$} \label{step:subset}
+\end{algorithmic}
+\end{algorithm}
 
 To carry out FR-NNS, one approach is to use a \define{ball tree}, a complete binary tree that associates with each node a hypersphere that contains a subset of the data \citep{Omohundro1989, Neeraj2008, Kibriya2007}. Any metric can be used to perform FR-NNS on a ball tree. However, because geolocation is represented as geographic coordinates, metrics that assume a Cartesian coordinate system may be unsuitable. One of the simplest geometric models of the Earth is that of a sphere. Given two geographic coordinates, the problem of finding the length of the geodesic\footnote{The \define{geodesic} is the shortest segment between two points on an ellipsoid \citep{Lu2014}.} between them is known as the \define{inverse geodetic problem} \citep{Sjoberg2012}. Assuming a spherical Earth, the solution to the inverse problem is to find the length of the segment that joins the two points on a great circle\footnote{The \define{great circle} is the cross-section of a sphere that contains its center \citep{Lu2014}}.
 
@@ -437,12 +443,3 @@ The running time of \Call{Spatially-Index}{} is $\Theta\left(\card{\histories} \
 		\card{\histories} \geq \card{\sindex} \geq \card{\users}
 	\end{equation*}
 since $\card{\histories} = \card{\sindex}$ only if all geolocations in $\histories$ are distinct, and $\card{\sindex} = \card{\users}$ only if each user has exactly one geolocation that is distinct from all other users. Dependent upon the input, however, is $\card{\query}$. In the worst case, $\card{\query} \in O\left(\card{\sindex}^2\right)$ if each geolocation is $\epsilon$-proximal to all other geolocations. This implies that the overall worst-case running time of \Call{Indexed-Contact-Search}{} is $O(\card{\histories}^2)$. In practice, the running time depends on the geohash precision as well as the geospatial density and mobility behavior of the user population.
-
-\subsection{Closing Remarks}
-
-% Common short-comings and learnings of all previous approaches
-% Issues with location-based contact tracing:
-%   - Privacy
-%   - GPS fine-grained accuracy and power consumption
-%   - Downstream accuracy of risk propagation
-%   - Scalability
