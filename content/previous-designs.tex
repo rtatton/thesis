@@ -63,7 +63,7 @@ Compared to \Cref{sec:subgraph-actors}, this implementation provided a cleaner d
 
 The last alternative design of risk propagation is the subject of published work \citep{Tatton2022b} and preprint \citep{Tatton2022a}. Since those works were written during the coarse of my graduate studies, substantial portions of them are included below. The remainder of this section assumes the reader is familiar with \Cref{ch:risk-propagation}.
 
-As with \cRiskPropagation{} and all previous designs, this version of risk propagation is an offline algorithm that assumes all recent risk scores $\vScores$ and contacts $\vContacts$ as input. Let $\pNumberOfSubgraphs$ be the number of actors, where $\vGraph_k$ represents \indexed{k}{subgraph of contacts}. It is assumed that actor communication is expensive, so a partitioning algorithm \citep{Buluc2016} that minimizes communication complexity between actors is key to maximizing performance. Each actor is associated with a \define{remote mailbox} and a \define{local mailbox}. The former is designated for messages sent by other actors, while the latter is designated for messages associated with individuals within the same subgraph. For an actor to send a message to another actor, it must know the address of the target actor's remote mailbox and an identifier of the individual within the target actor's subgraph. The \cRiskPropagationMain{} operation describes the main steps.
+As with \cRiskPropagation{} and all previous designs, risk propagation is an offline algorithm. Let $\pNumberOfSubgraphs$ be the number of actors, where $\vGraph_k$ represents \indexed{k}{subgraph of contacts}. It is assumed that actor communication is expensive, so a partitioning algorithm \citep{Buluc2016} that minimizes communication complexity between actors is key to maximizing performance. Each actor is associated with a \define{remote mailbox} and a \define{local mailbox}. The former is designated for messages sent by other actors, while the latter is designated for messages associated with individuals within the same subgraph. For an actor to send a message to another actor, it must know the address of the target actor's remote mailbox and an identifier of the individual within the target actor's subgraph. The \cRiskPropagationMain{} operation describes the main steps.
 
 \begin{function}{\nRiskPropagationMain}[\vScores, \vContacts]
   \State Create the contact network $\vGraph$ from the contact set $\vContacts$
@@ -73,11 +73,17 @@ As with \cRiskPropagation{} and all previous designs, this version of risk propa
   \State Collect the exposure scores from all actors
 \end{function}
 
+The \cRiskPropagationActor{} operation defines the behavior of an actor. Compared to asynchronous risk propagation (\Cref{sec:asynchronous}), actor behavior differs in two significant ways:
+\begin{enumerate}
+  \item The send threshold is applied \emph{across} contacts and discriminates against risk scores that are newer than the initial risk score. The latter is based on the assumption that newer risk scores are less likely to be propagated by other actors.
+  \item When computing messages, newer risk scores have more relevance than older messages. The rate at which the relevance decays over time is captured by the rate constant $\lambda > 0$.
+\end{enumerate}
+
 \begin{function}{\nRiskPropagationActor}[\vGraph_k, \vScores_k]
   \ForEach{$\vVertex_i \in \vGraph_k$}
     \State $r_i \assign (\vScore_i^0, \vTime_i^0) = \max \vScores_i$
     \ForEach{$\vVertex_j \in \vNeighbors_i$}
-      \State $\vMessage_{ij} \assign \Call{Compute-Message}{\vVertex_j, \vScores_i}$
+      \State $\vMessage_{ij} \assign \cComputeMessage[\vVertex_i, \vVertex_j, \vScores_i]$
       \State Send $\vMessage_{ij}$
     \EndFor
   \EndFor
@@ -85,7 +91,7 @@ As with \cRiskPropagation{} and all previous designs, this version of risk propa
     \State Receive $\vMessage_{ji}$
     \State $r_i \assign \max \{r_i, \vMessage_{ji}\}$
     \ForEach{$\vVertex_\ell \in \vNeighbors_i \setminus \{\vVertex_j\}$}
-      \State $\vMessage_{i\ell} \assign \Call{Compute-Message}{\vVertex_\ell, \vMessage_{ji}}$
+      \State $\vMessage_{i\ell} \assign \cComputeMessage[\vVertex_i, \vVertex_\ell, \vMessage_{ji}]$
       \If{$\vScore_{i\ell} \geq \pSendCoefficient \vScore_i^0$ \AND $\vTime_{i\ell} \leq \vTime_i^0$}
         \State Send $\vMessage_{i\ell}$
       \EndIf
@@ -93,31 +99,10 @@ As with \cRiskPropagation{} and all previous designs, this version of risk propa
   \EndWhile
 \end{function}
 
-\begin{function}{\nComputeMessage}[\vVertex_\ell, \vMessage_{ji}]
-  \State $(\vScore^\star, \vTime^\star) \assign \argmax \SetBuilder{\vScore^{\lambda(\vTime - \vTime_{ij})}}{(\vScore, \vTime) \in \vMessage_{ji}, \vTime < \vTime_{ij} + \pTimeBuffer}$
-  \State \Return $(\pTransmissionRate\vScore^\star, \vTime^\star)$
+\begin{function}{\nComputeMessage}[\vVertex_i, \vVertex_j, \vMessage]
+  \State $(\vScore^\star, \vTime^\star) \assign \argmax \SetBuilder{\vScore^{\lambda(\vTime - \vTime_{ij})}}{(\vScore, \vTime) \in \vMessage, \vTime < \vTime_{ij} + \pTimeBuffer}$
+  \State \Return $\{(\pTransmissionRate\vScore^\star, \vTime^\star)\}$
 \end{function}
-
-%Compared to the approaches described in \Cref{ch:risk-propagation}:
-%
-%Similar to synchronous risk propagation:
-%  - Offline – implies static topology
-%
-%Similar to asynchronous risk propagation:
-%  - Uses send coefficient to terminate message passing
-%  - Besides the initial message, each risk score is processed individually
-%  
-%Unique traits:
-%  - Uses additional termination conditions from MWD approach (see preprint)
-%  - Computing the first risk score accounts for the recency of the previously computed risk score – no effect after the first message
-%  - Temporal filtering based on the initial risk score
-%  - Message reachability is also defined with temporal filtering
-
-% Recognized that the state maintained by the monitor can be distributed amongst actors that represent individuals – this avoids the bottleneck
-% First exposure to the actor model and temporal networks
-% Message passing amongst actors that represent contact subnetworks
-% Asynchronous, but still offline since it assumes an "initial" risk score – send threshold/coefficient maintained for all contacts of a user, rather than individual contacts
-% Use of Ray library is likely the reason for poor runtime performance and limited concurrency
 
 \subsection{Evaluation}\label{sec:evaluation}
 
