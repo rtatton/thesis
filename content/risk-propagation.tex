@@ -125,7 +125,7 @@ To detect convergence, the normed difference between the current and previous ex
   \EndFor
   \While{$\| \vExposureScores{n} - \vExposureScores{n - 1} \| > \pDiff$}
     \ForEach{$\{\vVariable[i], \vFactor[ij]\} \in \vEdges$}
-      \State $\vVariableMessage{i}{j}{n} \assign \vRiskScores{i}{n - 1} \setminus \setBuilder{\vFactorMessage{j}{i}{k}}{k \in [1 \twodots n - 1]}$
+      \State $\vVariableMessage{i}{j}{n} \assign \vRiskScores{i}{n - 1} \setminus \setBuilder{\vFactorMessage{j}{i}{k}}{k \in \intRange{1}{n - 1}}$
     \EndFor
     \ForEach{$\{\vVariable[i], \vFactor[ij]\} \in \vEdges$}
       \State $\vFactorMessage{i}{j}{n} \assign \max \setBuilder{\pTransmissionRate \vScore_\vTime}{\vScore_\vTime \in \vVariableMessage{i}{j}{n}, \vTime < \vTime_{ij} + \pTimeBuffer}$
@@ -699,14 +699,14 @@ The system model is similar to that in previous work \citep{Ayday2020, Ayday2021
   \item No geolocation data is collected \citep{Ayday2020}. As a decentralized, proximity-based solution, it is not necessary to collect user geolocation data. See \cref{sec:location-based} for a discussion of a geolocation-based design that was considered.
 \end{itemize}
 
-\begin{figure}[htb]
-    \includegraphics[width=\textwidth]{distributed-dataflow}
-    \caption[Distributed ShareTrace data flow]{Distributed ShareTrace data flow. \emph{Contacts} include the actor name and contact time of all users with which the user came into close proximity. \emph{Personal data} includes the user's demographics, reported symptoms, and diagnosis. It may also include machine-generated biomarkers and electronic health record data \citep{Ayday2020}.}
-    \label{fig:distributed-dataflow}
-\end{figure}
-
-\begin{figure}[htb]
-    \includegraphics[width=\textwidth]{centralized-dataflow}
-    \caption[Centralized ShareTrace data flow]{Centralized ShareTrace data flow. \emph{Contacts} include the actor name and contact timestamp of all users with which the user came into close proximity. \emph{Personal data} includes the user's demographics, reported symptoms, and diagnosis. It may also include machine-generated biomarkers and electronic health record data \citep{Ayday2020}.}
-    \label{fig:centralized-dataflow}
-\end{figure}
+%\begin{figure}[htb]
+%    \includegraphics[width=\textwidth]{distributed-dataflow}
+%    \caption[Distributed ShareTrace data flow]{Distributed ShareTrace data flow. \emph{Contacts} include the actor name and contact time of all users with which the user came into close proximity. \emph{Personal data} includes the user's demographics, reported symptoms, and diagnosis. It may also include machine-generated biomarkers and electronic health record data \citep{Ayday2020}.}
+%    \label{fig:distributed-dataflow}
+%\end{figure}
+%
+%\begin{figure}[htb]
+%    \includegraphics[width=\textwidth]{centralized-dataflow}
+%    \caption[Centralized ShareTrace data flow]{Centralized ShareTrace data flow. \emph{Contacts} include the actor name and contact timestamp of all users with which the user came into close proximity. \emph{Personal data} includes the user's demographics, reported symptoms, and diagnosis. It may also include machine-generated biomarkers and electronic health record data \citep{Ayday2020}.}
+%    \label{fig:centralized-dataflow}
+%\end{figure}

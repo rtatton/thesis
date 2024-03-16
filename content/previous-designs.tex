@@ -9,7 +9,7 @@ Before working on ShareTrace, I did not have experience developing distributed a
 The first iteration of risk propagation\footnote{\url{https://github.com/cwru-xlab/sharetrace-giraph}} utilized Apache Giraph\footnote{\url{https://giraph.apache.org}}, an open-source version of the iterative graph-processing library, Pregel \citep{Malewicz2010}, which is based on the bulk synchronous parallel model of distributed computing \citep{Valiant1990}. Giraph follows the \define{``think like a vertex'' paradigm} in which the algorithm is specified in terms of the local information available to a graph \vertexName{} \citep{McCune2015}.
 
 % TODO - Add Google/Apple citation
-Risk propagation was implemented as defined by \citet{Ayday2020,Ayday2021}, using the factor graph representation of the contact network. Moreover, the implementation assumed the use of Dataswyft Personal Data Accounts\footnote{\url{https://www.dataswyft.io}}, which provide a data-oriented interface to self-sovereign identity \citep[pp. 98--99]{Preukschat2021}. However, because the Google/Apple API does not permit remotely persisting ephemeral identifiers, the implementation assumed that user geolocation data would be analyzed to generate the factor \verticesName{} in the factor graph (\Cref{sec:location-based}). \Cref{fig:aws-architecture} describes the high-level architecture. Callouts 1, 2, and 4 were implemented using a fan-out design in which a \define{ventilator} Lambda function divides the work amongst \define{worker} Lambda functions.
+Risk propagation was implemented as defined by \citet{Ayday2020,Ayday2021}, using the factor graph representation of the contact network. Moreover, the implementation assumed the use of Dataswyft Personal Data Accounts\footnote{\url{https://www.dataswyft.io}}, which provide a data-oriented interface to self-sovereign identity \citep[pp. 98--99]{Preukschat2021}. However, because the Google/Apple API\footnote{\url{https://covid19.apple.com/contacttracing}} does not permit remotely persisting ephemeral identifiers, the implementation assumed that user geolocation data would be analyzed to generate the factor \verticesName{} in the factor graph (\Cref{sec:location-based}). \Cref{fig:aws-architecture} describes the high-level architecture. Callouts 1, 2, and 4 were implemented using a fan-out design in which a \define{ventilator} Lambda function divides the work amongst \define{worker} Lambda functions.
 
 \begin{figure}[htbp]
 \centering
@@ -34,7 +34,7 @@ A couple factors prompted me to search for an alternative implementation.
     \item \emph{Implementation complexity}. For a relatively straightforward data flow, the architecture in \Cref{fig:aws-architecture} corresponded to over 4,000 lines of source code. In retrospect, AWS Step Functions\footnote{\url{https://aws.amazon.com/step-functions}} could have been used to orchestrate the workflow, including the fan-out design pattern, which would have simplified the Lambda function implementations. Regarding the implementation of risk propagation, one-mode projection (first used in \Cref{sec:projected-subgraphs}) would have simplified the implementation since it avoids types of \verticesName{} and messages.
   \end{enumerate}
 
-\section{Subgraph Actors}\label{sec:subgraph-actors}
+\section{Factor Subgraph Actors}\label{sec:subgraph-actors}
 
 In an attempt to simplify the design in \Cref{sec:giraph}, I rewrote risk propagation using the Ray Python library\footnote{\url{https://www.ray.io}}. While it claims to support actor-based programming, Ray only offers coarse-grained concurrency, with each actor being mapped to a physical core. To achieve parallelism, the factor graph was partitioned amongst the actors such that each actor maintained a subset of variable \verticesName{} \emph{or} factor \verticesName. The graph topology was stored in shared memory since it was immutable. The lifetime of this design was brief for the following reasons.
   \begin{enumerate}
@@ -61,15 +61,73 @@ Compared to \Cref{sec:subgraph-actors}, this implementation provided a cleaner d
 
 \section{Projected Subgraph Actors}\label{sec:projected-subgraphs}
 
+The last alternative design of risk propagation is the subject of published work \citep{Tatton2022b} and preprint \citep{Tatton2022a}. Since those works were written during the coarse of my graduate studies, substantial portions of them are included below. The remainder of this section assumes the reader is familiar with \Cref{ch:risk-propagation}.
+
+As with \cRiskPropagation{} and all previous designs, this version of risk propagation is an offline algorithm that assumes all recent risk scores $\vScores$ and contacts $\vContacts$ as input. Let $\pNumberOfSubgraphs$ be the number of actors, where $\vGraph_k$ represents \indexed{k}{subgraph of contacts}. It is assumed that actor communication is expensive, so a partitioning algorithm \citep{Buluc2016} that minimizes communication complexity between actors is key to maximizing performance. Each actor is associated with a \define{remote mailbox} and a \define{local mailbox}. The former is designated for messages sent by other actors, while the latter is designated for messages associated with individuals within the same subgraph. For an actor to send a message to another actor, it must know the address of the target actor's remote mailbox and an identifier of the individual within the target actor's subgraph. The \cRiskPropagationMain{} operation describes the main steps.
+
+\begin{function}{\nRiskPropagationMain}[\vScores, \vContacts]
+  \State Create the contact network $\vGraph$ from the contact set $\vContacts$
+  \ForEach{$k \in \intRange{1}{\pNumberOfSubgraphs}$}
+    \State $\cRiskPropagationActor[\vGraph_k, \vScores_k]$
+  \EndFor
+  \State Collect the exposure scores from all actors
+\end{function}
+
+\begin{function}{\nRiskPropagationActor}[\vGraph_k, \vScores_k]
+  \ForEach{$\vVertex_i \in \vGraph_k$}
+    \State $r_i \assign (\vScore_i^0, \vTime_i^0) = \max \vScores_i$
+    \ForEach{$\vVertex_j \in \vNeighbors_i$}
+      \State $\vMessage_{ij} \assign \Call{Compute-Message}{\vVertex_j, \vScores_i}$
+      \State Send $\vMessage_{ij}$
+    \EndFor
+  \EndFor
+  \While{termination condition is not satisfied}
+    \State Receive $\vMessage_{ji}$
+    \State $r_i \assign \max \{r_i, \vMessage_{ji}\}$
+    \ForEach{$\vVertex_\ell \in \vNeighbors_i \setminus \{\vVertex_j\}$}
+      \State $\vMessage_{i\ell} \assign \Call{Compute-Message}{\vVertex_\ell, \vMessage_{ji}}$
+      \If{$\vScore_{i\ell} \geq \pSendCoefficient \vScore_i^0$ \AND $\vTime_{i\ell} \leq \vTime_i^0$}
+        \State Send $\vMessage_{i\ell}$
+      \EndIf
+    \EndFor
+  \EndWhile
+\end{function}
+
+\begin{function}{\nComputeMessage}[\vVertex_\ell, \vMessage_{ji}]
+  \State $(\vScore^\star, \vTime^\star) \assign \argmax \SetBuilder{\vScore^{\lambda(\vTime - \vTime_{ij})}}{(\vScore, \vTime) \in \vMessage_{ji}, \vTime < \vTime_{ij} + \pTimeBuffer}$
+  \State \Return $(\pTransmissionRate\vScore^\star, \vTime^\star)$
+\end{function}
+
+%Compared to the approaches described in \Cref{ch:risk-propagation}:
+%
+%Similar to synchronous risk propagation:
+%  - Offline – implies static topology
+%
+%Similar to asynchronous risk propagation:
+%  - Uses send coefficient to terminate message passing
+%  - Besides the initial message, each risk score is processed individually
+%  
+%Unique traits:
+%  - Uses additional termination conditions from MWD approach (see preprint)
+%  - Computing the first risk score accounts for the recency of the previously computed risk score – no effect after the first message
+%  - Temporal filtering based on the initial risk score
+%  - Message reachability is also defined with temporal filtering
+
+% Recognized that the state maintained by the monitor can be distributed amongst actors that represent individuals – this avoids the bottleneck
+% First exposure to the actor model and temporal networks
+% Message passing amongst actors that represent contact subnetworks
+% Asynchronous, but still offline since it assumes an "initial" risk score – send threshold/coefficient maintained for all contacts of a user, rather than individual contacts
+% Use of Ray library is likely the reason for poor runtime performance and limited concurrency
+
 \subsection{Evaluation}\label{sec:evaluation}
 
 \subsubsection{Experimental Design}
 
-Risk propagation requires a partitioning or clustering algorithm, as described in Algorithm \ref{alg:rp-main}. We configured the METIS graph partitioning algorithm \cite{Karypis1998} to use $k$-way partitioning with a load imbalance factor of 0.2, to attempt contiguous partitions that have minimal inter-partition connectivity, to apply 10 iterations of refinement during each stage of the uncoarsening process, and to use the best of 3 cuts.
+Risk propagation requires a partitioning or clustering algorithm, as described in Algorithm \ref{alg:rp-main}. We configured the METIS graph partitioning algorithm \citep{Karypis1998} to use $k$-way partitioning with a load imbalance factor of 0.2, to attempt contiguous partitions that have minimal inter-partition connectivity, to apply 10 iterations of refinement during each stage of the uncoarsening process, and to use the best of 3 cuts.
 
 \subsubsection{Synthetic Graphs}\label{sec:synthetic-eval}
 
-We evaluate the scalability and efficiency of risk propagation on three types of graphs: a random geometric graph (RGG) \cite{Dall2002}, a benchmark graph (LFRG) \cite{Lancichinetti2008}, and a clustered scale-free graph (CSFG) \cite{Holme2002}. Together, these graphs demonstrate some aspects of community structure \cite{Fortunato2010} which allows us to more accurately measure the performance of risk propagation. When constructing a RGG, we set the radius to $r(n) = \min \left(1, 0.25^{\log_{10}(n) - 1}\right)$, where $n$ is the number of users. This allows us to scale the size of the graph while maintaining reasonable density. We use the following parameter values to create LFRGs: mixing parameter $\mu = 0.1$, degree power-law exponent $\gamma = 3$, community size power-law exponent $\beta = 2$, degree bounds $(k_{\min}, k_{\max}) = (3, 50)$, and community size bounds $(s_{\min}, s_{\max}) = (10, 100)$. Our choices align with the suggestions by \cite{Lancichinetti2008} in that $\gamma \in \mathbb{R}_{[2, 3]}$,  $\beta \in \mathbb{R}_{[1, 2]}$, $k_{\min} < s_{\min}$, and $k_{\max} < s_{\max}$. To build CSFGs, we add $m = 2$ edges for each new user and use a triad formulation probability of $P_t = 0.95$. For all graphs, we remove self-loops and isolated users.
+We evaluate the scalability and efficiency of risk propagation on three types of graphs: a random geometric graph (RGG) \citep{Dall2002}, a benchmark graph (LFRG) \citep{Lancichinetti2008}, and a clustered scale-free graph (CSFG) \citep{Holme2002}. Together, these graphs demonstrate some aspects of community structure \citep{Fortunato2010} which allows us to more accurately measure the performance of risk propagation. When constructing a RGG, we set the radius to $r(n) = \min \left(1, 0.25^{\log_{10}(n) - 1}\right)$, where $n$ is the number of users. This allows us to scale the size of the graph while maintaining reasonable density. We use the following parameter values to create LFRGs: mixing parameter $\mu = 0.1$, degree power-law exponent $\gamma = 3$, community size power-law exponent $\beta = 2$, degree bounds $(k_{\min}, k_{\max}) = (3, 50)$, and community size bounds $(s_{\min}, s_{\max}) = (10, 100)$. Our choices align with the suggestions by \citet{Lancichinetti2008} in that $\gamma \in \mathbb{R}_{[2, 3]}$,  $\beta \in \mathbb{R}_{[1, 2]}$, $k_{\min} < s_{\min}$, and $k_{\max} < s_{\max}$. To build CSFGs, we add $m = 2$ edges for each new user and use a triad formulation probability of $P_t = 0.95$. For all graphs, we remove self-loops and isolated users.
 
 The following defines our data generation process. Let $p$ be the probability of a user being ``high risk'' (i.e., $r \geq 0.5$) Then, with probability $p = 0.2$, we sample $L + 1$ values from the uniform distribution $\mathbb{U}_{[0.5, 1)}$. Otherwise, we sample from $\mathbb{U}_{[0, 0.5)}$. This assumes symptom scores and exposure scores are computed daily and includes the present day. We generate the times of these risk scores by sampling a time offset $t_{\text{off}} \sim \mathbb{U}_{[0\text{s}; 86,400\text{s}]}$ for each user such that $t_d = t_{\text{now}} + t_{\text{off}} - d~\text{days}$, where $d \in \mathbb{N}_{[0, L]}$. To generate a contact times, we follow the same procedure for risk scores, except that we randomly sample one of the $L + 1$ times and use that as the contact time.
 
@@ -83,7 +141,7 @@ To measure the scalability of risk propagation, we consider $n \in \mathbb{N}_{[
 
 \subsubsection{Real-World Graphs}
 
-We analyze the efficiency of risk propagation on three real-world contact networks that were collected through the SocioPatterns collaboration. Specifically, we use contact data in the setting of a high school (Thiers13) \cite{Fournet2014}, a workplace (InVS15), and a scientific conference (SFHH) \cite{Genois2018}. Because of limited availability of large-scale contact networks, we do not use real-world contact networks to measure the scalability of risk propagation.
+We analyze the efficiency of risk propagation on three real-world contact networks that were collected through the SocioPatterns collaboration. Specifically, we use contact data in the setting of a high school (Thiers13) \citep{Fournet2014}, a workplace (InVS15), and a scientific conference (SFHH) \citep{Genois2018}. Because of limited availability of large-scale contact networks, we do not use real-world contact networks to measure the scalability of risk propagation.
 
 To ensure that all risk scores are initially propagated, we shift all contact times forward by $\vReferenceTime$ and use $(\vReferenceTime - 1 \text{ day})$ when generating risk scores times. In this way, we ensure the most recent risk score is still older than the first contact time. Risk score values are generated in the same manner as described in Section \ref{sec:synthetic-eval} with the exception that we only generate one score. Lastly, we perform 10 iterations over each data set to obtain an average performance.
 
@@ -277,9 +335,9 @@ Fig. \ref{fig:runtime} describes the runtime behavior of risk propagation. The r
 \end{itemize}
 \subsection{System Model}
 % TODO Reference the AWS diagram
-The system model is very similar to previous work \cite{Ayday2020, Ayday2021} and designs. The only difference is that user geolocation data is collected instead of Bluetooth ephemeral identifiers.
+The system model is very similar to \citet{Ayday2020, Ayday2021} and designs. The only difference is that user geolocation data is collected instead of Bluetooth ephemeral identifiers.
 
-\define{Geohashing} is a public-domain encoding system that maps \define{geographic coordinates} (i.e., latitude-longitude ordered pairs \cite[p. 5]{Sickle2004}) to alphanumeric strings called \define{geohashes}, where the length of a geohash is correlated with its geospatial precision \cite{Morton1966}. To offer some basic privacy, a user's precise geolocation history is obfuscated on-device by encoding geographic coordinates as geohashes with 8-character precision which corresponds to a region of $730\mathrm{m}^2$.
+\define{Geohashing} is a public-domain encoding system that maps \define{geographic coordinates} (i.e., latitude-longitude ordered pairs \cite[p. 5]{Sickle2004}) to alphanumeric strings called \define{geohashes}, where the length of a geohash is correlated with its geospatial precision \citep{Morton1966}. To offer some basic privacy, a user's precise geolocation history is obfuscated on-device by encoding geographic coordinates as geohashes with 8-character precision which corresponds to a region of $730\mathrm{m}^2$.
 
 \subsection{Contact Search}
 
@@ -373,9 +431,9 @@ then it is recorded. The latest such sequence is used to define the contact betw
 %	\end{algorithm}
 
 \subsubsection{Indexed Contact Search}
-While the \textbf{for} loop in \Call{Naive-Contact-Search}{} is \define{embarrassingly parallel} \cite[p. 14]{Herlihy2012}, the naive approach is neither scalable nor efficient. It can be improved by observing that it is necessary, but not sufficient, that a pair of $\epsilon$-proximal geolocations exists between two geolocation histories for a contact to exist. Therefore, the geolocation histories $\histories$ can be indexed into a spatial data structure $\sindex$ \cite{Mokbel2003, Dinh2010, Mahmood2019} and then only consider the geolocation-history pairs that share at least one $\epsilon$-proximal geolocation pair. This approach is described by the \Call{Indexed-Contact-Search}{} operation.
+While the \textbf{for} loop in \Call{Naive-Contact-Search}{} is \define{embarrassingly parallel} \cite[p. 14]{Herlihy2012}, the naive approach is neither scalable nor efficient. It can be improved by observing that it is necessary, but not sufficient, that a pair of $\epsilon$-proximal geolocations exists between two geolocation histories for a contact to exist. Therefore, the geolocation histories $\histories$ can be indexed into a spatial data structure $\sindex$ \citep{Mokbel2003, Dinh2010, Mahmood2019} and then only consider the geolocation-history pairs that share at least one $\epsilon$-proximal geolocation pair. This approach is described by the \Call{Indexed-Contact-Search}{} operation.
 
-Line \ref{step:query} executes a fixed-radius near-neighbors search (FR-NNS) \cite{Bentley1975, Brin1995} for each geolocation in the spatial index $\sindex$. Formally, given a set of geolocations $\locset \subseteq \locations$, a metric $d$, and a distance $\epsilon$, the \define{fixed-radius near-neighbors} of a geolocation $\ell \in \locset$ is defined as the subset of $\epsilon$-proximal geolocations \cite{Brin1995},
+Line \ref{step:query} executes a fixed-radius near-neighbors search (FR-NNS) \citep{Bentley1975, Brin1995} for each geolocation in the spatial index $\sindex$. Formally, given a set of geolocations $\locset \subseteq \locations$, a metric $d$, and a distance $\epsilon$, the \define{fixed-radius near-neighbors} of a geolocation $\ell \in \locset$ is defined as the subset of $\epsilon$-proximal geolocations \citep{Brin1995},
 	\begin{equation*}
 		\query(\ell) = \{\ell' \in \locset \mid d(\ell, \ell') \leq \epsilon\}
 	\end{equation*}
@@ -429,9 +487,9 @@ The great-circle distance $d$ between two points can be found by inversing \labe
 \end{equation*}
 where $\ell_i = (\latitude_i, \longitude_i)$ is a latitude-longitude coordinate in radians \cite[pp. 157--162]{Brummelen2013}.
 
-The choice of the great-circle distance was primarily driven by its readily available usage in the scikit-learn \cite{sklearn2013} implementation of a ball tree. If such an approach for discovering contacts were to be used in practice, more advanced \define{geodetic datum} \cite[pp. 71--130]{Lu2014} could be used to provide better geospatial accuracy. Moreover, by projecting geodetic coordinates onto the plane, metrics that assume a Cartesian coordinate system could be used instead \cite[pp. 265--326]{Lu2014}.
+The choice of the great-circle distance was primarily driven by its readily available usage in the scikit-learn \citep{sklearn2013} implementation of a ball tree. If such an approach for discovering contacts were to be used in practice, more advanced \define{geodetic datum} \cite[pp. 71--130]{Lu2014} could be used to provide better geospatial accuracy. Moreover, by projecting geodetic coordinates onto the plane, metrics that assume a Cartesian coordinate system could be used instead \cite[pp. 265--326]{Lu2014}.
 
-The running time of \Call{Spatially-Index}{} is $\Theta\left(\card{\histories} \cdot \log\card{\histories}\right)$ \cite{Omohundro1989}. Assuming the ball tree is balanced\footnote{The ball-tree implementation provided by scikit-learn \cite{sklearn2013} ensures the tree is balanced.}, the running time of \Call{Fixed-Radius-Near-Neighbors}{} to find the $\epsilon$-proximal neighbors of all geolocations in the spatial index $\sindex$ is $\Theta(k \card{\sindex} \cdot \log\card{\sindex})$ , where $k$ is the dimensionality of a tree element (i.e., $k = 2$ for geographic coordinates). The running time of \Call{Unique-Users}{} is $\Theta(\card{\query})$. While the running time of \Call{Naive-Contact-Search}{} is $\Theta\left(\card{\users}^2\right)$, it is likely that $\card{\users} << \card{\histories}$. Regardless of the input,
+The running time of \Call{Spatially-Index}{} is $\Theta\left(\card{\histories} \cdot \log\card{\histories}\right)$ \citep{Omohundro1989}. Assuming the ball tree is balanced\footnote{The ball-tree implementation provided by scikit-learn \citep{sklearn2013} ensures the tree is balanced.}, the running time of \Call{Fixed-Radius-Near-Neighbors}{} to find the $\epsilon$-proximal neighbors of all geolocations in the spatial index $\sindex$ is $\Theta(k \card{\sindex} \cdot \log\card{\sindex})$ , where $k$ is the dimensionality of a tree element (i.e., $k = 2$ for geographic coordinates). The running time of \Call{Unique-Users}{} is $\Theta(\card{\query})$. While the running time of \Call{Naive-Contact-Search}{} is $\Theta\left(\card{\users}^2\right)$, it is likely that $\card{\users} << \card{\histories}$. Regardless of the input,
 \begin{equation*}
   \card{\histories} \geq \card{\sindex} \geq \card{\users}
 \end{equation*}

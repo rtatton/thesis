@@ -49,14 +49,16 @@
 
 % CROSS REFERENCING
 
-% Citations and cross-referencing
-\usepackage[hidelinks]{hyperref}
-
  % Bibliography citations
-\usepackage[sort&compress,round]{natbib}
+
+\usepackage[backend=bibtex,natbib=true]{biblatex}
+\addbibresource{content/references.bib}
 
 % Uncomment to find unused references
 %\usepackage{refcheck}
+
+% Citations and cross-referencing
+\usepackage[hidelinks]{hyperref}
 
 % Add support for hyperlinked URLs and DOIs
 \usepackage{url,doi}
@@ -216,6 +218,7 @@
 \newcommand{\vSourceSet}{\vSet{S}}
 \newcommand{\vVariables}{\vSet{X}}
 \newcommand{\vVertices}{\vSet{V}}
+\newcommand{\vGraphs}{\vSet{G}}
 
 % Parameters
 \newcommand{\pExpiry}{T}
@@ -223,6 +226,7 @@
 \newcommand{\pSendCoefficient}{\gamma}
 \newcommand{\pTimeBuffer}{\beta}
 \newcommand{\pTransmissionRate}{\alpha}
+\newcommand{\pNumberOfSubgraphs}{K}
 
 \newcommand{\pContactExpiry}{\pExpiry_\vContact}
 \newcommand{\pScoreExpiry}{\pExpiry_\vScore}
@@ -282,6 +286,9 @@
 \newcommand{\nSetSendThreshold}{Set-Send-Threshold}
 \newcommand{\nUpdateExposureScore}{Update-Exposure-Score}
 \newcommand{\nUpdateSendThreshold}{Update-Send-Threshold}
+\newcommand{\nRiskPropagationMain}{Risk-Propagation-Main}
+\newcommand{\nRiskPropagationActor}{Risk-Propagation-Actor}
+\newcommand{\nComputeMessage}{Compute-Message}
 
 % Function calls
 \newcommand{\cApplyRiskScore}[1][]{\Call{\nApplyRiskScore}{#1}}
@@ -308,6 +315,9 @@
 \newcommand{\cSetSendThreshold}[1][]{\Call{\nSetSendThreshold}{#1}}
 \newcommand{\cUpdateExposureScore}[1][]{\Call{\nUpdateExposureScore}{#1}}
 \newcommand{\cUpdateSendThreshold}[1][]{\Call{\nUpdateSendThreshold}{#1}}
+\newcommand{\cRiskPropagationMain}[1][]{\Call{\nRiskPropagationMain}{#1}}
+\newcommand{\cRiskPropagationActor}[1][]{\Call{\nRiskPropagationActor}{#1}}
+\newcommand{\cComputeMessage}[1][]{\Call{\nComputeMessage}{#1}}
 
 % Standard number sets
 \newcommand{\naturals}{\mathbb{N}}
@@ -334,4 +344,5 @@
 \newcommand{\SetBuilder}[2]{\Set{ #1 | #2}}
 
 % Ref: https://tex.stackexchange.com/questions/304662/typesetting-an-integer-interval
-\newcommand{\twodots}{\mathinner {\ldotp \ldotp}}
+\newcommand{\twoDots}{\mathinner {\ldotp \ldotp}}
+\newcommand{\intRange}[2]{[#1 \twoDots #2]}
