@@ -226,7 +226,7 @@
 \newcommand{\pSendCoefficient}{\gamma}
 \newcommand{\pTimeBuffer}{\beta}
 \newcommand{\pTransmissionRate}{\alpha}
-\newcommand{\pNumberOfSubgraphs}{K}
+\newcommand{\pNumberOfSubgraphs}{n}
 
 \newcommand{\pContactExpiry}{\pExpiry_\vContact}
 \newcommand{\pScoreExpiry}{\pExpiry_\vScore}
@@ -266,7 +266,7 @@
 \newcommand{\nApplyRiskScore}{Apply-Risk-Score}
 \newcommand{\nContactTtl}{Contact-Ttl}
 \newcommand{\nCreateActor}{Create-Actor}
-\newcommand{\nCreateFactorGraph}{Create-Factor-Graph}
+\newcommand{\nCreateFactorGraph}{Factor-Graph}
 \newcommand{\nCreate}{Create}
 \newcommand{\nDelete}{Delete}
 \newcommand{\nHandleContact}{Handle-Contact}
@@ -283,6 +283,7 @@
 \newcommand{\nRiskScoreTtl}{Risk-Score-Ttl}
 \newcommand{\nSearch}{Search}
 \newcommand{\nSend}{Send}
+\newcommand{\nReceive}{Receive}
 \newcommand{\nSetSendThreshold}{Set-Send-Threshold}
 \newcommand{\nUpdateExposureScore}{Update-Exposure-Score}
 \newcommand{\nUpdateSendThreshold}{Update-Send-Threshold}
@@ -312,6 +313,7 @@
 \newcommand{\cRiskScoreTtl}[1][]{\Call{\nRiskScoreTtl}{#1}}
 \newcommand{\cSearch}[1][]{\Call{\nSearch}{#1}}
 \newcommand{\cSend}[1][]{\Call{\nSend}{#1}}
+\newcommand{\cReceive}[1][]{\Call{\nReceive}{#1}}
 \newcommand{\cSetSendThreshold}[1][]{\Call{\nSetSendThreshold}{#1}}
 \newcommand{\cUpdateExposureScore}[1][]{\Call{\nUpdateExposureScore}{#1}}
 \newcommand{\cUpdateSendThreshold}[1][]{\Call{\nUpdateSendThreshold}{#1}}

@@ -1,12 +1,10 @@
 \chapter{Risk Propagation}\label{ch:risk-propagation}
 
-Risk propagation is a message-passing algorithm that estimates an individual's infection risk by considering their demographics, symptoms, diagnosis, and contact with others. Formally, a \define{risk score} $\vScore_\vTime$ is a timestamped infection probability where $\vScore \in [0, 1]$ and $\vTime \in \naturals$ is the time of its computation. Thus, an individual with a high risk score is likely to test positive for the infection and poses a significant health risk to others. There are two types of risk scores: \define{symptom scores}, or prior infection probabilities, which account for an individual's demographics, symptoms, and diagnosis \citep{Menni2020}; and \define{exposure scores}, or posterior infection probabilities, which incorporate the risk of direct and indirect contact with others.
+Risk propagation is a message-passing algorithm that estimates an individual's infection risk by considering their demographics, symptoms, diagnosis, and contact with others. Formally, a \define{risk score} $\vScore_\vTime \in [0, 1]$ is a timestamped infection probability where $\vTime \in \naturals$ is the time of its computation. Thus, an individual with a high risk score is likely to test positive for the infection and poses a significant health risk to others. There are two types of risk scores: \define{symptom scores}, or prior infection probabilities, which account for an individual's demographics, symptoms, and diagnosis \citep{Menni2020}; and \define{exposure scores}, or posterior infection probabilities, which incorporate the risk of direct and indirect contact with others.
 
 Given their recent risk scores and contacts, an individual's exposure score is derived by marginalizing over the joint infection probability distribution. Naively computing this marginalization scales exponentially with the number of variables (i.e., individuals). To circumvent this intractability, the joint distribution is modeled as a factor graph, and an efficient message-passing procedure is employed to compute the marginal probabilities with a time complexity that scales linearly in the number of factor \verticesName{} (i.e., contacts).
 
-Let $\vGraph = (\vVariables, \vFactors, \vEdges)$ be a \define{factor graph} where $\vVariables$ is the set of variable \verticesName{}, $\vFactors$ is the set of factor \verticesName{}, and $\vEdges$ is the set of edges incident between them \citep{Kschischang2001}. 
-
-A \define{variable \vertexName{}} $\vVariable: \eventSpace \rightarrow \{0, 1\} $ is a random variable that represents the infection status of an individual, where the sample space is $\eventSpace = \{\var{healthy}, \var{infected}\}$ and
+Let $\vGraph = (\vVariables, \vFactors, \vEdges)$ be a \define{factor graph} where $\vVariables$ is the set of variable \verticesName{}, $\vFactors$ is the set of factor \verticesName{}, and $\vEdges$ is the set of edges incident between them \citep{Kschischang2001}. A \define{variable \vertexName{}} $\vVariable: \eventSpace \rightarrow \{0, 1\} $ is a random variable that represents the infection status of an individual, where the sample space is $\eventSpace = \{\var{healthy}, \var{infected}\}$ and
 \begin{equation*}
   \vVariable(\event) =
     \begin{cases}
@@ -14,11 +12,9 @@ A \define{variable \vertexName{}} $\vVariable: \eventSpace \rightarrow \{0, 1\} 
       1 & \text{if } \event = \var{infected}.
     \end{cases}
 \end{equation*}
-Thus, $\pr{\vVariable[i]}[\vTime] = \vScore_\vTime$ is a risk score of \indexed{i}{individual}.
+Thus, $\pr{\vVariable[i]}[\vTime] = \vScore_\vTime$ is a risk score of \indexed{i}{individual}. A \define{factor \vertexName{}} $\vFactor: \vVariables \times \vVariables \rightarrow [0, 1]$ defines the transmission of infection risk between two contacts. Specifically, contact between \twoindexed{i}{j}{individual} is represented by the factor \vertexName{} $\vFactor(\vVariable[i], \vVariable[j])$ = $\vFactor[ij]$, which is adjacent to the variable \verticesName{} $\vVariable[i], \vVariable[j]$. \Cref{fig:factor-graph} depicts a factor graph that reflects the domain constraints.
 
-A \define{factor \vertexName{}} $\vFactor: \vVariables \times \vVariables \rightarrow [0, 1]$ defines the transmission of infection risk between two contacts. Specifically, contact between \twoindexed{i}{j}{individual} is represented by the factor \vertexName{} $\vFactor(\vVariable[i], \vVariable[j])$ = $\vFactor[ij]$, which is adjacent to the variable \verticesName{} $\vVariable[i], \vVariable[j]$. This work and \citet{Ayday2021} assume risk transmission is a symmetric function, $\vFactor[ij] = \vFactor[ji]$. However, it may be extended to account for an individual's susceptibility and transmissibility such that $\vFactor[ij] \neq \vFactor[ji]$. \Cref{fig:factor-graph} depicts a factor graph that reflects the domain constraints.
-
-\begin{figure}[htb]
+\begin{figure}[htbp]
 \centering
 \begin{tikzpicture}[ampersand replacement=\&]
   \matrix[row sep=1.5em, column sep=0.75em] {
@@ -40,7 +36,7 @@ A \define{factor \vertexName{}} $\vFactor: \vVariables \times \vVariables \right
 \section{Synchronous Risk Propagation}\label{sec:synchronous}
 
 \newcommand{\pDiff}{\epsilon}
-\newcommand{\topK}[1]{\text{top } K \text{ of } #1}
+\newcommand{\topK}[1]{\text{top } k \text{ of } #1}
 \newcommand{\vRiskScores}[2]{\vSet{R}_{#1}^{(#2)}}
 \newcommand{\vExposureScore}[2]{r_{#1}^{(#2)}}
 \newcommand{\vExposureScores}[1]{\mathbf{r}^{(#1)}}
@@ -113,7 +109,7 @@ In either case, a set $\vContacts$ containing only valid contacts implies fewer 
 
 \subsection{Termination}
 
-To detect convergence, the normed difference between the current and previous exposure scores is compared to the threshold $\pDiff \in \reals$. Note that $\vExposureScores{n}$ is the vector of exposure scores in the \indexed{n}{iteration} such that $\vExposureScore{i}{n}$ is \indexed{i}{component} of $\vExposureScores{n}$. The $\ell^1$ and $\ell^\infty$ norms are sensible choices for detecting convergence. \citet{Ayday2021} use the $\ell^1$ norm, which ensures that an individual's exposure score changed by at most $\pDiff$ after the penultimate iteration.
+To detect convergence, the normed difference between the current and previous exposure scores is compared to the threshold $\pDiff \in \reals$. Note that $\vExposureScores{n}$ is the vector of exposure scores in the \indexed{n}{iteration} such that $\vExposureScore{i}{n}$ is \indexed{i}{component} of $\vExposureScores{n}$. The $L_1$ and $L_\infty$ norms are sensible choices for detecting convergence. \citet{Ayday2021} use the $L_1$ norm, which ensures that an individual's exposure score changed by at most $\pDiff$ after the penultimate iteration.
 
 \begin{function}[H]{\nRiskPropagation}[\vScores, \vContacts]
   \State $(\vVariables, \vFactors, \vEdges) \assign \cCreateFactorGraph[\vContacts]$
@@ -125,7 +121,7 @@ To detect convergence, the normed difference between the current and previous ex
   \EndFor
   \While{$\| \vExposureScores{n} - \vExposureScores{n - 1} \| > \pDiff$}
     \ForEach{$\{\vVariable[i], \vFactor[ij]\} \in \vEdges$}
-      \State $\vVariableMessage{i}{j}{n} \assign \vRiskScores{i}{n - 1} \setminus \setBuilder{\vFactorMessage{j}{i}{k}}{k \in \intRange{1}{n - 1}}$
+      \State $\vVariableMessage{i}{j}{n} \assign \vRiskScores{i}{n - 1} \setminus \setBuilder{\vFactorMessage{j}{i}{\ell}}{\ell \in \intRange{1}{n - 1}}$
     \EndFor
     \ForEach{$\{\vVariable[i], \vFactor[ij]\} \in \vEdges$}
       \State $\vFactorMessage{i}{j}{n} \assign \max \setBuilder{\pTransmissionRate \vScore_\vTime}{\vScore_\vTime \in \vVariableMessage{i}{j}{n}, \vTime < \vTime_{ij} + \pTimeBuffer}$

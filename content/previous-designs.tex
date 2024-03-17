@@ -8,8 +8,7 @@ Before working on ShareTrace, I did not have experience developing distributed a
 
 The first iteration of risk propagation\footnote{\url{https://github.com/cwru-xlab/sharetrace-giraph}} utilized Apache Giraph\footnote{\url{https://giraph.apache.org}}, an open-source version of the iterative graph-processing library, Pregel \citep{Malewicz2010}, which is based on the bulk synchronous parallel model of distributed computing \citep{Valiant1990}. Giraph follows the \define{``think like a vertex'' paradigm} in which the algorithm is specified in terms of the local information available to a graph \vertexName{} \citep{McCune2015}.
 
-% TODO - Add Google/Apple citation
-Risk propagation was implemented as defined by \citet{Ayday2020,Ayday2021}, using the factor graph representation of the contact network. Moreover, the implementation assumed the use of Dataswyft Personal Data Accounts\footnote{\url{https://www.dataswyft.io}}, which provide a data-oriented interface to self-sovereign identity \citep[pp. 98--99]{Preukschat2021}. However, because the Google/Apple API\footnote{\url{https://covid19.apple.com/contacttracing}} does not permit remotely persisting ephemeral identifiers, the implementation assumed that user geolocation data would be analyzed to generate the factor \verticesName{} in the factor graph (\Cref{sec:location-based}). \Cref{fig:aws-architecture} describes the high-level architecture. Callouts 1, 2, and 4 were implemented using a fan-out design in which a \define{ventilator} Lambda function divides the work amongst \define{worker} Lambda functions.
+Risk propagation was implemented as defined by \citet{Ayday2020,Ayday2021}, using the factor graph representation of the contact network. Moreover, the implementation assumed the use of Dataswyft Personal Data Accounts\footnote{\url{https://www.dataswyft.io}}, which provide a data-oriented interface to self-sovereign identity \citep[pp. 98--99]{Preukschat2021}. However, because the Exposure Notification API developed by Apple\footnote{\url{https://covid19.apple.com/contacttracing}} and Google\footnote{\url{https://www.google.com/covid19/exposurenotifications}} does not permit remotely persisting ephemeral identifiers, the implementation assumed that user geolocation data would be analyzed to generate the factor \verticesName{} in the factor graph (\Cref{sec:location-based}). \Cref{fig:aws-architecture} describes the high-level architecture. Callouts 1, 2, and 4 were implemented using a fan-out design in which a \define{ventilator} Lambda function divides the work amongst \define{worker} Lambda functions.
 
 \begin{figure}[htbp]
 \centering
@@ -61,47 +60,47 @@ Compared to \Cref{sec:subgraph-actors}, this implementation provided a cleaner d
 
 \section{Projected Subgraph Actors}\label{sec:projected-subgraphs}
 
-The last alternative design of risk propagation is the subject of published work \citep{Tatton2022b} and preprint \citep{Tatton2022a}. Since those works were written during the coarse of my graduate studies, substantial portions of them are included below. The remainder of this section assumes the reader is familiar with \Cref{ch:risk-propagation}.
+The last alternative design of risk propagation is the subject of published work \citep{Tatton2022b} and preprint \citep{Tatton2022a}. Since those works were written during the coarse of my graduate studies, algorithmic details and experimental results are included below.
 
-As with \cRiskPropagation{} and all previous designs, risk propagation is an offline algorithm. Let $\pNumberOfSubgraphs$ be the number of actors, where $\vGraph_k$ represents \indexed{k}{subgraph of contacts}. It is assumed that actor communication is expensive, so a partitioning algorithm \citep{Buluc2016} that minimizes communication complexity between actors is key to maximizing performance. Each actor is associated with a \define{remote mailbox} and a \define{local mailbox}. The former is designated for messages sent by other actors, while the latter is designated for messages associated with individuals within the same subgraph. For an actor to send a message to another actor, it must know the address of the target actor's remote mailbox and an identifier of the individual within the target actor's subgraph. The \cRiskPropagationMain{} operation describes the main steps.
+\subsection{Risk Propagation}
+
+Like all previous designs, risk propagation is an offline algorithm. Let $\pNumberOfSubgraphs$ be the number of actors, where $\vGraph_i$ represents \indexed{i}{subgraph of contacts} that is associated with \indexed{i}{actor}. It is assumed that actor communication is expensive, so a partitioning algorithm \citep{Buluc2016} that minimizes communication complexity between actors is key to maximizing performance. Each actor is associated with a \define{remote mailbox} and a \define{local mailbox}. The former is designated for messages sent by other actors, while the latter is designated for messages associated with individuals within the same subgraph. For an actor to send a message to another actor, it must know the address of the target actor's remote mailbox and an identifier of the individual within the target actor's subgraph. The \cRiskPropagationMain{} operation describes the main steps.
 
 \begin{function}{\nRiskPropagationMain}[\vScores, \vContacts]
-  \State Create the contact network $\vGraph$ from the contact set $\vContacts$
-  \ForEach{$k \in \intRange{1}{\pNumberOfSubgraphs}$}
-    \State $\cRiskPropagationActor[\vGraph_k, \vScores_k]$
+  \State $\vGraph \assign \Call{Contact-Network}{\vContacts}$
+  \ForEach{$i \in \intRange{1}{\pNumberOfSubgraphs}$}
+    \State $\cRiskPropagationActor[\vGraph_i, \vScores_i]$
   \EndFor
   \State Collect the exposure scores from all actors
 \end{function}
 
-The \cRiskPropagationActor{} operation defines the behavior of an actor. Compared to asynchronous risk propagation (\Cref{sec:asynchronous}), actor behavior differs in two significant ways:
+The \cRiskPropagationActor{} operation defines the behavior of an actor. According to \citet{Tatton2022a,Tatton2022b}, an actor terminates when no message has been received after a set period of time. \citet{Tatton2022a} also allows an actor to terminate after passing messages for a maximum duration; or if a certain number of messages have been received and none caused an individual's exposure score to be updated. Compared to asynchronous risk propagation (\Cref{sec:asynchronous}), actor behavior differs in two significant ways:
 \begin{enumerate}
   \item The send threshold is applied \emph{across} contacts and discriminates against risk scores that are newer than the initial risk score. The latter is based on the assumption that newer risk scores are less likely to be propagated by other actors.
   \item When computing messages, newer risk scores have more relevance than older messages. The rate at which the relevance decays over time is captured by the rate constant $\lambda > 0$.
 \end{enumerate}
 
-\begin{function}{\nRiskPropagationActor}[\vGraph_k, \vScores_k]
-  \ForEach{$\vVertex_i \in \vGraph_k$}
-    \State $r_i \assign (\vScore_i^0, \vTime_i^0) = \max \vScores_i$
+\begin{equation*}
+  \vReachability(\vSourceVertex, \vTargetVertex) = \sum_{(i, j) \in \vPath} [\pTransmissionRate^i \dot{\vScore}_\vSourceVertex \geq \pSendCoefficient \pTransmissionRate \dot{\vScore}_i] \cdot [\dot{\vTime}_\vSourceVertex \leq \dot{\vTime}_i] \cdot [\vTime_\vSourceVertex < \vTime_{ij} + \pTimeBuffer],
+\end{equation*}
+
+\begin{function}{\nRiskPropagationActor}[\vGraph, \vScores]
+  \ForEach{$\vVertex_i \in \vVertices$}
+    \State $\tilde{\vScore}_{\vTime, i}, \dot{\vScore}_{\vTime, i}, \assign \max \vScores_i$
     \ForEach{$\vVertex_j \in \vNeighbors_i$}
-      \State $\vMessage_{ij} \assign \cComputeMessage[\vVertex_i, \vVertex_j, \vScores_i]$
-      \State Send $\vMessage_{ij}$
+      \State $\vScore_\vTime \assign \argmax \SetBuilder{\vScore_\vTime^{\lambda(\vTime - \vTime_{ij})}}{\vScore_\vTime \in \vScores_i, \vTime < \vTime_{ij} + \pTimeBuffer}$
+      \State Send $\pTransmissionRate \vScore_\vTime$ to $\vVertex_j$
     \EndFor
   \EndFor
   \While{termination condition is not satisfied}
-    \State Receive $\vMessage_{ji}$
-    \State $r_i \assign \max \{r_i, \vMessage_{ji}\}$
-    \ForEach{$\vVertex_\ell \in \vNeighbors_i \setminus \{\vVertex_j\}$}
-      \State $\vMessage_{i\ell} \assign \cComputeMessage[\vVertex_i, \vVertex_\ell, \vMessage_{ji}]$
-      \If{$\vScore_{i\ell} \geq \pSendCoefficient \vScore_i^0$ \AND $\vTime_{i\ell} \leq \vTime_i^0$}
-        \State Send $\vMessage_{i\ell}$
+    \State Receive $\vScore_\vTime$ for $\vVertex_i$ from $\vVertex_j$
+    \State $\tilde{\vScore}_{\vTime, i} \assign \max \{\tilde{\vScore}_{\vTime, i}, \vScore_\vTime\}$
+    \ForEach{$\vVertex_k \in \vNeighbors_i \setminus \{\vVertex_j\}$}
+      \If{$\vTime < \vTime_{ik} + \pTimeBuffer$ \AND $\vScore_\vTime \geq \pSendCoefficient \dot{\vScore}_i$ \AND $\vTime \leq \dot{\vTime}_i$}
+        \State Send $\pTransmissionRate \vScore_\vTime$ to $\vVertex_k$
       \EndIf
     \EndFor
   \EndWhile
-\end{function}
-
-\begin{function}{\nComputeMessage}[\vVertex_i, \vVertex_j, \vMessage]
-  \State $(\vScore^\star, \vTime^\star) \assign \argmax \SetBuilder{\vScore^{\lambda(\vTime - \vTime_{ij})}}{(\vScore, \vTime) \in \vMessage, \vTime < \vTime_{ij} + \pTimeBuffer}$
-  \State \Return $\{(\pTransmissionRate\vScore^\star, \vTime^\star)\}$
 \end{function}
 
 \subsection{Evaluation}\label{sec:evaluation}
@@ -474,8 +473,8 @@ where $\ell_i = (\latitude_i, \longitude_i)$ is a latitude-longitude coordinate 
 
 The choice of the great-circle distance was primarily driven by its readily available usage in the scikit-learn \citep{sklearn2013} implementation of a ball tree. If such an approach for discovering contacts were to be used in practice, more advanced \define{geodetic datum} \cite[pp. 71--130]{Lu2014} could be used to provide better geospatial accuracy. Moreover, by projecting geodetic coordinates onto the plane, metrics that assume a Cartesian coordinate system could be used instead \cite[pp. 265--326]{Lu2014}.
 
-The running time of \Call{Spatially-Index}{} is $\Theta\left(\card{\histories} \cdot \log\card{\histories}\right)$ \citep{Omohundro1989}. Assuming the ball tree is balanced\footnote{The ball-tree implementation provided by scikit-learn \citep{sklearn2013} ensures the tree is balanced.}, the running time of \Call{Fixed-Radius-Near-Neighbors}{} to find the $\epsilon$-proximal neighbors of all geolocations in the spatial index $\sindex$ is $\Theta(k \card{\sindex} \cdot \log\card{\sindex})$ , where $k$ is the dimensionality of a tree element (i.e., $k = 2$ for geographic coordinates). The running time of \Call{Unique-Users}{} is $\Theta(\card{\query})$. While the running time of \Call{Naive-Contact-Search}{} is $\Theta\left(\card{\users}^2\right)$, it is likely that $\card{\users} << \card{\histories}$. Regardless of the input,
-\begin{equation*}
-  \card{\histories} \geq \card{\sindex} \geq \card{\users}
-\end{equation*}
-since $\card{\histories} = \card{\sindex}$ only if all geolocations in $\histories$ are distinct, and $\card{\sindex} = \card{\users}$ only if each user has exactly one geolocation that is distinct from all other users. Dependent upon the input, however, is $\card{\query}$. In the worst case, $\card{\query} \in O\left(\card{\sindex}^2\right)$ if each geolocation is $\epsilon$-proximal to all other geolocations. This implies that the overall worst-case running time of \Call{Indexed-Contact-Search}{} is $O(\card{\histories}^2)$. In practice, the running time depends on the geohash precision as well as the geospatial density and mobility behavior of the user population.
+%The running time of \Call{Spatially-Index}{} is $\Theta\left(\card{\histories} \cdot \log\card{\histories}\right)$ \citep{Omohundro1989}. Assuming the ball tree is balanced\footnote{The ball-tree implementation provided by scikit-learn \citep{sklearn2013} ensures the tree is balanced.}, the running time of \Call{Fixed-Radius-Near-Neighbors}{} to find the $\epsilon$-proximal neighbors of all geolocations in the spatial index $\sindex$ is $\Theta(k \card{\sindex} \cdot \log\card{\sindex})$ , where $k$ is the dimensionality of a tree element (i.e., $k = 2$ for geographic coordinates). The running time of \Call{Unique-Users}{} is $\Theta(\card{\query})$. While the running time of \Call{Naive-Contact-Search}{} is $\Theta\left(\card{\users}^2\right)$, it is likely that $\card{\users} << \card{\histories}$. Regardless of the input,
+%\begin{equation*}
+%  \card{\histories} \geq \card{\sindex} \geq \card{\users}
+%\end{equation*}
+%since $\card{\histories} = \card{\sindex}$ only if all geolocations in $\histories$ are distinct, and $\card{\sindex} = \card{\users}$ only if each user has exactly one geolocation that is distinct from all other users. Dependent upon the input, however, is $\card{\query}$. In the worst case, $\card{\query} \in O\left(\card{\sindex}^2\right)$ if each geolocation is $\epsilon$-proximal to all other geolocations. This implies that the overall worst-case running time of \Call{Indexed-Contact-Search}{} is $O(\card{\histories}^2)$. In practice, the running time depends on the geohash precision as well as the geospatial density and mobility behavior of the user population.
