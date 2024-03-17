@@ -74,21 +74,13 @@ Like all previous designs, risk propagation is an offline algorithm. Let $\pNumb
   \State Collect the exposure scores from all actors
 \end{function}
 
-The \cRiskPropagationActor{} operation defines the behavior of an actor. According to \citet{Tatton2022a,Tatton2022b}, an actor terminates when no message has been received after a set period of time. \citet{Tatton2022a} also allows an actor to terminate after passing messages for a maximum duration; or if a certain number of messages have been received and none caused an individual's exposure score to be updated. Compared to asynchronous risk propagation (\Cref{sec:asynchronous}), actor behavior differs in two significant ways:
-\begin{enumerate}
-  \item The send threshold is applied \emph{across} contacts and discriminates against risk scores that are newer than the initial risk score. The latter is based on the assumption that newer risk scores are less likely to be propagated by other actors.
-  \item When computing messages, newer risk scores have more relevance than older messages. The rate at which the relevance decays over time is captured by the rate constant $\lambda > 0$.
-\end{enumerate}
-
-\begin{equation*}
-  \vReachability(\vSourceVertex, \vTargetVertex) = \sum_{(i, j) \in \vPath} [\pTransmissionRate^i \dot{\vScore}_\vSourceVertex \geq \pSendCoefficient \pTransmissionRate \dot{\vScore}_i] \cdot [\dot{\vTime}_\vSourceVertex \leq \dot{\vTime}_i] \cdot [\vTime_\vSourceVertex < \vTime_{ij} + \pTimeBuffer],
-\end{equation*}
+The \cRiskPropagationActor{} operation defines the behavior of an actor. According to \citet{Tatton2022a,Tatton2022b}, an actor terminates when no message has been received after a set period of time. \citet{Tatton2022a} also allows an actor to terminate after passing messages for a maximum duration; or if a certain number of messages have been received and none caused an individual's exposure score to be updated.
 
 \begin{function}{\nRiskPropagationActor}[\vGraph, \vScores]
   \ForEach{$\vVertex_i \in \vVertices$}
     \State $\tilde{\vScore}_{\vTime, i}, \dot{\vScore}_{\vTime, i}, \assign \max \vScores_i$
     \ForEach{$\vVertex_j \in \vNeighbors_i$}
-      \State $\vScore_\vTime \assign \argmax \SetBuilder{\vScore_\vTime^{\lambda(\vTime - \vTime_{ij})}}{\vScore_\vTime \in \vScores_i, \vTime < \vTime_{ij} + \pTimeBuffer}$
+      \State $\vScore_\vTime \assign \argmax \SetBuilder{\vScore_\vTime^{\pRateConstant(\vTime - \vTime_{ij})}}{\vScore_\vTime \in \vScores_i, \vTime < \vTime_{ij} + \pTimeBuffer}$
       \State Send $\pTransmissionRate \vScore_\vTime$ to $\vVertex_j$
     \EndFor
   \EndFor
@@ -103,19 +95,33 @@ The \cRiskPropagationActor{} operation defines the behavior of an actor. Accordi
   \EndWhile
 \end{function}
 
-\subsection{Evaluation}\label{sec:evaluation}
+Compared to asynchronous risk propagation (\Cref{sec:asynchronous}), actor behavior differs in two significant ways:
+\begin{enumerate}
+  \item The send threshold is applied \emph{across} contacts and discriminates against risk scores that are newer than the initial exposure score $\dot{\vScore}_\vTime$. The latter is based on the assumption that newer risk scores are less likely to be propagated by other actors.
+  \item The initial risk score to sent to each contact accounts for recency, which is assumed to exponentially decay with a rate constant of $\pRateConstant > 0$.
+\end{enumerate}
+As such, message reachability differs from \cref{eq:reach}:
+\begin{equation*}
+  \vReachability(\vSourceVertex, \vTargetVertex) = \sum_{(i, j) \in \vPath} [\pTransmissionRate^i \dot{\vScore}_\vSourceVertex \geq \pSendCoefficient \pTransmissionRate \dot{\vScore}_i] \cdot [\dot{\vTime}_\vSourceVertex \leq \dot{\vTime}_i] \cdot [\dot{\vTime}_\vSourceVertex < \vTime_{ij} + \pTimeBuffer],
+\end{equation*}
 
-\subsubsection{Experimental Design}
+\subsection{Experiment Design}
 
-Risk propagation requires a partitioning or clustering algorithm, as described in Algorithm \ref{alg:rp-main}. We configured the METIS graph partitioning algorithm \citep{Karypis1998} to use $k$-way partitioning with a load imbalance factor of 0.2, to attempt contiguous partitions that have minimal inter-partition connectivity, to apply 10 iterations of refinement during each stage of the uncoarsening process, and to use the best of 3 cuts.
+The implementation of risk propagation is available on GitHub\footnote{\url{https://github.com/cwru-xlab/sharetrace-ray}}.
+
+Unless stated otherwise, it is assumed that the transmission rate is $\pTransmissionRate = 0.8$; the send coefficient is $\pSendCoefficient = 0.6$; the time buffer is $\pTimeBuffer = 2 \text{ days}$; the risk score and contact expiries are $\pScoreExpiry = \pContactExpiry = 14 \text{ days}$; and the rate constant is $\pRateConstant = 1$. Actors were configured to timeout after 3 seconds of not receiving any messages; or after receiving $10n$ messages that did not prompt an update to an individual's exposure score, where $n$ is the number of \verticesName{} in the contact network.
+
+To partition the contact network, the METIS algorithm\footnote{\url{https://github.com/inducer/pymetis}} \citep{Karypis1998} was configured to use $k$-way partitioning with a load imbalance factor of 0.2; to attempt contiguous partitions that have minimal inter-partition connectivity; to apply 10 iterations of refinement during each stage of the uncoarsening process; and to use the best of 3 cuts.
+
+The Case Western Reserve University high-performance computing cluster was utilized. For efficiency experiments, 4 CPUs and 8GB RAM were used. For scalability experiments, 8--12 CPUs and 16--64GB RAM were used. All experiments were run on a single cluster node.
 
 \subsubsection{Synthetic Graphs}\label{sec:synthetic-eval}
 
-We evaluate the scalability and efficiency of risk propagation on three types of graphs: a random geometric graph (RGG) \citep{Dall2002}, a benchmark graph (LFRG) \citep{Lancichinetti2008}, and a clustered scale-free graph (CSFG) \citep{Holme2002}. Together, these graphs demonstrate some aspects of community structure \citep{Fortunato2010} which allows us to more accurately measure the performance of risk propagation. When constructing a RGG, we set the radius to $r(n) = \min \left(1, 0.25^{\log_{10}(n) - 1}\right)$, where $n$ is the number of users. This allows us to scale the size of the graph while maintaining reasonable density. We use the following parameter values to create LFRGs: mixing parameter $\mu = 0.1$, degree power-law exponent $\gamma = 3$, community size power-law exponent $\beta = 2$, degree bounds $(k_{\min}, k_{\max}) = (3, 50)$, and community size bounds $(s_{\min}, s_{\max}) = (10, 100)$. Our choices align with the suggestions by \citet{Lancichinetti2008} in that $\gamma \in \mathbb{R}_{[2, 3]}$,  $\beta \in \mathbb{R}_{[1, 2]}$, $k_{\min} < s_{\min}$, and $k_{\max} < s_{\max}$. To build CSFGs, we add $m = 2$ edges for each new user and use a triad formulation probability of $P_t = 0.95$. For all graphs, we remove self-loops and isolated users.
+We evaluate the scalability and efficiency of risk propagation on three types of graphs: a random geometric graph [RGG] \citep{Dall2002}, a benchmark graph [LFRG] \citep{Lancichinetti2008}, and a clustered scale-free graph [CSFG] \citep{Holme2002}. Together, these graphs demonstrate some aspects of community structure \citep{Fortunato2010} which allows us to more accurately measure the performance of risk propagation. When constructing a RGG, we set the radius to $r(n) = \min \left(1, 0.25^{\log_{10}(n) - 1}\right)$, where $n$ is the number of users. This allows us to scale the size of the graph while maintaining reasonable density. We use the following parameter values to create LFRGs: mixing parameter $\mu = 0.1$, degree power-law exponent $\gamma = 3$, community size power-law exponent $\beta = 2$, degree bounds $(k_{\min}, k_{\max}) = (3, 50)$, and community size bounds $(s_{\min}, s_{\max}) = (10, 100)$. Our choices align with the suggestions by \citet{Lancichinetti2008} in that $\gamma \in \mathbb{R}_{[2, 3]}$,  $\beta \in \mathbb{R}_{[1, 2]}$, $k_{\min} < s_{\min}$, and $k_{\max} < s_{\max}$. To build CSFGs, we add $m = 2$ edges for each new user and use a triad formulation probability of $P_t = 0.95$. For all graphs, we remove self-loops and isolated users.
 
 The following defines our data generation process. Let $p$ be the probability of a user being ``high risk'' (i.e., $r \geq 0.5$) Then, with probability $p = 0.2$, we sample $L + 1$ values from the uniform distribution $\mathbb{U}_{[0.5, 1)}$. Otherwise, we sample from $\mathbb{U}_{[0, 0.5)}$. This assumes symptom scores and exposure scores are computed daily and includes the present day. We generate the times of these risk scores by sampling a time offset $t_{\text{off}} \sim \mathbb{U}_{[0\text{s}; 86,400\text{s}]}$ for each user such that $t_d = t_{\text{now}} + t_{\text{off}} - d~\text{days}$, where $d \in \mathbb{N}_{[0, L]}$. To generate a contact times, we follow the same procedure for risk scores, except that we randomly sample one of the $L + 1$ times and use that as the contact time.
 
-We evaluate various transmission rates and send tolerances:
+We evaluate various transmission rates and send coefficients:
 \begin{equation*}
   (\pSendCoefficient, \pTransmissionRate) \in \{0.1, 0.2, \ldots, 1\} \times \{0.1, 0.2, \ldots, 0.9\}.
 \end{equation*}
@@ -125,17 +131,17 @@ To measure the scalability of risk propagation, we consider $n \in \mathbb{N}_{[
 
 \subsubsection{Real-World Graphs}
 
-We analyze the efficiency of risk propagation on three real-world contact networks that were collected through the SocioPatterns collaboration. Specifically, we use contact data in the setting of a high school (Thiers13) \citep{Fournet2014}, a workplace (InVS15), and a scientific conference (SFHH) \citep{Genois2018}. Because of limited availability of large-scale contact networks, we do not use real-world contact networks to measure the scalability of risk propagation.
+We analyze the efficiency of risk propagation on three real-world contact networks that were collected through the SocioPatterns collaboration. Specifically, we use contact data in the setting of a high school [Thiers13] \citep{Fournet2014}, a workplace [InVS15], and a scientific conference [SFHH] \citep{Genois2018}. Because of limited availability of large-scale contact networks, we do not use real-world contact networks to measure the scalability of risk propagation.
 
 To ensure that all risk scores are initially propagated, we shift all contact times forward by $\vReferenceTime$ and use $(\vReferenceTime - 1 \text{ day})$ when generating risk scores times. In this way, we ensure the most recent risk score is still older than the first contact time. Risk score values are generated in the same manner as described in Section \ref{sec:synthetic-eval} with the exception that we only generate one score. Lastly, we perform 10 iterations over each data set to obtain an average performance.
 
-\subsection{Results}
+\subsection{Experiment Results}
 
 \subsubsection{Efficiency}
 
-Prior to measuring scalability and real-world performance, we observed the effects of send tolerance and transmission rate on the efficiency of risk propagation. As ground truth, we used the maximum update count for a given transmission rate. Fig. \ref{fig:efficiency} indicates that a send tolerance of $\pSendCoefficient = 0.6$ permits 99\% of the possible updates. Beyond $\pSendCoefficient = 0.6$, however, the transmission rate has considerable impact, regardless of the graph. As noted in Section \ref{sec:reachability}, send tolerance quantifies the trade-off between completeness and efficiency. Thus, $\pSendCoefficient = 0.6$ optimizes for both criteria.
+Prior to measuring scalability and real-world performance, we observed the effects of send coefficient and transmission rate on the efficiency of risk propagation. As ground truth, we used the maximum update count for a given transmission rate. Fig. \ref{fig:efficiency} indicates that a send coefficient of $\pSendCoefficient = 0.6$ permits 99\% of the possible updates. Beyond $\pSendCoefficient = 0.6$, however, the transmission rate has considerable impact, regardless of the graph. As noted in Section \ref{sec:reachability}, send coefficient quantifies the trade-off between completeness and efficiency. Thus, $\pSendCoefficient = 0.6$ optimizes for both criteria.
 
-Unlike the update count, Fig. \ref{fig:efficiency} shows a more variable relationship with respect to runtime and message count. While, in general, transmission rate (send tolerance) has a direct (resp. inverse) relationship with runtime and message count, the graph topology seems to have an impact on this fact. Namely, the LFRG displayed less variability across send tolerance and transmission rate than the RGG and CSFG, which is the cause for the large interquartile ranges. Therefore, it is useful to consider the lower quartile $Q_1$, the median $Q_2$, and the upper quartile $Q_3$. For $\pTransmissionRate = 0.8 $ and $\pSendCoefficient = 0.6$, risk propagation is more efficient with $(Q_{1}, Q_{2}, Q_{3}) = (0.13, 0.13, 0.46)$ normalized runtime and $(Q_{1}, Q_{2}, Q_{3}) = (0.13, 0.15, 0.44)$ normalized message count.
+Unlike the update count, Fig. \ref{fig:efficiency} shows a more variable relationship with respect to runtime and message count. While, in general, transmission rate (send coefficient) has a direct (resp. inverse) relationship with runtime and message count, the graph topology seems to have an impact on this fact. Namely, the LFRG displayed less variability across send coefficient and transmission rate than the RGG and CSFG, which is the cause for the large interquartile ranges. Therefore, it is useful to consider the lower quartile $Q_1$, the median $Q_2$, and the upper quartile $Q_3$. For $\pTransmissionRate = 0.8 $ and $\pSendCoefficient = 0.6$, risk propagation is more efficient with $(Q_{1}, Q_{2}, Q_{3}) = (0.13, 0.13, 0.46)$ normalized runtime and $(Q_{1}, Q_{2}, Q_{3}) = (0.13, 0.15, 0.44)$ normalized message count.
 
 \begin{figure}[htbp]
 \centering
@@ -158,7 +164,7 @@ Unlike the update count, Fig. \ref{fig:efficiency} shows a more variable relatio
   xmax=10.75,
   ytick distance=0.2,
   xtick scale label code/.code={},
-  xlabel={Send tolerance}
+  xlabel={Send coefficient}
   ]
   \nextgroupplot[
     table/y=NormalizedUpdates,
@@ -183,7 +189,7 @@ Unlike the update count, Fig. \ref{fig:efficiency} shows a more variable relatio
   }
 \end{groupplot}
 \end{tikzpicture}
-\caption[Effects of send tolerance on efficiency]{Effects of send tolerance on efficiency. All dependent variables are normalized across graphs and transmission rates.}
+\caption[Effects of send coefficient on efficiency]{Effects of send coefficient on efficiency. All dependent variables are normalized across graphs and transmission rates.}
 \label{fig:efficiency}
 \end{figure}
 
@@ -215,7 +221,7 @@ Because \Cref{eq:estreach} does not account for the temporality constraints \Cre
   ytick distance=0.5,
   xtick distance=1,
   table/y=RatioValue,
-  xlabel={Send tolerance},
+  xlabel={Send coefficient},
   xmin=0.25,
   xmax=10.75,
   xtick scale label code/.code={}
@@ -251,7 +257,7 @@ Because \Cref{eq:estreach} does not account for the temporality constraints \Cre
 \end{axis}
 \end{tikzpicture}
 \end{subfigure}
-\caption[Effects of send tolerance and transmission rate on the message reachability ratio]{Effects of send tolerance and transmission rate on the message reachability ratio. Independent variables are grouped across graphs.}
+\caption[Effects of send coefficient and transmission rate on the message reachability ratio]{Effects of send coefficient and transmission rate on the message reachability ratio. Independent variables are grouped across graphs.}
 \label{fig:ratio}
 \end{figure}
 
