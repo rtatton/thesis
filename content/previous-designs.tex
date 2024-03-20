@@ -8,7 +8,7 @@ Before working on ShareTrace, I did not have experience developing distributed a
 
 The first iteration of risk propagation\footnote{\url{https://github.com/cwru-xlab/sharetrace-giraph}} utilized Apache Giraph\footnote{\url{https://giraph.apache.org}}, an open-source version of the iterative graph-processing library, Pregel \citep{Malewicz2010}, which is based on the bulk synchronous parallel model of distributed computing \citep{Valiant1990}. Giraph follows the \define{``think like a vertex'' paradigm} in which the algorithm is specified in terms of the local information available to a graph \vertexName{} \citep{McCune2015}.
 
-Risk propagation was implemented as defined by \citet{Ayday2020,Ayday2021}, using the factor graph representation of the contact network. Moreover, the implementation assumed the use of Dataswyft Personal Data Accounts\footnote{\url{https://www.dataswyft.io}}, which provide a data-oriented interface to self-sovereign identity \citep[pp. 98--99]{Preukschat2021}. However, because the Exposure Notification API developed by Apple\footnote{\url{https://covid19.apple.com/contacttracing}} and Google\footnote{\url{https://www.google.com/covid19/exposurenotifications}} does not permit remotely persisting ephemeral identifiers, the implementation assumed that user geolocation data would be analyzed to generate the factor \verticesName{} in the factor graph (\Cref{sec:location-based}). \Cref{fig:aws-architecture} describes the high-level architecture. Callouts 1, 2, and 4 were implemented using a fan-out design in which a \define{ventilator} Lambda function divides the work amongst \define{worker} Lambda functions.
+Risk propagation was implemented as defined by \citet{Ayday2020,Ayday2021}, using the factor graph representation of the contact network. Moreover, the implementation assumed the use of Dataswyft Personal Data Accounts\footnote{\url{https://www.dataswyft.io}}, which provide a data-oriented interface to self-sovereign identity \citep[pp. 98--99]{Preukschat2021}. However, because the Exposure Notification API developed by Apple\footnote{\url{https://covid19.apple.com/contacttracing}} and Google\footnote{\url{https://www.google.com/covid19/exposurenotifications}} does not permit remotely persisting ephemeral identifiers, the implementation assumed that user geolocation data would be analyzed to generate the factor \verticesName{} in the factor graph (\Cref{sec:contact-search}). \Cref{fig:aws-architecture} describes the high-level architecture. Callouts 1, 2, and 4 were implemented using a fan-out design in which a \define{ventilator} Lambda function divides the work amongst \define{worker} Lambda functions.
 
 \begin{figure}[htbp]
 \centering
@@ -64,7 +64,7 @@ The last alternative design of risk propagation is the subject of published work
 
 \subsection{Risk Propagation}
 
-Like all previous designs, risk propagation is an offline algorithm. Let $\pNumberOfSubgraphs$ be the number of actors, where $\vGraph_i$ represents \indexed{i}{subgraph of contacts} that is associated with \indexed{i}{actor}. It is assumed that actor communication is expensive, so a partitioning algorithm \citep{Buluc2016} that minimizes communication complexity between actors is key to maximizing performance. Each actor is associated with a \define{remote mailbox} and a \define{local mailbox}. The former is designated for messages sent by other actors, while the latter is designated for messages associated with individuals within the same subgraph. For an actor to send a message to another actor, it must know the address of the target actor's remote mailbox and an identifier of the individual within the target actor's subgraph. The \cRiskPropagationMain{} operation describes the main steps.
+Like all previous designs, risk propagation is an offline algorithm. Let $\vGraph_i$ be \indexed{i}{subgraph of contacts} that is associated with \indexed{i}{actor}. It is assumed that actor communication is expensive, so a partitioning algorithm \citep{Buluc2016} that minimizes communication complexity between actors is key to maximizing performance. Each actor is associated with a \define{remote mailbox} and a \define{local mailbox}. The former is designated for messages sent by other actors, while the latter is designated for messages associated with individuals within the same subgraph. For an actor to send a message to another actor, it must know the address of the target actor's remote mailbox and an identifier of the individual within the target actor's subgraph. The \cRiskPropagationMain{} operation describes the main steps.
 
 \begin{function}{\nRiskPropagationMain}[\vScores, \vContacts]
   \State $\vGraph \assign \Call{Contact-Network}{\vContacts}$
@@ -101,39 +101,82 @@ Compared to asynchronous risk propagation (\Cref{sec:asynchronous}), actor behav
   \item The initial risk score to sent to each contact accounts for recency, which is assumed to exponentially decay with a rate constant of $\pRateConstant > 0$.
 \end{enumerate}
 As such, message reachability differs from \cref{eq:reach}:
-\begin{equation*}
+\begin{equation}\label{eq:initial-estimated-message-reachability}
   \vReachability(\vSourceVertex, \vTargetVertex) = \sum_{(i, j) \in \vPath} [\pTransmissionRate^i \dot{\vScore}_\vSourceVertex \geq \pSendCoefficient \pTransmissionRate \dot{\vScore}_i] \cdot [\dot{\vTime}_\vSourceVertex \leq \dot{\vTime}_i] \cdot [\dot{\vTime}_\vSourceVertex < \vTime_{ij} + \pTimeBuffer],
-\end{equation*}
+\end{equation}
 
 \subsection{Experiment Design}
 
-The implementation of risk propagation is available on GitHub\footnote{\url{https://github.com/cwru-xlab/sharetrace-ray}}.
+The following experiments were performed using the implementation of risk propagation available on GitHub\footnote{\url{https://github.com/cwru-xlab/sharetrace-ray}}:
+\begin{itemize}
+  \item \emph{Efficiency}. How does the transmission rate and send coefficient affect the running time and number of messages sent during risk propagation? What value of the send coefficient provides the most efficiency without impacting accuracy?
+  \item \emph{Message reachability}. How good of an estimator is \cref{eq:initial-estimated-message-reachability}?
+  \item \emph{Scalability}. How does the running time of risk propagation relate to the size of the contact network?
+\end{itemize}
+\Cref{tab:experiments} summarizes the types of contact networks used for each type of experiment.
 
-Unless stated otherwise, it is assumed that the transmission rate is $\pTransmissionRate = 0.8$; the send coefficient is $\pSendCoefficient = 0.6$; the time buffer is $\pTimeBuffer = 2 \text{ days}$; the risk score and contact expiries are $\pScoreExpiry = \pContactExpiry = 14 \text{ days}$; and the rate constant is $\pRateConstant = 1$. Actors were configured to timeout after 3 seconds of not receiving any messages; or after receiving $10n$ messages that did not prompt an update to an individual's exposure score, where $n$ is the number of \verticesName{} in the contact network.
-
-To partition the contact network, the METIS algorithm\footnote{\url{https://github.com/inducer/pymetis}} \citep{Karypis1998} was configured to use $k$-way partitioning with a load imbalance factor of 0.2; to attempt contiguous partitions that have minimal inter-partition connectivity; to apply 10 iterations of refinement during each stage of the uncoarsening process; and to use the best of 3 cuts.
+\begin{table}[htbp]
+\centering
+\begin{tabular}{lccc}
+  \toprule
+  & Efficiency & Message reachability & Scalability \\
+  \midrule
+  Synthetic & \checkmark & \checkmark & \checkmark \\
+  Real-world & \checkmark & \checkmark & \\
+  \bottomrule
+\end{tabular}
+\caption[Experiments by contact network type]{Experiments by contact network type.}
+\label{tab:experiments}
+\end{table}
 
 The Case Western Reserve University high-performance computing cluster was utilized. For efficiency experiments, 4 CPUs and 8GB RAM were used. For scalability experiments, 8--12 CPUs and 16--64GB RAM were used. All experiments were run on a single cluster node.
 
-\subsubsection{Synthetic Graphs}\label{sec:synthetic-eval}
+Unless stated otherwise, it is assumed that the transmission rate is $\pTransmissionRate = 0.8$; the send coefficient is $\pSendCoefficient = 0.6$; the time buffer is $\pTimeBuffer = 2 \text{ days}$; the risk score and contact expiries are $\pScoreExpiry = \pContactExpiry = 14 \text{ days}$; and the rate constant is $\pRateConstant = 1$. Actors were configured to timeout after 3 seconds of not receiving any messages; or after receiving 10 times the number of individuals in messages that did not update an individual's exposure score.
 
-We evaluate the scalability and efficiency of risk propagation on three types of graphs: a random geometric graph [RGG] \citep{Dall2002}, a benchmark graph [LFRG] \citep{Lancichinetti2008}, and a clustered scale-free graph [CSFG] \citep{Holme2002}. Together, these graphs demonstrate some aspects of community structure \citep{Fortunato2010} which allows us to more accurately measure the performance of risk propagation. When constructing a RGG, we set the radius to $r(n) = \min \left(1, 0.25^{\log_{10}(n) - 1}\right)$, where $n$ is the number of users. This allows us to scale the size of the graph while maintaining reasonable density. We use the following parameter values to create LFRGs: mixing parameter $\mu = 0.1$, degree power-law exponent $\gamma = 3$, community size power-law exponent $\beta = 2$, degree bounds $(k_{\min}, k_{\max}) = (3, 50)$, and community size bounds $(s_{\min}, s_{\max}) = (10, 100)$. Our choices align with the suggestions by \citet{Lancichinetti2008} in that $\gamma \in \mathbb{R}_{[2, 3]}$,  $\beta \in \mathbb{R}_{[1, 2]}$, $k_{\min} < s_{\min}$, and $k_{\max} < s_{\max}$. To build CSFGs, we add $m = 2$ edges for each new user and use a triad formulation probability of $P_t = 0.95$. For all graphs, we remove self-loops and isolated users.
+To partition the contact network, the METIS algorithm\footnote{\url{https://github.com/inducer/pymetis}} \citep{Karypis1998} was configured to use a load imbalance factor of 0.2; to attempt contiguous partitions that have minimal inter-partition connectivity; to apply 10 iterations of refinement during each stage of the uncoarsening process; and to use the best of 3 cuts.
 
-The following defines our data generation process. Let $p$ be the probability of a user being ``high risk'' (i.e., $r \geq 0.5$) Then, with probability $p = 0.2$, we sample $L + 1$ values from the uniform distribution $\mathbb{U}_{[0.5, 1)}$. Otherwise, we sample from $\mathbb{U}_{[0, 0.5)}$. This assumes symptom scores and exposure scores are computed daily and includes the present day. We generate the times of these risk scores by sampling a time offset $t_{\text{off}} \sim \mathbb{U}_{[0\text{s}; 86,400\text{s}]}$ for each user such that $t_d = t_{\text{now}} + t_{\text{off}} - d~\text{days}$, where $d \in \mathbb{N}_{[0, L]}$. To generate a contact times, we follow the same procedure for risk scores, except that we randomly sample one of the $L + 1$ times and use that as the contact time.
+Random geometric graphs [RGGs] \citep{Dall2002}, benchmark graphs [LFRGs] \citep{Lancichinetti2008}, and clustered scale-free graphs [CSFGs] \citep{Holme2002} were used as synthetic contact networks. Together, these graphs demonstrate aspects of community structure \citep{Fortunato2010}. When constructing RGGs, the radius was set to
+\begin{equation*}
+  r(n) = \min \{1, 0.25^{\log_{10}(n) - 1}\},
+\end{equation*}
+where $n$ is the number of individuals. Used to construct LFRGs, a mixing parameter of $\mu = 0.1$, a degree power-law exponent $\gamma = 3$, a community size power-law exponent $\beta = 2$, degree bounds $(k_{\min}, k_{\max}) = (3, 50)$, and community size bounds $(s_{\min}, s_{\max}) = (10, 100)$. These parameter values align with the suggestions by \citet{Lancichinetti2008} in that $\gamma \in [2, 3]$,  $\beta \in [1, 2]$, $k_{\min} < s_{\min}$, and $k_{\max} < s_{\max}$. When creating CSFGs, $m = 2$ edges are added for each new \vertexName{} and a triad is formed with probability $P_t = 0.95$. For all graphs, self-loops and isolated \verticesName{} are removed.
 
-We evaluate various transmission rates and send coefficients:
+Three real-world contact networks were used from the SocioPatterns project: a high school [Thiers13] \citep{Fournet2014}, a workplace [InVS15], and a scientific conference [SFHH] \citep{G_enois2018}. Each contact in these networks represents 20 seconds of face-to-face interaction. However, to remain consistent with risk propagation, only the most recent contact time was retained for each pair of individuals.
+
+\begin{figure}[htbp]
+\centering
+\subcaptionbox{Thiers13 (\num{180} nodes; \num{2220} edges)\label{fig:highschool12}}{
+  \includegraphics[height=0.275\textheight]{highschool12.png}
+}
+\subcaptionbox{InVS15 (\num{217} nodes; \num{4274} edges)\label{fig:workplace}}{
+  \includegraphics[height=0.275\textheight]{workplace.png}
+}
+\subcaptionbox{SFHH (\num{403} nodes; \num{9565} edges)\label{fig:conference}}{
+  \includegraphics[height=0.275\textheight]{conference.png}
+}
+\caption{SocioPatterns contact networks}
+\label{fig:real-networks}
+\end{figure}
+
+The following defines the data generation process. Let $p$ be the probability of having a high risk score, $j \in \intRange{0}{\pScoreExpiry}$, and $\delta_i \sim \uniformDistribution(\qty{0}{\second}, \qty{86400}{\second})$. Then the risk scores for \indexed{i}{individual} were
+\begin{equation*}
+  \vScores_i = 
+    \begin{cases}
+      \SetBuilder{\vScore_{\vTime_j} \sim \uniformDistribution(0, 0.5)}{ \vTime_j = \vReferenceTime + \delta_i + j \text{ days}} & \text{with } p = 0.8 \\
+      \SetBuilder{\vScore_{\vTime_j} \sim \uniformDistribution(0.5, 1)}{\vTime_j = \vReferenceTime + \delta_i + j \text{ days}} & \text{with } p = 0.2.
+    \end{cases}
+\end{equation*}
+Contact times were sampled similarly. Of the sampled contact times, one is randomly selected and used as the contact time for a pair of individuals.
+
+For the real-world contact networks, to ensure that all risk scores were initially propagated, the contact times were shifted forward by $\vReferenceTime$ and use $(\vReferenceTime - 1 \text{ day})$ when generating risk scores times. In this way, the most recent risk score was older than the first contact time. Risk score values were generated in the same manner as described in Section \ref{sec:synthetic-eval} with the exception that we only generate one score. Lastly, 10 iterations were performed over each data set to obtain an average performance.
+
+Various transmission rates and send coefficients were evaluated:
 \begin{equation*}
   (\pSendCoefficient, \pTransmissionRate) \in \{0.1, 0.2, \ldots, 1\} \times \{0.1, 0.2, \ldots, 0.9\}.
 \end{equation*}
-For all $\pSendCoefficient, \pTransmissionRate$, we set $n = 5,000$ and $K = 2$.
+For all $(\pSendCoefficient, \pTransmissionRate)$ pairs, the contact network contains 5,000 individuals and is partitioned into 2 subgraphs. 
 
-To measure the scalability of risk propagation, we consider $n \in \mathbb{N}_{[10^2, 10^4]}$ users in increments of 100 and collect 10 iterations for each $n$. The number of actors we use depends on $n$ such that $K(n) = 1$ if $n < 10^3$ and $K(n) = 2$ otherwise. Increasing $K$ for our choice of $n$ did not offer improved performance due to the communication overhead.
-
-\subsubsection{Real-World Graphs}
-
-We analyze the efficiency of risk propagation on three real-world contact networks that were collected through the SocioPatterns collaboration. Specifically, we use contact data in the setting of a high school [Thiers13] \citep{Fournet2014}, a workplace [InVS15], and a scientific conference [SFHH] \citep{Genois2018}. Because of limited availability of large-scale contact networks, we do not use real-world contact networks to measure the scalability of risk propagation.
-
-To ensure that all risk scores are initially propagated, we shift all contact times forward by $\vReferenceTime$ and use $(\vReferenceTime - 1 \text{ day})$ when generating risk scores times. In this way, we ensure the most recent risk score is still older than the first contact time. Risk score values are generated in the same manner as described in Section \ref{sec:synthetic-eval} with the exception that we only generate one score. Lastly, we perform 10 iterations over each data set to obtain an average performance.
+To measure the scalability of risk propagation, contact networks were generated with 100--10,000 individuals in increments of 100 and repeated for 10 iterations. For scalability experiments, no partitioning was performed for contact networks containing fewer than 1,000 individuals; otherwise, 2 partitions were used. Additional partitioning did not improve performance due to interprocess communication\footnote{Clearly, so 1--2 partitions offers minimal parallelism. Performance issues are suspected to be caused by the Ray library.}.
 
 \subsection{Experiment Results}
 
@@ -318,18 +361,7 @@ Fig. \ref{fig:runtime} describes the runtime behavior of risk propagation. The r
 \label{fig:runtime}
 \end{figure}
 
-\section{Location-Based Contact Tracing}\label{sec:location-based}
-\begin{itemize}
-  \item Motivation: Google/Apple API prevents exporting Bluetooth EphIDs
-  \item Other location-based contact tracing approaches
-\end{itemize}
-\subsection{System Model}
-% TODO Reference the AWS diagram
-The system model is very similar to \citet{Ayday2020, Ayday2021} and designs. The only difference is that user geolocation data is collected instead of Bluetooth ephemeral identifiers.
-
-\define{Geohashing} is a public-domain encoding system that maps \define{geographic coordinates} (i.e., latitude-longitude ordered pairs \cite[p. 5]{Sickle2004}) to alphanumeric strings called \define{geohashes}, where the length of a geohash is correlated with its geospatial precision \citep{Morton1966}. To offer some basic privacy, a user's precise geolocation history is obfuscated on-device by encoding geographic coordinates as geohashes with 8-character precision which corresponds to a region of $730\mathrm{m}^2$.
-
-\subsection{Contact Search}
+\section{Contact Search}\label{sec:contact-search}
 
 \newcommand{\histories}{\vSet{H}}
 \newcommand{\locations}{\mathbb{L}}
@@ -343,6 +375,13 @@ The system model is very similar to \citet{Ayday2020, Ayday2021} and designs. Th
 \newcommand{\hone}{G}
 \newcommand{\htwo}{H}
 \newcommand{\neighbors}{\vSet{N}}
+
+% Motivation: Google/Apple API prevents exporting Bluetooth EphIDs
+
+% TODO Reference the AWS diagram
+The system model is very similar to \citet{Ayday2020, Ayday2021} and designs. The only difference is that user geolocation data is collected instead of Bluetooth ephemeral identifiers.
+
+\define{Geohashing} is a public-domain encoding system that maps \define{geographic coordinates} (i.e., latitude-longitude ordered pairs \cite[p. 5]{Sickle2004}) to alphanumeric strings called \define{geohashes}, where the length of a geohash is correlated with its geospatial precision \citep{Morton1966}. To offer some basic privacy, a user's precise geolocation history is obfuscated on-device by encoding geographic coordinates as geohashes with 8-character precision which corresponds to a region of \qty{730}{\meter^2}.
 
 %A \define{contact} follows the definition of \Cref{eq:contact-seq}, where the contact time $\tsym$ indicates the most recent time at which two users were proximal for a contiguous duration of at least $\delta \in \preals$. Each user has a \define{geolocation history}
 %	\begin{equation*}
@@ -397,7 +436,8 @@ Finding the most recent contact between two users from their aligned geolocation
 \label{fig:contact-search}
 \end{figure}
 
-\subsubsection{Naive Contact Search}\label{sec:naive-contact-search}
+\subsection{Naive Contact Search}\label{sec:naive-contact-search}
+
 A naive approach to finding all contacts amongst a set of geolocation histories $\histories$ is to compare all unordered pairs. For a given pair of aligned geolocation histories, the idea is to maintain a pointer to the previous and current index in each history, advancing the pair of pointers whose geolocation occurs later in time. Once a common geolocation is found, all pointers are advanced together until the geolocations differ. If the sequence is $\delta$-contiguous, where a sequence of timestamped geolocations $S$ is \define{$\delta$-contiguous} if $\attr{S}{length} \geq \delta$ and
 %	\begin{equation*}
 %		\forall i \in \ints_{[1, \attr{S}{length}]}(\timeAttr{S[i + 1]} = \timeAttr{S[i]} + T),
@@ -420,7 +460,8 @@ then it is recorded. The latest such sequence is used to define the contact betw
 %	\end{algorithmic}
 %	\end{algorithm}
 
-\subsubsection{Indexed Contact Search}
+\subsection{Indexed Contact Search}
+
 While the \textbf{for} loop in \Call{Naive-Contact-Search}{} is \define{embarrassingly parallel} \cite[p. 14]{Herlihy2012}, the naive approach is neither scalable nor efficient. It can be improved by observing that it is necessary, but not sufficient, that a pair of $\epsilon$-proximal geolocations exists between two geolocation histories for a contact to exist. Therefore, the geolocation histories $\histories$ can be indexed into a spatial data structure $\sindex$ \citep{Mokbel2003, Dinh2010, Mahmood2019} and then only consider the geolocation-history pairs that share at least one $\epsilon$-proximal geolocation pair. This approach is described by the \Call{Indexed-Contact-Search}{} operation.
 
 Line \ref{step:query} executes a fixed-radius near-neighbors search (FR-NNS) \citep{Bentley1975, Brin1995} for each geolocation in the spatial index $\sindex$. Formally, given a set of geolocations $\locset \subseteq \locations$, a metric $d$, and a distance $\epsilon$, the \define{fixed-radius near-neighbors} of a geolocation $\ell \in \locset$ is defined as the subset of $\epsilon$-proximal geolocations \citep{Brin1995},
