@@ -207,21 +207,21 @@ Unlike the update count, \Cref{fig:efficiency} shows a more variable relationshi
   ]
   \nextgroupplot[
     table/y=NormalizedUpdates,
-    ylabel={Normalized update count}
+    ylabel={Updates}
   ]
   \foreach \t in {1,...,10} {
     \addplot[color=black] table[only if={entry of SendTolerance is \t}]{tolerance-updates.csv};
   }
   \nextgroupplot[
     table/y=NormalizedRuntimeInSeconds,
-    ylabel={Normalized runtime}
+    ylabel={Runtime}
   ]
   \foreach \t in {1,...,10} {
     \addplot[color=black] table[only if={entry of SendTolerance is \t}]{tolerance-runtime.csv};
   }
   \nextgroupplot[
     table/y=NormalizedMessages,
-    ylabel={Normalized message count}
+    ylabel={Messages}
   ]
   \foreach \t in {1,...,10} {
     \addplot[color=black] table[only if={entry of SendTolerance is \t}]{tolerance-messages.csv};
