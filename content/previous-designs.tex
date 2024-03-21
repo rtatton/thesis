@@ -1,19 +1,17 @@
-\chapter{Previous Designs and Implementations}\label{sec:previous-designs}
-
-% Describe implementations in the past tense.
+\chapter{Prior Designs and Implementations}\label{ch:previous-designs}
 
 Before working on ShareTrace, I did not have experience developing distributed algorithms. The approach proposed in \Cref{ch:risk-propagation} is my \emph{fifth} attempt at defining a performant implementation of risk propagation that is also decentralized and online. The prior four attempts offered valuable learnings that guided me toward the proposed approach; however, only the latter supports truly decentralized, privacy-preserving contact tracing. To document my efforts in developing this thesis, prior designs and implementations are provided in this appendix.
 
 \section{Thinking Like a Vertex}\label{sec:giraph}
 
-The first iteration of risk propagation\footnote{\url{https://github.com/cwru-xlab/sharetrace-giraph}} utilized Apache Giraph\footnote{\url{https://giraph.apache.org}}, an open-source version of the iterative graph-processing library, Pregel \citep{Malewicz2010}, which is based on the bulk synchronous parallel model of distributed computing \citep{Valiant1990}. Giraph follows the \define{``think like a vertex'' paradigm} in which the algorithm is specified in terms of the local information available to a graph \vertexName{} \citep{McCune2015}.
+The first iteration of risk propagation\footnote{\url{https://github.com/cwru-xlab/sharetrace-giraph}} utilized Apache Giraph\footnote{\url{https://giraph.apache.org}}, an open-source version of the iterative graph-processing library, Pregel \citep{Malewicz2010}, which is based on the bulk synchronous parallel model of distributed computing \citep{Valiant1990}. Giraph follows the \define{``think like a vertex'' paradigm} in which the algorithm is specified in terms of the local information available to a graph \vertexName \citep{McCune2015}.
 
-Risk propagation was implemented as defined by \citet{Ayday2020,Ayday2021}, using the factor graph representation of the contact network. Moreover, the implementation assumed the use of Dataswyft Personal Data Accounts\footnote{\url{https://www.dataswyft.io}}, which provide a data-oriented interface to self-sovereign identity \citep[pp. 98--99]{Preukschat2021}. However, because the Exposure Notification API developed by Apple\footnote{\url{https://covid19.apple.com/contacttracing}} and Google\footnote{\url{https://www.google.com/covid19/exposurenotifications}} does not permit remotely persisting ephemeral identifiers, the implementation assumed that user geolocation data would be analyzed to generate the factor \verticesName{} in the factor graph (\Cref{sec:contact-search}). \Cref{fig:aws-architecture} describes the high-level architecture. Callouts 1, 2, and 4 were implemented using a fan-out design in which a \define{ventilator} Lambda function divides the work amongst \define{worker} Lambda functions.
+Risk propagation was implemented as defined by \citet{Ayday2020,Ayday2021}, using the factor graph representation of the contact network. Moreover, the implementation assumed the use of Dataswyft Personal Data Accounts\footnote{\url{https://www.dataswyft.io}}, which provide a data-oriented interface to self-sovereign identity \citep[pp. 98--99]{Preukschat2021}. However, because the Exposure Notification API developed by Apple\footnote{\url{https://covid19.apple.com/contacttracing}} and Google\footnote{\url{https://www.google.com/covid19/exposurenotifications}} does not permit remotely persisting ephemeral identifiers, the implementation assumed that user geolocation data would be analyzed to generate the factor \verticesName in the factor graph (\Cref{sec:contact-search}). \Cref{fig:aws-architecture} describes the high-level architecture. Callouts 1, 2, and 4 were implemented using a fan-out design in which a \define{ventilator} Lambda function divides the work amongst \define{worker} Lambda functions.
 
 \begin{figure}[htbp]
 \centering
 \includegraphics[width=\textwidth]{aws-architecture}
-\caption[ShareTrace batch-processing architecture]{ShareTrace batch-processing architecture. \ding{202} An AWS Lambda function\protect\footnotemark{} retrieves the recent risk scores and location data from the Dataswyft Personal Data Accounts (PDAs) of ShareTrace users. Risk scores are formatted as Giraph \verticesName{} and stored in an Amazon Simple Storage Service\protect\footnotemark{} (S3) bucket. Location data is stored in a separate S3 bucket. \ding{203} A Lambda function performs a contact search over the location data and stores the contacts as Giraph edges in the same bucket that stores the Giraph \verticesName. \ding{204} Amazon Elastic MapReduce\protect\footnotemark{} (EMR) runs risk propagation as a Giraph job and stores the exposure scores in an S3 bucket. \ding{205} A Lambda function stores the exposure score of each user in their respective PDA.}
+\caption[ShareTrace batch-processing architecture]{ShareTrace batch-processing architecture. \ding{202} An AWS Lambda function\protect\footnotemark{} retrieves the recent risk scores and location data from the Dataswyft Personal Data Accounts (PDAs) of ShareTrace users. Risk scores are formatted as Giraph \verticesName and stored in an Amazon Simple Storage Service\protect\footnotemark{} (S3) bucket. Location data is stored in a separate S3 bucket. \ding{203} A Lambda function performs a contact search over the location data and stores the contacts as Giraph edges in the same bucket that stores the Giraph \verticesName. \ding{204} Amazon Elastic MapReduce\protect\footnotemark{} (EMR) runs risk propagation as a Giraph job and stores the exposure scores in an S3 bucket. \ding{205} A Lambda function stores the exposure score of each user in their respective PDA.}
 \label{fig:aws-architecture}
 \end{figure}
 
@@ -30,14 +28,14 @@ Risk propagation was implemented as defined by \citet{Ayday2020,Ayday2021}, usin
 A couple factors prompted me to search for an alternative implementation.
   \begin{enumerate}
     \item \emph{Dependency management incompatibility}. The primary impetus for reimplementation was the dependency conflicts between Giraph and other libraries. Despite several attempts (e.g., using different library versions, using different versions of Giraph, and forcing specific versions of transitive dependencies) to resolve the conflicts, a lack of personal development experience and stalled progress prompted me pursue alternative implementations.
-    \item \emph{Implementation complexity}. For a relatively straightforward data flow, the architecture in \Cref{fig:aws-architecture} corresponded to over 4,000 lines of source code. In retrospect, AWS Step Functions\footnote{\url{https://aws.amazon.com/step-functions}} could have been used to orchestrate the workflow, including the fan-out design pattern, which would have simplified the Lambda function implementations. Regarding the implementation of risk propagation, one-mode projection (first used in \Cref{sec:projected-subgraphs}) would have simplified the implementation since it avoids types of \verticesName{} and messages.
+    \item \emph{Implementation complexity}. For a relatively straightforward data flow, the architecture in \Cref{fig:aws-architecture} corresponded to over 4,000 lines of source code. In retrospect, AWS Step Functions\footnote{\url{https://aws.amazon.com/step-functions}} could have been used to orchestrate the workflow, including the fan-out design pattern, which would have simplified the Lambda function implementations. Regarding the implementation of risk propagation, one-mode projection (first used in \Cref{sec:projected-subgraphs}) would have simplified the implementation since it avoids types of \verticesName and messages.
   \end{enumerate}
 
 \section{Factor Subgraph Actors}\label{sec:subgraph-actors}
 
-In an attempt to simplify the design in \Cref{sec:giraph}, I rewrote risk propagation using the Ray Python library\footnote{\url{https://www.ray.io}}. While it claims to support actor-based programming, Ray only offers coarse-grained concurrency, with each actor being mapped to a physical core. To achieve parallelism, the factor graph was partitioned amongst the actors such that each actor maintained a subset of variable \verticesName{} \emph{or} factor \verticesName. The graph topology was stored in shared memory since it was immutable. The lifetime of this design was brief for the following reasons.
+In an attempt to simplify the design in \Cref{sec:giraph}, I rewrote risk propagation using the Ray Python library\footnote{\url{https://www.ray.io}}. While it claims to support actor-based programming, Ray only offers coarse-grained concurrency, with each actor being mapped to a physical core. To achieve parallelism, the factor graph was partitioned amongst the actors such that each actor maintained a subset of variable \verticesName \emph{or} factor \verticesName. The graph topology was stored in shared memory since it was immutable. The lifetime of this design was brief for the following reasons.
   \begin{enumerate}
-    \item \emph{Poor performance}. Communication between Ray actors requires message serialization. Moreover, partitioning the factor graph into subsets of factor \verticesName{} and variable \verticesName{} results in maximal interprocess communication. Unsurprisingly, this choice of partitioning manifested in poor runtime performance.
+    \item \emph{Poor performance}. Communication between Ray actors requires message serialization. Moreover, partitioning the factor graph into subsets of factor \verticesName and variable \verticesName results in maximal interprocess communication. Unsurprisingly, this choice of partitioning manifested in poor runtime performance.
     \item \emph{Design complexity}. Not using a framework, like Giraph, meant that this implementation required more low-level code to implement actor functionality and message passing. Regardless of the performance, the overall design of this implementation was poorly organized and overthought.
   \end{enumerate}
 
@@ -56,7 +54,7 @@ For risk propagation, the driver creates the factor graph from the set of risk s
 
 The MWD framework was the first approach that utilized the send coefficient to ensure the convergence and termination of message passing. However, because the MWD-based implementation assumed the factor graph representation of the contact network, the send coefficient was applied to both variable and factor messages.
 
-Compared to \Cref{sec:subgraph-actors}, this implementation provided a cleaner design and less communication overhead. However, what prompted (yet another) an alternative implementation was its scalability. Because the monitor processes messages serially, it is a bottleneck for algorithms in which the workers perform fine-grained tasks. Indeed, the Ray documentation\footnote{\url{https://docs.ray.io/en/latest/ray-core/patterns/too-fine-grained-tasks.html}} notes that the parallelization of small tasks is an anti-pattern because the interprocess communication cost exceeds the benefit of multiprocessing. Unfortunately, the computation performed by factor \verticesName{} and variable \verticesName{} was fine-grained, so the scalability of the MWD framework was demonstrably poor.
+Compared to \Cref{sec:subgraph-actors}, this implementation provided a cleaner design and less communication overhead. However, what prompted (yet another) an alternative implementation was its scalability. Because the monitor processes messages serially, it is a bottleneck for algorithms in which the workers perform fine-grained tasks. Indeed, the Ray documentation\footnote{\url{https://docs.ray.io/en/latest/ray-core/patterns/too-fine-grained-tasks.html}} notes that the parallelization of small tasks is an anti-pattern because the interprocess communication cost exceeds the benefit of multiprocessing. Unfortunately, the computation performed by factor \verticesName and variable \verticesName was fine-grained, so the scalability of the MWD framework was demonstrably poor.
 
 \section{Projected Subgraph Actors}\label{sec:projected-subgraphs}
 
@@ -64,7 +62,7 @@ The last alternative design of risk propagation is the subject of published work
 
 \subsection{Risk Propagation}
 
-Like all previous designs, risk propagation is an offline algorithm. Let $\vGraph_i$ be \indexed{i}{subgraph of contacts} that is associated with \indexed{i}{actor}. It is assumed that actor communication is expensive, so a partitioning algorithm \citep{Buluc2016} that minimizes communication complexity between actors is key to maximizing performance. Each actor is associated with a \define{remote mailbox} and a \define{local mailbox}. The former is designated for messages sent by other actors, while the latter is designated for messages associated with individuals within the same subgraph. For an actor to send a message to another actor, it must know the address of the target actor's remote mailbox and an identifier of the individual within the target actor's subgraph. The \cRiskPropagationMain{} operation describes the main steps.
+Like all previous designs, risk propagation is an offline algorithm. Let $\vGraph_i$ be \indexed{i}{subgraph of contacts} that is associated with \indexed{i}{actor}. It is assumed that actor communication is expensive, so a partitioning algorithm \citep{Buluc2016} that minimizes communication complexity between actors is key to maximizing performance. Each actor is associated with a \define{remote mailbox} and a \define{local mailbox}. The former is designated for messages sent by other actors, while the latter is designated for messages associated with individuals within the same subgraph. For an actor to send a message to another actor, it must know the address of the target actor's remote mailbox and an identifier of the individual within the target actor's subgraph. The \cRiskPropagationMain operation describes the main steps.
 
 \begin{function}{\nRiskPropagationMain}[\vScores, \vContacts]
   \State $\vGraph \assign \Call{Contact-Network}{\vContacts}$
@@ -74,7 +72,7 @@ Like all previous designs, risk propagation is an offline algorithm. Let $\vGrap
   \State Collect the exposure scores from all actors
 \end{function}
 
-The \cRiskPropagationActor{} operation defines the behavior of an actor. According to \citet{Tatton2022a,Tatton2022b}, an actor terminates when no message has been received after a set period of time. \citet{Tatton2022a} also allows an actor to terminate after passing messages for a given duration; or if a certain number of messages have been received and none caused an individual's exposure score to be updated.
+The \cRiskPropagationActor operation defines the behavior of an actor. According to \citet{Tatton2022a,Tatton2022b}, an actor terminates when no message has been received after a set period of time. \citet{Tatton2022a} also allows an actor to terminate after passing messages for a given duration; or if a certain number of messages have been received and none caused an individual's exposure score to be updated.
 
 \begin{function}{\nRiskPropagationActor}[\vGraph, \vScores]
   \ForEach{$\vVertex_i \in \vVertices$}
@@ -139,19 +137,19 @@ Random geometric graphs [RGGs] \citep{Dall2002}, benchmark graphs [LFRGs] \citep
 \begin{equation*}
   r(n) = \min \{1, 0.25^{\log_{10}(n) - 1}\},
 \end{equation*}
-where $n$ is the number of individuals. Used to construct LFRGs, a mixing parameter of $\mu = 0.1$, a degree power-law exponent $\gamma = 3$, a community size power-law exponent $\beta = 2$, degree bounds $(k_\mathit{min}, k_\mathit{max}) = (3, 50)$, and community size bounds $(s_\mathit{min}, s_\mathit{max}) = (10, 100)$. These parameter values are consistent with recommendation to have $\gamma \in [2, 3]$,  $\beta \in [1, 2]$, $k_\mathit{min} < s_\mathit{min}$, and $k_\mathit{max} < s_\mathit{max}$ \citep{Lancichinetti2008}. When creating CSFGs, $m = 2$ edges are added for each new \vertexName{} and a triad is formed with probability $P_t = 0.95$. For all graphs, self-loops and isolated \verticesName{} are removed.
+where $n$ is the number of individuals. Used to construct LFRGs, a mixing parameter of $\mu = 0.1$, a degree power-law exponent $\gamma = 3$, a community size power-law exponent $\beta = 2$, degree bounds $(k_\mathit{min}, k_\mathit{max}) = (3, 50)$, and community size bounds $(s_\mathit{min}, s_\mathit{max}) = (10, 100)$. These parameter values are consistent with recommendation to have $\gamma \in [2, 3]$,  $\beta \in [1, 2]$, $k_\mathit{min} < s_\mathit{min}$, and $k_\mathit{max} < s_\mathit{max}$ \citep{Lancichinetti2008}. When creating CSFGs, $m = 2$ edges are added for each new \vertexName and a triad is formed with probability $P_t = 0.95$. For all graphs, self-loops and isolated \verticesName are removed.
 
 Three real-world contact networks were used from the SocioPatterns project: a high school [Thiers13] \citep{Fournet2014}, a workplace [InVS15], and a scientific conference [SFHH] \citep{G_enois2018}. Each contact in these networks represents \num{20} seconds of face-to-face interaction. However, to remain consistent with risk propagation, only the most recent contact time was retained for each pair of individuals.\Cref{fig:real-networks} visualizes the contact network for each setting.
 
 \begin{figure}[htbp]
 \centering
-\subcaptionbox{Thiers13 (\num{180} \verticesName{}; \num{2220} edges)\label{fig:highschool12}}{
+\subcaptionbox{Thiers13 (\num{180} \verticesName; \num{2220} edges)\label{fig:highschool12}}{
   \includegraphics[height=0.275\textheight]{highschool12.png}
 }
-\subcaptionbox{InVS15 (\num{217} \verticesName{}; \num{4274} edges)\label{fig:workplace}}{
+\subcaptionbox{InVS15 (\num{217} \verticesName; \num{4274} edges)\label{fig:workplace}}{
   \includegraphics[height=0.275\textheight]{workplace.png}
 }
-\subcaptionbox{SFHH (\num{403} \verticesName{}; \num{9565} edges)\label{fig:conference}}{
+\subcaptionbox{SFHH (\num{403} \verticesName; \num{9565} edges)\label{fig:conference}}{
   \includegraphics[height=0.275\textheight]{conference.png}
 }
 \caption{SocioPatterns contact networks}
@@ -257,7 +255,7 @@ Because \cref{eq:estreach} does not account for the temporality constraints \cre
   xtick distance=5,
   scaled x ticks={base 10:-1},
   width=\textwidth,
-  height=0.3\textheight,
+  height=0.35\textheight,
   ytick distance=0.5,
   xtick distance=1,
   table/y=RatioValue,
@@ -282,7 +280,7 @@ Because \cref{eq:estreach} does not account for the temporality constraints \cre
   xtick distance=5,
   scaled x ticks={base 10:-1},
   width=\textwidth,
-  height=0.3\textheight,
+  height=0.35\textheight,
   ytick distance=0.5,
   xtick distance=1,
   table/y=RatioValue,
@@ -301,31 +299,32 @@ Because \cref{eq:estreach} does not account for the temporality constraints \cre
 \label{fig:ratio}
 \end{figure}
 
+\newcommand*{\tabindent}{ \hspace{3mm}}
+
 \begin{table}[htbp]
 \centering
 \begin{tabular}{lc}
   \toprule
-  \bfseries Contact network & A/E MRR $\pm 1.96 \cdot \text{SE}$\\
+  Contact network & A/E MRR $\pm 95\% \text{ CI}$\\
   \midrule
-  \rowgroup{\itshape Synthetic} \\
-  LFR & $0.88 \pm 0.14$\\
-  RGG & $0.74 \pm 0.12$\\
-  CSFG & $0.90 \pm 0.14$\\
-  & $\boldsymbol{0.85 \pm 0.08}$ \\
-  \rowgroup{\itshape Real-world} \\
-  Thiers13 & $0.58 \pm 0.01$\\
-  InVS15 & $0.63 \pm 0.01$\\
-  SFHH & $0.60 \pm 0.01$\\
-  & $\boldsymbol{0.60 \pm 0.01}$ \\
+  \textit{Synthetic} & \num{0.85 \pm 0.08}\\
+  \tabindent LFR & \num{0.88 \pm 0.14}\\
+  \tabindent RGG & \num{0.74 \pm 0.12}\\
+  \tabindent CSFG & \num{0.90 \pm 0.14}\\
+  \midrule
+  \textit{Real-world} & \num{0.60 \pm 0.01}\\
+  \tabindent Thiers13 & \num{0.58 \pm 0.01}\\
+  \tabindent InVS15 & \num{0.63 \pm 0.01}\\
+  \tabindent SFHH & \num{0.60 \pm 0.01}\\
   \bottomrule
 \end{tabular}
-\caption[A/E MRR for synthetic and real-world contact networks]{A/E MRRs for synthetic and real-world contact networks with transmission rate $\pTransmissionRate = 0.8$ and send coefficient $\pSendCoefficient = 0.6$. Synthetic (real-world) ratios are averaged across parameter combinations (resp. iterations).}
+\caption[A/E MRR for synthetic and real-world contact networks]{A/E MRR for synthetic and real-world contact networks with transmission rate $\pTransmissionRate = 0.8$ and send coefficient $\pSendCoefficient = 0.6$. Ratios of synthetic contact networks are averaged across parameter combinations, while ratios for real-world contact networks are averaged across iterations.}
 \label{tab:reachability}
 \end{table}
 
 \subsubsection{Scalability}
 
-\Cref{fig:runtime} describes the runtime behavior of risk propagation. The runtime of CSFGs requires further investigation. A linear regression fit explains ($R^2 = 0.52$) the runtime of LFRGs and RGGs with a slope $m = (1.1 \pm 0.1) \cdot 10^{-3}$ s/contact and intercept $b = 4.3 \pm 1.6$s ($\pm 1.96 \cdot \text{SE}$).
+\Cref{fig:runtime} describes the runtime behavior of risk propagation. The runtime of CSFGs requires further investigation. A linear regression fit explains ($R^2 = 0.52$) the runtime of LFRGs and RGGs with a slope $m = (1.1 \pm 0.1) \cdot 10^{-3}$ s/contact and intercept $b = \qty{4.3 \pm 1.6}{\second}$.
 
 \begin{figure}[htbp]
 \centering
@@ -461,14 +460,14 @@ then it is recorded. The latest such sequence is used to define the contact betw
 While the \textbf{for} loop in \Call{Naive-Contact-Search}{} is \define{embarrassingly parallel} \cite[p. 14]{Herlihy2012}, the naive approach is neither scalable nor efficient. It can be improved by observing that it is necessary, but not sufficient, that a pair of $\epsilon$-proximal geolocations exists between two geolocation histories for a contact to exist. Therefore, the geolocation histories $\histories$ can be indexed into a spatial data structure $\sindex$ \citep{Mokbel2003, Dinh2010, Mahmood2019} and then only consider the geolocation-history pairs that share at least one $\epsilon$-proximal geolocation pair. This approach is described by the \Call{Indexed-Contact-Search}{} operation.
 
 Line \ref{step:query} executes a fixed-radius near-neighbors search (FR-NNS) \citep{Bentley1975, Brin1995} for each geolocation in the spatial index $\sindex$. Formally, given a set of geolocations $\locset \subseteq \locations$, a metric $d$, and a distance $\epsilon$, the \define{fixed-radius near-neighbors} of a geolocation $\ell \in \locset$ is defined as the subset of $\epsilon$-proximal geolocations \citep{Brin1995},
-	\begin{equation*}
-		\query(\ell) = \{\ell' \in \locset \mid d(\ell, \ell') \leq \epsilon\}
-	\end{equation*}
+\begin{equation*}
+  \query(\ell) = \{\ell' \in \locset \mid d(\ell, \ell') \leq \epsilon\}
+\end{equation*}
 
 Note that the set of neighbors $\query(i)$ of user $i$ corresponds to the geolocations that are $\epsilon$-proximal to \emph{any} of the geolocations in their geolocation history $\htwo_i$,
-	\begin{equation*}
-		\query(i) = \bigcup_{\ell \in \htwo_i} \query(\ell).
-	\end{equation*}
+\begin{equation*}
+  \query(i) = \bigcup_{\ell \in \htwo_i} \query(\ell).
+\end{equation*}
 On line \ref{step:to-users}, the operation \Call{Unique-Users}{} maps these near-neighbors back to the associated users, removing any duplicates that may arise from mapping multiple geolocations to the same user. Finally, line \ref{step:subset} maps the set of users $\users$ back to their geolocation histories and runs \Call{Naive-Contact-Search}{} on the resultant subset.
 
 \begin{function}{Indexed-Contact-Search}[\histories]
