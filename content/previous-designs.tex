@@ -74,7 +74,7 @@ Like all previous designs, risk propagation is an offline algorithm. Let $\vGrap
   \State Collect the exposure scores from all actors
 \end{function}
 
-The \cRiskPropagationActor{} operation defines the behavior of an actor. According to \citet{Tatton2022a,Tatton2022b}, an actor terminates when no message has been received after a set period of time. \citet{Tatton2022a} also allows an actor to terminate after passing messages for a maximum duration; or if a certain number of messages have been received and none caused an individual's exposure score to be updated.
+The \cRiskPropagationActor{} operation defines the behavior of an actor. According to \citet{Tatton2022a,Tatton2022b}, an actor terminates when no message has been received after a set period of time. \citet{Tatton2022a} also allows an actor to terminate after passing messages for a given duration; or if a certain number of messages have been received and none caused an individual's exposure score to be updated.
 
 \begin{function}{\nRiskPropagationActor}[\vGraph, \vScores]
   \ForEach{$\vVertex_i \in \vVertices$}
@@ -109,11 +109,11 @@ As such, message reachability differs from \cref{eq:reach}:
 
 The following experiments were performed using the implementation of risk propagation available on GitHub\footnote{\url{https://github.com/cwru-xlab/sharetrace-ray}}:
 \begin{itemize}
-  \item \emph{Efficiency}. How does the transmission rate and send coefficient affect the running time and number of messages sent during risk propagation? What value of the send coefficient provides the most efficiency without impacting accuracy?
-  \item \emph{Message reachability}. How good of an estimator is \cref{eq:initial-estimated-message-reachability}?
-  \item \emph{Scalability}. How does the running time of risk propagation relate to the size of the contact network?
+  \item \emph{Efficiency}. How does the transmission rate and send coefficient affect the runtime and number of messages sent during risk propagation? What value of the send coefficient provides the most efficiency without impacting accuracy?
+  \item \emph{Message reachability}. How accurately does \cref{eq:estreach} estimate \cref{eq:initial-estimated-message-reachability}?
+  \item \emph{Scalability}. How does the runtime of risk propagation relate to the size of the contact network?
 \end{itemize}
-\Cref{tab:experiments} summarizes the types of contact networks used for each type of experiment.
+\Cref{tab:experiments} summarizes the types of contact networks used for the experiments.
 
 \begin{table}[htbp]
 \centering
@@ -129,62 +129,60 @@ The following experiments were performed using the implementation of risk propag
 \label{tab:experiments}
 \end{table}
 
-The Case Western Reserve University high-performance computing cluster was utilized. For efficiency experiments, 4 CPUs and 8GB RAM were used. For scalability experiments, 8--12 CPUs and 16--64GB RAM were used. All experiments were run on a single cluster node.
+The Case Western Reserve University high-performance computing cluster was utilized. For efficiency experiments, \num{4} CPUs and 8GB RAM were used. For scalability experiments, 8--12 CPUs and 16--64GB RAM were used. All experiments were run on a single cluster node.
 
-Unless stated otherwise, it is assumed that the transmission rate is $\pTransmissionRate = 0.8$; the send coefficient is $\pSendCoefficient = 0.6$; the time buffer is $\pTimeBuffer = 2 \text{ days}$; the risk score and contact expiries are $\pScoreExpiry = \pContactExpiry = 14 \text{ days}$; and the rate constant is $\pRateConstant = 1$. Actors were configured to timeout after 3 seconds of not receiving any messages; or after receiving 10 times the number of individuals in messages that did not update an individual's exposure score.
+Unless stated otherwise, it is assumed that the transmission rate is $\pTransmissionRate = 0.8$; the send coefficient is $\pSendCoefficient = 0.6$; the time buffer is $\pTimeBuffer = 2 \text{ days}$; the risk score and contact expiries are $\pScoreExpiry = \pContactExpiry = 14 \text{ days}$; and the rate constant is $\pRateConstant = 1$. Actors were configured to timeout after \num{3} seconds of not receiving any messages; or after receiving \num{10} times the number of individuals in messages that did not update an individual's exposure score.
 
-To partition the contact network, the METIS algorithm\footnote{\url{https://github.com/inducer/pymetis}} \citep{Karypis1998} was configured to use a load imbalance factor of 0.2; to attempt contiguous partitions that have minimal inter-partition connectivity; to apply 10 iterations of refinement during each stage of the uncoarsening process; and to use the best of 3 cuts.
+To partition the contact network, the METIS algorithm\footnote{\url{https://github.com/inducer/pymetis}} \citep{Karypis1998} was configured to use a load imbalance factor of \num{0.2}; to attempt contiguous partitions that have minimal inter-partition connectivity; to apply 10 iterations of refinement during each stage of the uncoarsening process; and to use the best of \num{3} cuts.
 
 Random geometric graphs [RGGs] \citep{Dall2002}, benchmark graphs [LFRGs] \citep{Lancichinetti2008}, and clustered scale-free graphs [CSFGs] \citep{Holme2002} were used as synthetic contact networks. Together, these graphs demonstrate aspects of community structure \citep{Fortunato2010}. When constructing RGGs, the radius was set to
 \begin{equation*}
   r(n) = \min \{1, 0.25^{\log_{10}(n) - 1}\},
 \end{equation*}
-where $n$ is the number of individuals. Used to construct LFRGs, a mixing parameter of $\mu = 0.1$, a degree power-law exponent $\gamma = 3$, a community size power-law exponent $\beta = 2$, degree bounds $(k_{\min}, k_{\max}) = (3, 50)$, and community size bounds $(s_{\min}, s_{\max}) = (10, 100)$. These parameter values align with the suggestions by \citet{Lancichinetti2008} in that $\gamma \in [2, 3]$,  $\beta \in [1, 2]$, $k_{\min} < s_{\min}$, and $k_{\max} < s_{\max}$. When creating CSFGs, $m = 2$ edges are added for each new \vertexName{} and a triad is formed with probability $P_t = 0.95$. For all graphs, self-loops and isolated \verticesName{} are removed.
+where $n$ is the number of individuals. Used to construct LFRGs, a mixing parameter of $\mu = 0.1$, a degree power-law exponent $\gamma = 3$, a community size power-law exponent $\beta = 2$, degree bounds $(k_\mathit{min}, k_\mathit{max}) = (3, 50)$, and community size bounds $(s_\mathit{min}, s_\mathit{max}) = (10, 100)$. These parameter values are consistent with recommendation to have $\gamma \in [2, 3]$,  $\beta \in [1, 2]$, $k_\mathit{min} < s_\mathit{min}$, and $k_\mathit{max} < s_\mathit{max}$ \citep{Lancichinetti2008}. When creating CSFGs, $m = 2$ edges are added for each new \vertexName{} and a triad is formed with probability $P_t = 0.95$. For all graphs, self-loops and isolated \verticesName{} are removed.
 
-Three real-world contact networks were used from the SocioPatterns project: a high school [Thiers13] \citep{Fournet2014}, a workplace [InVS15], and a scientific conference [SFHH] \citep{G_enois2018}. Each contact in these networks represents 20 seconds of face-to-face interaction. However, to remain consistent with risk propagation, only the most recent contact time was retained for each pair of individuals.
+Three real-world contact networks were used from the SocioPatterns project: a high school [Thiers13] \citep{Fournet2014}, a workplace [InVS15], and a scientific conference [SFHH] \citep{G_enois2018}. Each contact in these networks represents \num{20} seconds of face-to-face interaction. However, to remain consistent with risk propagation, only the most recent contact time was retained for each pair of individuals.\Cref{fig:real-networks} visualizes the contact network for each setting.
 
 \begin{figure}[htbp]
 \centering
-\subcaptionbox{Thiers13 (\num{180} nodes; \num{2220} edges)\label{fig:highschool12}}{
+\subcaptionbox{Thiers13 (\num{180} \verticesName{}; \num{2220} edges)\label{fig:highschool12}}{
   \includegraphics[height=0.275\textheight]{highschool12.png}
 }
-\subcaptionbox{InVS15 (\num{217} nodes; \num{4274} edges)\label{fig:workplace}}{
+\subcaptionbox{InVS15 (\num{217} \verticesName{}; \num{4274} edges)\label{fig:workplace}}{
   \includegraphics[height=0.275\textheight]{workplace.png}
 }
-\subcaptionbox{SFHH (\num{403} nodes; \num{9565} edges)\label{fig:conference}}{
+\subcaptionbox{SFHH (\num{403} \verticesName{}; \num{9565} edges)\label{fig:conference}}{
   \includegraphics[height=0.275\textheight]{conference.png}
 }
 \caption{SocioPatterns contact networks}
 \label{fig:real-networks}
 \end{figure}
 
-The following defines the data generation process. Let $p$ be the probability of having a high risk score, $j \in \intRange{0}{\pScoreExpiry}$, and $\delta_i \sim \uniformDistribution(\qty{0}{\second}, \qty{86400}{\second})$. Then the risk scores for \indexed{i}{individual} were
+The following defines the data generation process. Let $j \in \intRange{0}{\pScoreExpiry}$ and $\delta_i \sim \uniformDistribution(\qty{0}{\second}, \qty{86400}{\second})$. Then the risk scores for \indexed{i}{individual} were
 \begin{equation*}
   \vScores_i = 
     \begin{cases}
-      \SetBuilder{\vScore_{\vTime_j} \sim \uniformDistribution(0, 0.5)}{ \vTime_j = \vReferenceTime + \delta_i + j \text{ days}} & \text{with } p = 0.8 \\
-      \SetBuilder{\vScore_{\vTime_j} \sim \uniformDistribution(0.5, 1)}{\vTime_j = \vReferenceTime + \delta_i + j \text{ days}} & \text{with } p = 0.2.
+      \SetBuilder{\vScore_{\vTime_j} \sim \uniformDistribution(0, 0.5)}{ \vTime_j = \vReferenceTime + \delta_i + j \text{ days}} & \text{with probability } p = 0.8 \\
+      \SetBuilder{\vScore_{\vTime_j} \sim \uniformDistribution(0.5, 1)}{\vTime_j = \vReferenceTime + \delta_i + j \text{ days}} & \text{with probability } 1 - p.
     \end{cases}
 \end{equation*}
-Contact times were sampled similarly. Of the sampled contact times, one is randomly selected and used as the contact time for a pair of individuals.
+Contact times were generated similarly, but only one randomly selected contact time was used for a pair of individuals. For the real-world contact networks, to ensure that all risk scores were initially propagated, the contact times were shifted forward by $\vReferenceTime$ and use $(\vReferenceTime - 1 \text{ day})$ when generating risk scores times. In this way, the most recent risk score was older than the first contact time.
 
-For the real-world contact networks, to ensure that all risk scores were initially propagated, the contact times were shifted forward by $\vReferenceTime$ and use $(\vReferenceTime - 1 \text{ day})$ when generating risk scores times. In this way, the most recent risk score was older than the first contact time. Risk score values were generated in the same manner as described in Section \ref{sec:synthetic-eval} with the exception that we only generate one score. Lastly, 10 iterations were performed over each data set to obtain an average performance.
-
-Various transmission rates and send coefficients were evaluated:
+To measure efficiency and message reachability, various transmission rates and send coefficients were evaluated:
 \begin{equation*}
   (\pSendCoefficient, \pTransmissionRate) \in \{0.1, 0.2, \ldots, 1\} \times \{0.1, 0.2, \ldots, 0.9\}.
 \end{equation*}
-For all $(\pSendCoefficient, \pTransmissionRate)$ pairs, the contact network contains 5,000 individuals and is partitioned into 2 subgraphs. 
+Synthetic contact networks of \num{5000} individuals and \num{2} subgraphs were used. For real-world contact networks, \num{10} iterations were performed over each data set to obtain an average performance.
 
-To measure the scalability of risk propagation, contact networks were generated with 100--10,000 individuals in increments of 100 and repeated for 10 iterations. For scalability experiments, no partitioning was performed for contact networks containing fewer than 1,000 individuals; otherwise, 2 partitions were used. Additional partitioning did not improve performance due to interprocess communication\footnote{Clearly, so 1--2 partitions offers minimal parallelism. Performance issues are suspected to be caused by the Ray library.}.
+To measure the scalability of risk propagation, contact networks were generated with 100--10,000 individuals in increments of \num{100} and repeated for \num{10} iterations. No partitioning was performed for contact networks containing fewer than \num{1000} individuals; otherwise, \num{2} partitions were used. Additional partitioning did not improve performance due to interprocess communication\footnote{Clearly, 1--2 partitions offers minimal parallelism. Performance issues are suspected to be caused by the Ray library.}.
 
 \subsection{Experiment Results}
 
 \subsubsection{Efficiency}
 
-Prior to measuring scalability and real-world performance, we observed the effects of send coefficient and transmission rate on the efficiency of risk propagation. As ground truth, we used the maximum update count for a given transmission rate. Fig. \ref{fig:efficiency} indicates that a send coefficient of $\pSendCoefficient = 0.6$ permits 99\% of the possible updates. Beyond $\pSendCoefficient = 0.6$, however, the transmission rate has considerable impact, regardless of the graph. As noted in Section \ref{sec:reachability}, send coefficient quantifies the trade-off between completeness and efficiency. Thus, $\pSendCoefficient = 0.6$ optimizes for both criteria.
+To determine accuracy, the maximum update count for a given transmission rate was used. \Cref{fig:efficiency} indicates that a send coefficient of $\pSendCoefficient = 0.6$ permits 99\% of the possible updates. Beyond $\pSendCoefficient = 0.6$, however, the transmission rate had considerable impact, independent of the contact network type. Thus, a send coefficient of $\pSendCoefficient = 0.6$ is optimal for efficiency and accuracy.
 
-Unlike the update count, Fig. \ref{fig:efficiency} shows a more variable relationship with respect to runtime and message count. While, in general, transmission rate (send coefficient) has a direct (resp. inverse) relationship with runtime and message count, the graph topology seems to have an impact on this fact. Namely, the LFRG displayed less variability across send coefficient and transmission rate than the RGG and CSFG, which is the cause for the large interquartile ranges. Therefore, it is useful to consider the lower quartile $Q_1$, the median $Q_2$, and the upper quartile $Q_3$. For $\pTransmissionRate = 0.8 $ and $\pSendCoefficient = 0.6$, risk propagation is more efficient with $(Q_{1}, Q_{2}, Q_{3}) = (0.13, 0.13, 0.46)$ normalized runtime and $(Q_{1}, Q_{2}, Q_{3}) = (0.13, 0.15, 0.44)$ normalized message count.
+Unlike the update count, \Cref{fig:efficiency} shows a more variable relationship with respect to runtime and message count. While, in general, transmission rate (send coefficient) has a direct (resp. inverse) relationship with runtime and message count, the graph topology seems to have an impact on this fact. Namely, the LFRG displayed less variability across send coefficient and transmission rate than the RGG and CSFG, which is the cause for the large interquartile ranges. Therefore, it is useful to consider the lower quartile $Q_1$, the median $Q_2$, and the upper quartile $Q_3$. For $\pTransmissionRate = 0.8 $ and $\pSendCoefficient = 0.6$, risk propagation is more efficient with $(Q_{1}, Q_{2}, Q_{3}) = (0.13, 0.13, 0.46)$ normalized runtime and $(Q_{1}, Q_{2}, Q_{3}) = (0.13, 0.15, 0.44)$ normalized message count.
 
 \begin{figure}[htbp]
 \centering
@@ -238,15 +236,14 @@ Unlike the update count, Fig. \ref{fig:efficiency} shows a more variable relatio
 
 \subsubsection{Message Reachability}
 
-To validate the accuracy of \Cref{eq:estreach}, we collected values of \Cref{eq:reach} and \Cref{eq:estreach} for real-world and synthetic graphs. For the latter set of graphs, we observed reachability while sweeping across values of $\pSendCoefficient$ and $\pTransmissionRate$.
+Let the \define{actual/estimated message reachability ratio} be defined as
+\begin{equation*}
+  \text{A/E MRR} = \frac{\vReachability(\vVertex)}{\vEstimatedReachability(\vVertex)}
+\end{equation*}
 
-To measure the accuracy of \Cref{eq:estreach}, let the \emph{message reachability ratio} (MRR) be defined as
-\begin{equation}\label{eq:mrr}
-  \aeMsgReachRatio(u) := \frac{\vReachability(u)}{\vEstimatedReachability(u)}.
-\end{equation}
-Overall, \Cref{eq:estreach} is a good estimator of \Cref{eq:reach}. Across all synthetic graphs, \Cref{eq:estreach} modestly underestimated \Cref{eq:reach} with quartiles $(Q_1, Q_2, Q_3) = (0.71, 0.84, 0.98)$ for the \Cref{eq:mrr}. For $\pTransmissionRate = 0.8$ and $\pSendCoefficient = 0.6$, the quartiles of \Cref{eq:mrr} were $(Q_1, Q_2, Q_3) = (0.52, 0.77, 1.12)$ and $(Q_1, Q_2, Q_3) = (0.79, 0.84, 0.93)$, respectively. Table \ref{tab:reachability} provides mean values of \Cref{eq:mrr} for both synthetic and real-world graphs. Fig. \ref{fig:ratio} indicates that moderate values of $\pSendCoefficient$ tend to result in a more stable MRR, with lower (higher) $\pSendCoefficient$ underestimating (resp. overestimating) \Cref{eq:reach}. With regard to transmission rate, \Cref{eq:mrr} tends to decrease with increasing $\pTransmissionRate$, but also exhibits larger interquartile ranges.
+Overall, \cref{eq:estreach} is a good estimator of \cref{eq:reach}. Across all synthetic graphs, \cref{eq:estreach} modestly underestimated \cref{eq:reach} with quartiles $(Q_1, Q_2, Q_3) = (0.71, 0.84, 0.98)$ for \cref{eq:mrr}. For $\pTransmissionRate = 0.8$ and $\pSendCoefficient = 0.6$, the quartiles of \cref{eq:mrr} were $(Q_1, Q_2, Q_3) = (0.52, 0.77, 1.12)$ and $(Q_1, Q_2, Q_3) = (0.79, 0.84, 0.93)$, respectively. \Cref{tab:reachability} provides mean values of the A/E MRR for both synthetic and real-world graphs. \Cref{fig:ratio} indicates that moderate values of $\pSendCoefficient$ tend to result in a more stable MRR, with lower (higher) $\pSendCoefficient$ underestimating (resp. overestimating) \cref{eq:reach}. With regard to transmission rate, the A/E MRR tends to decrease with increasing $\pTransmissionRate$, but also exhibits larger interquartile ranges.
 
-Because \Cref{eq:estreach} does not account for the temporality constraints \Cref{eq:contact-const} and \Cref{eq:time-const}, it does not perfectly estimate \Cref{eq:reach}. With lower $\pSendCoefficient$ and higher $\pTransmissionRate$, \Cref{eq:estreach} suggests higher MR. However, because a message is only passed under certain conditions (see Algorithm \ref{alg:rp-msg}), this causes \Cref{eq:estreach} to overestimate \Cref{eq:reach}. While \Cref{eq:estreach} theoretically is an upper bound on \Cref{eq:reach}, it is possible for \Cref{eq:estreach} to underestimate \Cref{eq:reach} if the specified value of $\vInitScore(v)$ overestimates the true value of $\vInitScore(v)$. When computing \Cref{eq:mrr} for Fig. \ref{fig:ratio}, we used the mean $\vInitScore(v)$ across all users $v$, so $\aeMsgReachRatio(u) > 1$ in some cases.
+Because \cref{eq:estreach} does not account for the temporality constraints \cref{eq:contact-const} and \cref{eq:time-const}, it does not perfectly estimate \cref{eq:reach}. With lower $\pSendCoefficient$ and higher $\pTransmissionRate$, \cref{eq:estreach} suggests higher MR. However, because a message is only passed under certain conditions (see Algorithm \ref{alg:rp-msg}), this causes \cref{eq:estreach} to overestimate \cref{eq:reach}. While \cref{eq:estreach} theoretically is an upper bound on \cref{eq:reach}, it is possible for \cref{eq:estreach} to underestimate \cref{eq:reach} if the specified value of $\vInitScore(v)$ overestimates the true value of $\vInitScore(v)$. When computing the A/E MRR for \Cref{fig:ratio}, we used the mean $\vInitScore(v)$ across all users $v$, so the A/E MRR is greater than 1 in some cases.
 
 \begin{figure}[htbp]
 \centering
@@ -256,7 +253,7 @@ Because \Cref{eq:estreach} does not account for the temporality constraints \Cre
   boxplot,
   table/col sep=comma,
   boxplot/draw direction=y,
-  ylabel={Message reachability ratio},
+  ylabel={A/E MRR},
   xtick distance=5,
   scaled x ticks={base 10:-1},
   width=\textwidth,
@@ -281,7 +278,7 @@ Because \Cref{eq:estreach} does not account for the temporality constraints \Cre
   boxplot,
   table/col sep=comma,
   boxplot/draw direction=y,
-  ylabel={Message reachability ratio},
+  ylabel={A/E MRR},
   xtick distance=5,
   scaled x ticks={base 10:-1},
   width=\textwidth,
@@ -300,7 +297,7 @@ Because \Cref{eq:estreach} does not account for the temporality constraints \Cre
 \end{axis}
 \end{tikzpicture}
 \end{subfigure}
-\caption[Effects of send coefficient and transmission rate on the message reachability ratio]{Effects of send coefficient and transmission rate on the message reachability ratio. Independent variables are grouped across graphs.}
+\caption[Effects of send coefficient and transmission rate on the message reachability ratio]{Effects of send coefficient and transmission rate on the A/E MRR. Independent variables are grouped across graphs.}
 \label{fig:ratio}
 \end{figure}
 
@@ -308,7 +305,7 @@ Because \Cref{eq:estreach} does not account for the temporality constraints \Cre
 \centering
 \begin{tabular}{lc}
   \toprule
-  \bfseries Setting & $\aeMsgReachRatio(u) \pm 1.96 \cdot \text{SE}$\\
+  \bfseries Setting & $\vReachability(\vVertex) / \vEstimatedReachability(\vVertex) \pm 1.96 \cdot \text{SE}$\\
   \midrule
   \rowgroup{\itshape Synthetic} \\
   LFR & $0.88 \pm 0.14$\\
@@ -323,13 +320,13 @@ Because \Cref{eq:estreach} does not account for the temporality constraints \Cre
   & $\boldsymbol{0.60 \pm 0.01}$ \\
   \bottomrule
 \end{tabular}
-\caption[Message reachability ratio for synthetic and real-world graphs]{Message reachability ratio for synthetic and real-world graphs ($\pTransmissionRate = 0.8$, $\pSendCoefficient = 0.6$). Synthetic (real-world) ratios are averaged across parameter combinations (resp. runs).}
+\caption[A/E MRR for synthetic and real-world graphs]{A/E MRR for synthetic and real-world graphs ($\pTransmissionRate = 0.8$, $\pSendCoefficient = 0.6$). Synthetic (real-world) ratios are averaged across parameter combinations (resp. runs).}
 \label{tab:reachability}
 \end{table}
 
 \subsubsection{Scalability}
 
-Fig. \ref{fig:runtime} describes the runtime behavior of risk propagation. The runtime of CSFGs requires further investigation. A linear regression fit explains ($R^2 = 0.52$) the runtime of LFRGs and RGGs with a slope $m = (1.1 \pm 0.1) \cdot 10^{-3}$ s/contact and intercept $b = 4.3 \pm 1.6$s ($\pm 1.96 \cdot \text{SE}$).
+\Cref{fig:runtime} describes the runtime behavior of risk propagation. The runtime of CSFGs requires further investigation. A linear regression fit explains ($R^2 = 0.52$) the runtime of LFRGs and RGGs with a slope $m = (1.1 \pm 0.1) \cdot 10^{-3}$ s/contact and intercept $b = 4.3 \pm 1.6$s ($\pm 1.96 \cdot \text{SE}$).
 
 \begin{figure}[htbp]
 \centering
@@ -355,8 +352,8 @@ Fig. \ref{fig:runtime} describes the runtime behavior of risk propagation. The r
     mark size=2pt
   ] table [col sep=comma,x=Edges,y=RuntimeInSeconds,meta=Graph]{scalability.csv};
 \legend{LFRG,CSFG,RGG}
-\end{axis}%
-\end{tikzpicture}%
+\end{axis}
+\end{tikzpicture}
 \caption[Runtime of risk propagation]{Runtime of risk propagation on synthetic graphs containing 100--10,000 users and approximately 200--38,000 contacts.}
 \label{fig:runtime}
 \end{figure}
@@ -383,7 +380,7 @@ The system model is very similar to \citet{Ayday2020, Ayday2021} and designs. Th
 
 \define{Geohashing} is a public-domain encoding system that maps \define{geographic coordinates} (i.e., latitude-longitude ordered pairs \cite[p. 5]{Sickle2004}) to alphanumeric strings called \define{geohashes}, where the length of a geohash is correlated with its geospatial precision \citep{Morton1966}. To offer some basic privacy, a user's precise geolocation history is obfuscated on-device by encoding geographic coordinates as geohashes with 8-character precision which corresponds to a region of \qty{730}{\meter^2}.
 
-%A \define{contact} follows the definition of \Cref{eq:contact-seq}, where the contact time $\tsym$ indicates the most recent time at which two users were proximal for a contiguous duration of at least $\delta \in \preals$. Each user has a \define{geolocation history}
+%A \define{contact} follows the definition of \cref{eq:contact-seq}, where the contact time $\tsym$ indicates the most recent time at which two users were proximal for a contiguous duration of at least $\delta \in \preals$. Each user has a \define{geolocation history}
 %	\begin{equation*}
 %		\htwo = \left[(\tsym_i, \ell_i) \mid ~\forall i \in \ints_{[1, \attr{\htwo}{length}]} (\tsym_i < \tsym_{i + 1}) \right],
 %	\end{equation*}
@@ -520,8 +517,8 @@ where $\ell_i = (\latitude_i, \longitude_i)$ is a latitude-longitude coordinate 
 
 The choice of the great-circle distance was primarily driven by its readily available usage in the scikit-learn \citep{sklearn2013} implementation of a ball tree. If such an approach for discovering contacts were to be used in practice, more advanced \define{geodetic datum} \cite[pp. 71--130]{Lu2014} could be used to provide better geospatial accuracy. Moreover, by projecting geodetic coordinates onto the plane, metrics that assume a Cartesian coordinate system could be used instead \cite[pp. 265--326]{Lu2014}.
 
-%The running time of \Call{Spatially-Index}{} is $\Theta\left(\card{\histories} \cdot \log\card{\histories}\right)$ \citep{Omohundro1989}. Assuming the ball tree is balanced\footnote{The ball-tree implementation provided by scikit-learn \citep{sklearn2013} ensures the tree is balanced.}, the running time of \Call{Fixed-Radius-Near-Neighbors}{} to find the $\epsilon$-proximal neighbors of all geolocations in the spatial index $\sindex$ is $\Theta(k \card{\sindex} \cdot \log\card{\sindex})$ , where $k$ is the dimensionality of a tree element (i.e., $k = 2$ for geographic coordinates). The running time of \Call{Unique-Users}{} is $\Theta(\card{\query})$. While the running time of \Call{Naive-Contact-Search}{} is $\Theta\left(\card{\users}^2\right)$, it is likely that $\card{\users} << \card{\histories}$. Regardless of the input,
+%The runtime of \Call{Spatially-Index}{} is $\Theta\left(\card{\histories} \cdot \log\card{\histories}\right)$ \citep{Omohundro1989}. Assuming the ball tree is balanced\footnote{The ball-tree implementation provided by scikit-learn \citep{sklearn2013} ensures the tree is balanced.}, the runtime of \Call{Fixed-Radius-Near-Neighbors}{} to find the $\epsilon$-proximal neighbors of all geolocations in the spatial index $\sindex$ is $\Theta(k \card{\sindex} \cdot \log\card{\sindex})$ , where $k$ is the dimensionality of a tree element (i.e., $k = 2$ for geographic coordinates). The runtime of \Call{Unique-Users}{} is $\Theta(\card{\query})$. While the runtime of \Call{Naive-Contact-Search}{} is $\Theta\left(\card{\users}^2\right)$, it is likely that $\card{\users} << \card{\histories}$. Regardless of the input,
 %\begin{equation*}
 %  \card{\histories} \geq \card{\sindex} \geq \card{\users}
 %\end{equation*}
-%since $\card{\histories} = \card{\sindex}$ only if all geolocations in $\histories$ are distinct, and $\card{\sindex} = \card{\users}$ only if each user has exactly one geolocation that is distinct from all other users. Dependent upon the input, however, is $\card{\query}$. In the worst case, $\card{\query} \in O\left(\card{\sindex}^2\right)$ if each geolocation is $\epsilon$-proximal to all other geolocations. This implies that the overall worst-case running time of \Call{Indexed-Contact-Search}{} is $O(\card{\histories}^2)$. In practice, the running time depends on the geohash precision as well as the geospatial density and mobility behavior of the user population.
+%since $\card{\histories} = \card{\sindex}$ only if all geolocations in $\histories$ are distinct, and $\card{\sindex} = \card{\users}$ only if each user has exactly one geolocation that is distinct from all other users. Dependent upon the input, however, is $\card{\query}$. In the worst case, $\card{\query} \in O\left(\card{\sindex}^2\right)$ if each geolocation is $\epsilon$-proximal to all other geolocations. This implies that the overall worst-case runtime of \Call{Indexed-Contact-Search}{} is $O(\card{\histories}^2)$. In practice, the runtime depends on the geohash precision as well as the geospatial density and mobility behavior of the user population.
