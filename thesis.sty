@@ -19,16 +19,26 @@
 % Provides NewDocumentCommand and NewDocumentEnvironment 
 \usepackage{xparse}
 
+% Define commands that appear not to eat spaces
+% https://ctan.org/pkg/xspace
+\usepackage{xspace}
+
 % Math symbols and fonts
 \usepackage{amsmath,amssymb,amsfonts}
 
 % Customize itemize and enumerate environments 
 \usepackage{enumitem}
 
+% Prevent figures from being placed in other sections
+% Ref: https://tex.stackexchange.com/a/282
+\usepackage[section]{placeins}
+
 % Circled numbers
+% https://ctan.org/pkg/pifont
 \usepackage{pifont}
 
 % SI unit formatting
+% https://ctan.org/pkg/siunitx
 \usepackage{siunitx}
 
 % Use to define key terms in-text
@@ -50,7 +60,7 @@
 % CROSS REFERENCING
 
  % Bibliography citations
-
+ % https://ctan.org/pkg/biblatex
 \usepackage[backend=bibtex,natbib=true]{biblatex}
 \addbibresource{content/references.bib}
 
@@ -112,8 +122,8 @@
 
 % ALGORITHM AND PSEUDOCODE
 
-\newcommand{\vertexName}{vertex}
-\newcommand{\verticesName}{vertices}
+\newcommand{\vertexName}{vertex\xspace}
+\newcommand{\verticesName}{vertices\xspace}
 
 \newcommand{\indexed}[2]{the $#1$-th #2}
 \newcommand{\twoindexed}[3]{the $#1$-th and $#2$-th #3}
@@ -293,34 +303,34 @@
 \newcommand{\nComputeMessage}{Compute-Message}
 
 % Function calls
-\newcommand{\cApplyRiskScore}[1][]{\Call{\nApplyRiskScore}{#1}}
-\newcommand{\cBecome}[1][]{\Call{\nBecome}{#1}}
-\newcommand{\cContactTtl}[1][]{\Call{\nContactTtl}{#1}}
-\newcommand{\cCreateActor}[1][]{\Call{\nCreateActor}{#1}}
-\newcommand{\cCreateFactorGraph}[1][]{\Call{\nCreateFactorGraph}{#1}}
-\newcommand{\cCreate}[1][]{\Call{\nCreate}{#1}}
-\newcommand{\cDelete}[1][]{\Call{\nDelete}{#1}}
-\newcommand{\cHandleContact}[1][]{\Call{\nHandleContact}{#1}}
-\newcommand{\cHandleFlushTimeout}[1][]{\Call{\nHandleFlushTimeout}{#1}}
-\newcommand{\cHandleRiskScore}[1][]{\Call{\nHandleRiskScore}{#1}}
-\newcommand{\cInsert}[1][]{\Call{\nInsert}{#1}}
-\newcommand{\cMaximumOlderThan}[1][]{\Call{\nMaximumOlderThan}{#1}}
-\newcommand{\cMaximum}[1][]{\Call{\nMaximum}{#1}}
-\newcommand{\cMerge}[1][]{\Call{\nMerge}{#1}}
-\newcommand{\cMinimum}[1][]{\Call{\nMinimum}{#1}}
-\newcommand{\cNullRiskScore}[1][]{\Call{\nNullRiskScore}{#1}}
-\newcommand{\cPredicate}[1][]{\Call{\nPredicate}{#1}}
-\newcommand{\cRiskPropagation}[1][]{\Call{\nRiskPropagation}{#1}}
-\newcommand{\cRiskScoreTtl}[1][]{\Call{\nRiskScoreTtl}{#1}}
-\newcommand{\cSearch}[1][]{\Call{\nSearch}{#1}}
-\newcommand{\cSend}[1][]{\Call{\nSend}{#1}}
-\newcommand{\cReceive}[1][]{\Call{\nReceive}{#1}}
-\newcommand{\cSetSendThreshold}[1][]{\Call{\nSetSendThreshold}{#1}}
-\newcommand{\cUpdateExposureScore}[1][]{\Call{\nUpdateExposureScore}{#1}}
-\newcommand{\cUpdateSendThreshold}[1][]{\Call{\nUpdateSendThreshold}{#1}}
-\newcommand{\cRiskPropagationMain}[1][]{\Call{\nRiskPropagationMain}{#1}}
-\newcommand{\cRiskPropagationActor}[1][]{\Call{\nRiskPropagationActor}{#1}}
-\newcommand{\cComputeMessage}[1][]{\Call{\nComputeMessage}{#1}}
+\newcommand{\cApplyRiskScore}[1][]{\Call{\nApplyRiskScore}{#1}\xspace}
+\newcommand{\cBecome}[1][]{\Call{\nBecome}{#1}\xspace}
+\newcommand{\cContactTtl}[1][]{\Call{\nContactTtl}{#1}\xspace}
+\newcommand{\cCreateActor}[1][]{\Call{\nCreateActor}{#1}\xspace}
+\newcommand{\cCreateFactorGraph}[1][]{\Call{\nCreateFactorGraph}{#1}\xspace}
+\newcommand{\cCreate}[1][]{\Call{\nCreate}{#1}\xspace}
+\newcommand{\cDelete}[1][]{\Call{\nDelete}{#1}\xspace}
+\newcommand{\cHandleContact}[1][]{\Call{\nHandleContact}{#1}\xspace}
+\newcommand{\cHandleFlushTimeout}[1][]{\Call{\nHandleFlushTimeout}{#1}\xspace}
+\newcommand{\cHandleRiskScore}[1][]{\Call{\nHandleRiskScore}{#1}\xspace}
+\newcommand{\cInsert}[1][]{\Call{\nInsert}{#1}\xspace}
+\newcommand{\cMaximumOlderThan}[1][]{\Call{\nMaximumOlderThan}{#1}\xspace}
+\newcommand{\cMaximum}[1][]{\Call{\nMaximum}{#1}\xspace}
+\newcommand{\cMerge}[1][]{\Call{\nMerge}{#1}\xspace}
+\newcommand{\cMinimum}[1][]{\Call{\nMinimum}{#1}\xspace}
+\newcommand{\cNullRiskScore}[1][]{\Call{\nNullRiskScore}{#1}\xspace}
+\newcommand{\cPredicate}[1][]{\Call{\nPredicate}{#1}\xspace}
+\newcommand{\cRiskPropagation}[1][]{\Call{\nRiskPropagation}{#1}\xspace}
+\newcommand{\cRiskScoreTtl}[1][]{\Call{\nRiskScoreTtl}{#1}\xspace}
+\newcommand{\cSearch}[1][]{\Call{\nSearch}{#1}\xspace}
+\newcommand{\cSend}[1][]{\Call{\nSend}{#1}\xspace}
+\newcommand{\cReceive}[1][]{\Call{\nReceive}{#1}\xspace}
+\newcommand{\cSetSendThreshold}[1][]{\Call{\nSetSendThreshold}{#1}\xspace}
+\newcommand{\cUpdateExposureScore}[1][]{\Call{\nUpdateExposureScore}{#1}\xspace}
+\newcommand{\cUpdateSendThreshold}[1][]{\Call{\nUpdateSendThreshold}{#1}\xspace}
+\newcommand{\cRiskPropagationMain}[1][]{\Call{\nRiskPropagationMain}{#1}\xspace}
+\newcommand{\cRiskPropagationActor}[1][]{\Call{\nRiskPropagationActor}{#1}\xspace}
+\newcommand{\cComputeMessage}[1][]{\Call{\nComputeMessage}{#1}\xspace}
 
 % Standard number sets
 \newcommand{\naturals}{\mathbb{N}}

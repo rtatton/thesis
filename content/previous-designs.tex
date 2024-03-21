@@ -68,7 +68,7 @@ Like all previous designs, risk propagation is an offline algorithm. Let $\vGrap
 
 \begin{function}{\nRiskPropagationMain}[\vScores, \vContacts]
   \State $\vGraph \assign \Call{Contact-Network}{\vContacts}$
-  \ForEach{$i \in \intRange{1}{\pNumberOfSubgraphs}$}
+  \ForEach{$i \in \intRange{1}{n}$}
     \State $\cRiskPropagationActor[\vGraph_i, \vScores_i]$
   \EndFor
   \State Collect the exposure scores from all actors
@@ -180,9 +180,9 @@ To measure the scalability of risk propagation, contact networks were generated 
 
 \subsubsection{Efficiency}
 
-To determine accuracy, the maximum update count for a given transmission rate was used. \Cref{fig:efficiency} indicates that a send coefficient of $\pSendCoefficient = 0.6$ permits 99\% of the possible updates. Beyond $\pSendCoefficient = 0.6$, however, the transmission rate had considerable impact, independent of the contact network type. Thus, a send coefficient of $\pSendCoefficient = 0.6$ is optimal for efficiency and accuracy.
+To determine accuracy, the maximum update count for a given transmission rate was used. \Cref{fig:efficiency} indicates that a send coefficient of $\pSendCoefficient = 0.6$ achieves 99\% accuracy. Beyond $\pSendCoefficient = 0.6$, however, the transmission rate had considerable impact, independent of the contact network type.
 
-Unlike the update count, \Cref{fig:efficiency} shows a more variable relationship with respect to runtime and message count. While, in general, transmission rate (send coefficient) has a direct (resp. inverse) relationship with runtime and message count, the graph topology seems to have an impact on this fact. Namely, the LFRG displayed less variability across send coefficient and transmission rate than the RGG and CSFG, which is the cause for the large interquartile ranges. Therefore, it is useful to consider the lower quartile $Q_1$, the median $Q_2$, and the upper quartile $Q_3$. For $\pTransmissionRate = 0.8 $ and $\pSendCoefficient = 0.6$, risk propagation is more efficient with $(Q_{1}, Q_{2}, Q_{3}) = (0.13, 0.13, 0.46)$ normalized runtime and $(Q_{1}, Q_{2}, Q_{3}) = (0.13, 0.15, 0.44)$ normalized message count.
+Unlike the update count, \Cref{fig:efficiency} shows a more variable relationship with respect to runtime and message count. While, in general, transmission rate (send coefficient) has a direct (resp. inverse) relationship with runtime and message count, the network topology seems to have an impact on this fact. Namely, LFRGs displayed less variability across send coefficients and transmission rates than RGGs and CSFGs, which is the cause for the large interquartile ranges. Therefore, it is useful to consider the lower quartile $Q_1$, the median $Q_2$, and the upper quartile $Q_3$. For $\pTransmissionRate = 0.8 $ and $\pSendCoefficient = 0.6$, risk propagation was more efficient with $(Q_{1}, Q_{2}, Q_{3}) = (0.13, 0.13, 0.46)$ normalized runtime and $(Q_{1}, Q_{2}, Q_{3}) = (0.13, 0.15, 0.44)$ normalized message count.
 
 \begin{figure}[htbp]
 \centering
@@ -230,7 +230,7 @@ Unlike the update count, \Cref{fig:efficiency} shows a more variable relationshi
   }
 \end{groupplot}
 \end{tikzpicture}
-\caption[Effects of send coefficient on efficiency]{Effects of send coefficient on efficiency. All dependent variables are normalized across graphs and transmission rates.}
+\caption[Effects of send coefficient on risk propagation efficiency]{Effects of send coefficient on risk propagation efficiency. All dependent variables are normalized across contact networks and transmission rates.}
 \label{fig:efficiency}
 \end{figure}
 
@@ -238,12 +238,12 @@ Unlike the update count, \Cref{fig:efficiency} shows a more variable relationshi
 
 Let the \define{actual/estimated message reachability ratio} be defined as
 \begin{equation*}
-  \text{A/E MRR} = \frac{\vReachability(\vVertex)}{\vEstimatedReachability(\vVertex)}
+  \text{A/E MRR} = \frac{\vReachability(\vVertex)}{\vEstimatedReachability(\vVertex)}.
 \end{equation*}
 
-Overall, \cref{eq:estreach} is a good estimator of \cref{eq:reach}. Across all synthetic graphs, \cref{eq:estreach} modestly underestimated \cref{eq:reach} with quartiles $(Q_1, Q_2, Q_3) = (0.71, 0.84, 0.98)$ for \cref{eq:mrr}. For $\pTransmissionRate = 0.8$ and $\pSendCoefficient = 0.6$, the quartiles of \cref{eq:mrr} were $(Q_1, Q_2, Q_3) = (0.52, 0.77, 1.12)$ and $(Q_1, Q_2, Q_3) = (0.79, 0.84, 0.93)$, respectively. \Cref{tab:reachability} provides mean values of the A/E MRR for both synthetic and real-world graphs. \Cref{fig:ratio} indicates that moderate values of $\pSendCoefficient$ tend to result in a more stable MRR, with lower (higher) $\pSendCoefficient$ underestimating (resp. overestimating) \cref{eq:reach}. With regard to transmission rate, the A/E MRR tends to decrease with increasing $\pTransmissionRate$, but also exhibits larger interquartile ranges.
+Overall, \cref{eq:estreach} is a good estimator of \cref{eq:reach}. Across all synthetic networks, \cref{eq:estreach} modestly underestimated \cref{eq:reach} with quartiles $(Q_1, Q_2, Q_3) = (0.71, 0.84, 0.98)$ for \cref{eq:mrr}. For $\pTransmissionRate = 0.8$ and $\pSendCoefficient = 0.6$, the quartiles of \cref{eq:mrr} were $(Q_1, Q_2, Q_3) = (0.52, 0.77, 1.12)$ and $(Q_1, Q_2, Q_3) = (0.79, 0.84, 0.93)$, respectively. \Cref{tab:reachability} provides mean values of the A/E MRR for both synthetic and real-world contact networks. \Cref{fig:ratio} indicates that moderate values of $\pSendCoefficient$ tend to result in a more stable MRR. The A/E MRR tends to decrease as the transmission rate increases, but also exhibits larger interquartile ranges.
 
-Because \cref{eq:estreach} does not account for the temporality constraints \cref{eq:contact-const} and \cref{eq:time-const}, it does not perfectly estimate \cref{eq:reach}. With lower $\pSendCoefficient$ and higher $\pTransmissionRate$, \cref{eq:estreach} suggests higher MR. However, because a message is only passed under certain conditions (see Algorithm \ref{alg:rp-msg}), this causes \cref{eq:estreach} to overestimate \cref{eq:reach}. While \cref{eq:estreach} theoretically is an upper bound on \cref{eq:reach}, it is possible for \cref{eq:estreach} to underestimate \cref{eq:reach} if the specified value of $\vInitScore(v)$ overestimates the true value of $\vInitScore(v)$. When computing the A/E MRR for \Cref{fig:ratio}, we used the mean $\vInitScore(v)$ across all users $v$, so the A/E MRR is greater than 1 in some cases.
+Because \cref{eq:estreach} does not account for the temporality constraints \cref{eq:contact-const} and \cref{eq:time-const}, it does not perfectly estimate \cref{eq:reach}. With lower $\pSendCoefficient$ and higher $\pTransmissionRate$, \cref{eq:estreach} suggests higher message reachability. However, because a message is only passed under certain conditions (see Algorithm \ref{alg:rp-msg}), this causes \cref{eq:estreach} to overestimate \cref{eq:reach}. While \cref{eq:estreach} theoretically is an upper bound on \cref{eq:reach}, it is possible for \cref{eq:estreach} to underestimate \cref{eq:reach} if the specified value of the initial risk score overestimates its actual value. When computing the A/E MRR for \Cref{fig:ratio}, the mean initial risk score was used, so the A/E MRR is greater than 1 in some cases.
 
 \begin{figure}[htbp]
 \centering
@@ -297,7 +297,7 @@ Because \cref{eq:estreach} does not account for the temporality constraints \cre
 \end{axis}
 \end{tikzpicture}
 \end{subfigure}
-\caption[Effects of send coefficient and transmission rate on the message reachability ratio]{Effects of send coefficient and transmission rate on the A/E MRR. Independent variables are grouped across graphs.}
+\caption[Effects of the send coefficient and transmission rate on the A/E MRR]{Effects of send coefficient and transmission rate on the A/E MRR. Independent variables are grouped across contact networks.}
 \label{fig:ratio}
 \end{figure}
 
@@ -305,14 +305,13 @@ Because \cref{eq:estreach} does not account for the temporality constraints \cre
 \centering
 \begin{tabular}{lc}
   \toprule
-  \bfseries Setting & $\vReachability(\vVertex) / \vEstimatedReachability(\vVertex) \pm 1.96 \cdot \text{SE}$\\
+  \bfseries Contact network & A/E MRR $\pm 1.96 \cdot \text{SE}$\\
   \midrule
   \rowgroup{\itshape Synthetic} \\
   LFR & $0.88 \pm 0.14$\\
   RGG & $0.74 \pm 0.12$\\
   CSFG & $0.90 \pm 0.14$\\
   & $\boldsymbol{0.85 \pm 0.08}$ \\
-  \midrule
   \rowgroup{\itshape Real-world} \\
   Thiers13 & $0.58 \pm 0.01$\\
   InVS15 & $0.63 \pm 0.01$\\
@@ -320,7 +319,7 @@ Because \cref{eq:estreach} does not account for the temporality constraints \cre
   & $\boldsymbol{0.60 \pm 0.01}$ \\
   \bottomrule
 \end{tabular}
-\caption[A/E MRR for synthetic and real-world graphs]{A/E MRR for synthetic and real-world graphs ($\pTransmissionRate = 0.8$, $\pSendCoefficient = 0.6$). Synthetic (real-world) ratios are averaged across parameter combinations (resp. runs).}
+\caption[A/E MRR for synthetic and real-world contact networks]{A/E MRRs for synthetic and real-world contact networks with transmission rate $\pTransmissionRate = 0.8$ and send coefficient $\pSendCoefficient = 0.6$. Synthetic (real-world) ratios are averaged across parameter combinations (resp. iterations).}
 \label{tab:reachability}
 \end{table}
 
@@ -354,7 +353,7 @@ Because \cref{eq:estreach} does not account for the temporality constraints \cre
 \legend{LFRG,CSFG,RGG}
 \end{axis}
 \end{tikzpicture}
-\caption[Runtime of risk propagation]{Runtime of risk propagation on synthetic graphs containing 100--10,000 users and approximately 200--38,000 contacts.}
+\caption[Runtime of risk propagation]{Runtime of risk propagation on synthetic contact networks containing 100--10,000 users and approximately 200--38,000 contacts.}
 \label{fig:runtime}
 \end{figure}
 
