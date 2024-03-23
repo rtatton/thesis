@@ -24,7 +24,9 @@
 \usepackage{xspace}
 
 % Math symbols and fonts
-\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsfonts}
 
 % Customize itemize and enumerate environments 
 \usepackage{enumitem}
@@ -39,7 +41,13 @@
 
 % SI unit formatting
 % https://ctan.org/pkg/siunitx
-\usepackage{siunitx}
+\usepackage[
+  use-xspace,
+  uncertainty-mode=separate,
+  range-units=single,
+  exponent-product=\cdot,
+  range-phrase=--
+]{siunitx}
 
 % Use to define key terms in-text
 \newcommand{\define}[1]{\emph{#1}}
@@ -71,30 +79,26 @@
 \usepackage[hidelinks]{hyperref}
 
 % Add support for hyperlinked URLs and DOIs
-\usepackage{url,doi}
+\usepackage{url}
+\usepackage{doi}
 
 % Unified cross-referencing for figures, tables, and equations
 \usepackage[nameinlink,capitalize,noabbrev]{cleveref}
 \newcommand{\crefconjunction}{\textendash}
 \crefname{equation}{}{}
-% Assumes capitalize and noabbrev
-\Crefname{equation}{Equation}{Equations}
 
 % TABLES AND FIGURES
 
+\newcommand{\tabindent}{ \hspace{3mm}}
+
 \usepackage{booktabs}
 
-% TODO Remove?
 \usepackage{tabularx}
 
-% TODO Remove?
 \usepackage{multirow}
 
-% TODO Remove?
-\newcommand{\rowgroup}[1]{\hspace{-1em}\textit{#1}}
-
 \usepackage{subcaption}
-\captionsetup{skip=10pt,labelfont=bf}
+\captionsetup{labelfont=bf}
 
 \usepackage{tikz}
 \graphicspath{{assets/}}
@@ -345,7 +349,6 @@
 \newcommand{\event}{\omega}
 
 % Math functions
-\DeclareMathOperator{\aeMsgReachRatio}{mrr}
 \DeclareMathOperator{\argmax}{\arg\max}
 \DeclareMathOperator{\hav}{hav}
 \DeclareMathOperator{\vers}{vers}
@@ -354,11 +357,11 @@
 \newcommand{\ceil}[1]{\left\lceil #1 \right\rceil}
 \newcommand{\floor}[1]{\left\lfloor #1 \right\rfloor}
 
-% Convenience commands for proper bracket formatting
+% Proper bracket formatting
 \usepackage{braket}
 \newcommand{\setBuilder}[2]{\set{ #1 | #2}}
 \newcommand{\SetBuilder}[2]{\Set{ #1 | #2}}
 
-% Ref: https://tex.stackexchange.com/questions/304662/typesetting-an-integer-interval
+% Ref: https://tex.stackexchange.com/a/304667
 \newcommand{\twoDots}{\mathinner {\ldotp \ldotp}}
-\newcommand{\intRange}[2]{[#1 \twoDots #2]}
+\newcommand{\intInterval}[2]{[#1 \twoDots #2]}

@@ -121,7 +121,7 @@ To detect convergence, the normed difference between the current and previous ex
   \EndFor
   \While{$\| \vExposureScores{n} - \vExposureScores{n - 1} \| > \pDiff$}
     \ForEach{$\{\vVariable[i], \vFactor[ij]\} \in \vEdges$}
-      \State $\vVariableMessage{i}{j}{n} \assign \vRiskScores{i}{n - 1} \setminus \setBuilder{\vFactorMessage{j}{i}{\ell}}{\ell \in \intRange{1}{n - 1}}$
+      \State $\vVariableMessage{i}{j}{n} \assign \vRiskScores{i}{n - 1} \setminus \setBuilder{\vFactorMessage{j}{i}{\ell}}{\ell \in \intInterval{1}{n - 1}}$
     \EndFor
     \ForEach{$\{\vVariable[i], \vFactor[ij]\} \in \vEdges$}
       \State $\vFactorMessage{i}{j}{n} \assign \max \setBuilder{\pTransmissionRate \vScore_\vTime}{\vScore_\vTime \in \vVariableMessage{i}{j}{n}, \vTime < \vTime_{ij} + \pTimeBuffer}$
