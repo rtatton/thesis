@@ -98,8 +98,8 @@ Compared to asynchronous risk propagation (\Cref{sec:asynchronous}), actor behav
   \item The send threshold is applied \emph{across} contacts and discriminates against risk scores that are newer than the initial exposure score $\dot{\vScore}_\vTime$. The latter is based on the assumption that newer risk scores are less likely to be propagated by other actors.
   \item The initial risk score to sent to each contact accounts for recency, which is assumed to exponentially decay with a rate constant of $\pRateConstant > 0$.
 \end{enumerate}
-As such, message reachability differs from \cref{eq:reach}:
-\begin{equation}\label{eq:initial-estimated-message-reachability}
+As such, message reachability differs from \cref{eq:message-reachability}:
+\begin{equation}\label{eq:initial-message-reachability}
   \vReachability(\vSourceVertex, \vTargetVertex) = \sum_{(i, j) \in \vPath} [\pTransmissionRate^i \dot{\vScore}_\vSourceVertex \geq \pSendCoefficient \pTransmissionRate \dot{\vScore}_i] \cdot [\dot{\vTime}_\vSourceVertex \leq \dot{\vTime}_i] \cdot [\dot{\vTime}_\vSourceVertex < \vTime_{ij} + \pTimeBuffer],
 \end{equation}
 
@@ -107,8 +107,8 @@ As such, message reachability differs from \cref{eq:reach}:
 
 The following experiments were performed using the implementation of risk propagation available on GitHub\footnote{\url{https://github.com/cwru-xlab/sharetrace-ray}}:
 \begin{itemize}
-  \item \emph{Efficiency}. How does the transmission rate and send coefficient affect the runtime and number of messages sent during risk propagation? What value of the send coefficient provides the most efficiency without impacting accuracy?
-  \item \emph{Message reachability}. How accurately does \cref{eq:estreach} estimate \cref{eq:initial-estimated-message-reachability}?
+  \item \emph{Efficiency}. How does the transmission rate and send coefficient affect the runtime and number of messages sent during risk propagation? What send coefficient provides the most efficiency without impacting accuracy?
+  \item \emph{Message reachability}. How accurately does \cref{eq:estimated-message-reachability} estimate \cref{eq:initial-estimated-message-reachability}?
   \item \emph{Scalability}. How does the runtime of risk propagation relate to the size of the contact network?
 \end{itemize}
 \Cref{tab:experiments} summarizes the types of contact networks used for the experiments.
@@ -127,9 +127,9 @@ The following experiments were performed using the implementation of risk propag
 \label{tab:experiments}
 \end{table}
 
-The Case Western Reserve University high-performance computing cluster was utilized. For efficiency experiments, \num{4} CPU and \qty{8}{GB} memory were used. For scalability experiments, \numrange{8}{12} CPUs and \qtyrange{16}{64}{GB} memory were used. All experiments were run on a single cluster node.
+The Case Western Reserve University high-performance computing cluster was utilized. For efficiency and message reachability experiments, \num{4} CPUs and \qty{8}{GB} memory were used. For scalability experiments, \numrange{8}{12} CPUs and \qtyrange{16}{64}{GB} memory were used. All experiments were run on a single cluster node.
 
-Unless stated otherwise, it is assumed that the transmission rate is $\pTransmissionRate = \num{0.8}$; the send coefficient is $\pSendCoefficient = \num{0.6}$; the time buffer is $\pTimeBuffer = \num{2}$ days; the risk score and contact expiries are $\pScoreExpiry = \pContactExpiry = \num{14}$ days; and the rate constant is $\pRateConstant = \num{1}$. Actors were configured to timeout after \num{3} seconds of not receiving any messages; or after receiving \num{10} times the number of individuals in messages that did not update an individual's exposure score.
+Unless stated otherwise, the transmission rate was $\pTransmissionRate = \num{0.8}$; the send coefficient was $\pSendCoefficient = \num{0.6}$; the time buffer was $\pTimeBuffer = \num{2}$ days; the risk score and contact expiries were $\pScoreExpiry = \pContactExpiry = \num{14}$ days; and the rate constant was $\pRateConstant = \num{1}$. Actors were configured to timeout after \num{3} seconds of not receiving any messages; or after receiving \num{10} times the number of individuals in messages that did not update an individual's exposure score.
 
 To partition the contact network, the METIS algorithm\footnote{\url{https://github.com/inducer/pymetis}} \citep{Karypis1998} was configured to use a load imbalance factor of \num{0.2}; to attempt contiguous partitions that have minimal inter-partition connectivity; to apply \num{10} iterations of refinement during each stage of the uncoarsening process; and to use the best of \num{3} cuts.
 
@@ -137,9 +137,9 @@ Random geometric graphs [RGGs] \citep{Dall2002}, benchmark graphs [LFRGs] \citep
 \begin{equation*}
   r(n) = \min \{\num{1}, \num{0.25}^{\log_{10}(n) - 1}\},
 \end{equation*}
-where $n$ is the number of individuals. Used to construct LFRGs, a mixing parameter of $\mu = \num{0.1}$, a degree power-law exponent $\gamma = \num{3}$, a community size power-law exponent $\beta = \num{2}$, degree bounds $(k_\mathit{min}, k_\mathit{max}) = (\num{3}, \num{50})$, and community size bounds $(s_\mathit{min}, s_\mathit{max}) = (\num{10}, \num{100})$. These parameter values are consistent with recommendation to have $\gamma \in [\num{2}, \num{3}]$,  $\beta \in [\num{1}, \num{2}]$, $k_\mathit{min} < s_\mathit{min}$, and $k_\mathit{max} < s_\mathit{max}$ \citep{Lancichinetti2008}. When creating CSFGs, $m = \num{2}$ edges are added for each new \vertexName and a triad is formed with probability $P_t = \num{0.95}$. For all graphs, self-loops and isolated \verticesName are removed.
+where $n$ is the number of individuals. Used to construct LFRGs, a mixing parameter of $\mu = \num{0.1}$, a degree power-law exponent $\gamma = \num{3}$, a community size power-law exponent $\beta = \num{2}$, degree bounds $(k_\mathit{min}, k_\mathit{max}) = (\num{3}, \num{50})$, and community size bounds $(s_\mathit{min}, s_\mathit{max}) = (\num{10}, \num{100})$. These values are consistent with the recommendation to have $\gamma \in [\num{2}, \num{3}]$,  $\beta \in [\num{1}, \num{2}]$, $k_\mathit{min} < s_\mathit{min}$, and $k_\mathit{max} < s_\mathit{max}$ \citep{Lancichinetti2008}. When creating CSFGs, $m = \num{2}$ edges are added for each new \vertexName and a triad was formed with probability $P_t = \num{0.95}$. For all graphs, self-loops and isolated \verticesName are removed.
 
-Three real-world contact networks were used from the SocioPatterns project: a high school [Thiers13] \citep{Fournet2014}, a workplace [InVS15], and a scientific conference [SFHH] \citep{G_enois2018}. Each contact in these networks represents \num{20} seconds of face-to-face interaction. However, to remain consistent with risk propagation, only the most recent contact time was retained for each pair of individuals.\Cref{fig:real-networks} visualizes the contact network for each setting.
+Three real-world contact networks were used from the SocioPatterns project: a high school [Thiers13] \citep{Fournet2014}, a workplace [InVS15], and a scientific conference [SFHH] \citep{G_enois2018}. Contact in these networks represents \num{20} seconds of face-to-face interaction. However, to remain consistent with risk propagation, only the most recent contact time was retained for each pair of individuals. \Cref{fig:real-networks} visualizes the contact network of each setting.
 
 \begin{figure}[htbp]
 \centering
@@ -164,7 +164,7 @@ The following defines the data generation process. Let $j \in \intInterval{0}{\p
       \SetBuilder{\vScore_{\vTime_j} \sim \uniformDistribution(\num{0.5}, \num{1})}{\vTime_j = \vReferenceTime + \delta_i + j \text{ days}} & \text{with probability } 1 - p.
     \end{cases}
 \end{equation*}
-Contact times were generated similarly, but only one randomly selected contact time was used for a pair of individuals. For the real-world contact networks, to ensure that all risk scores were initially propagated, the contact times were shifted forward by $\vReferenceTime$ and use $(\vReferenceTime - 1 \text{ day})$ when generating risk scores times. In this way, the most recent risk score was older than the first contact time.
+Contact times were similarly generated. For real-world contact networks, to ensure that all risk scores were initially propagated, the contact times were shifted forward by $\vReferenceTime$ and $\vReferenceTime - 1 \text{ day}$ was used for generating the timestamps of risk scores. In this way, the newest risk score was older than the oldest contact.
 
 To measure efficiency and message reachability, various transmission rates and send coefficients were evaluated:
 \begin{equation*}
@@ -172,7 +172,7 @@ To measure efficiency and message reachability, various transmission rates and s
 \end{equation*}
 Synthetic contact networks of \num{5000} individuals and \num{2} subgraphs were used. For real-world contact networks, \num{10} iterations were performed over each data set to obtain an average performance.
 
-To measure the scalability of risk propagation, contact networks were generated with \numrange{100}{10000} individuals in increments of \num{100} and repeated for \num{10} iterations. No partitioning was performed for contact networks containing fewer than \num{1000} individuals; otherwise, \num{2} partitions were used. Additional partitioning did not improve performance due to interprocess communication\footnote{Clearly, \numrange{1}{2} partitions offers minimal parallelism. Performance issues are suspected to be caused by the usage of the Ray library.}.
+To measure the scalability of risk propagation, contact networks were generated with \numrange{100}{10000} individuals in increments of \num{100} and repeated for \num{10} iterations. No partitioning was performed for contact networks containing fewer than \num{1000} individuals; otherwise, \num{2} partitions were used. Additional partitioning did not improve performance due to interprocess communication\footnote{Clearly, \numrange{1}{2} partitions offers minimal parallelism. Limitations of the Ray library are suspected to be the cause of performance issues.}.
 
 \subsection{Experiment Results}
 
@@ -180,7 +180,7 @@ To measure the scalability of risk propagation, contact networks were generated 
 
 To determine accuracy, the maximum number of updates for a given transmission rate was used. \Cref{fig:efficiency} indicates that a send coefficient of $\pSendCoefficient = \num{0.6}$ achieved \qty{99}{\percent} accuracy. Beyond $\pSendCoefficient = \num{0.6}$, however, the transmission rate had considerable impact, independent of the contact network type.
 
-\Cref{fig:efficiency} shows a more variable relationship with respect to runtime and the number of messages. While, in general, transmission rate (send coefficient) has a direct (resp. inverse) relationship with runtime and number of messages, the network topology had an impact on this fact. Namely, LFRGs displayed less variability across send coefficients and transmission rates than RGGs and CSFGs. Therefore, it is useful to consider the lower quartile $Q_1$, the median $Q_2$, and the upper quartile $Q_3$, which shall be collectively reported as $(Q_1, Q_2, Q_3)$. For $\pTransmissionRate = \num{0.8} $ and $\pSendCoefficient = \num{0.6}$, risk propagation was more efficient with relative runtime $(\num{0.13}, \num{0.13}, \num{0.46})$ and relative number of messages $(0.13, 0.15, 0.44)$.
+\Cref{fig:efficiency} shows a more variable relationship with respect to runtime and the number of messages. Generally, the transmission rate (resp., send coefficient) had a direct (resp., inverse) relationship with runtime and number of messages. However, LFRGs displayed less variability across send coefficients and transmission rates than RGGs and CSFGs. Therefore, it is useful to consider the lower quartile $Q_1$, the median $Q_2$, and the upper quartile $Q_3$, which shall be collectively reported as $(Q_1, Q_2, Q_3)$. For $\pTransmissionRate = \num{0.8} $ and $\pSendCoefficient = \num{0.6}$, risk propagation was more efficient with relative runtime $(\num{0.13}, \num{0.13}, \num{0.46})$ and relative number of messages $(0.13, 0.15, 0.44)$.
 
 \begin{figure}[htbp]
 \centering
@@ -206,6 +206,13 @@ To determine accuracy, the maximum number of updates for a given transmission ra
   xlabel={Send coefficient}
   ]
   \nextgroupplot[
+    table/y=NormalizedMessages,
+    ylabel={Number of messages}
+  ]
+  \foreach \t in {1,...,10} {
+    \addplot[color=black] table[only if={entry of SendTolerance is \t}]{tolerance-messages.csv};
+  }
+  \nextgroupplot[
     table/y=NormalizedUpdates,
     ylabel={Number of updates}
   ]
@@ -218,13 +225,6 @@ To determine accuracy, the maximum number of updates for a given transmission ra
   ]
   \foreach \t in {1,...,10} {
     \addplot[color=black] table[only if={entry of SendTolerance is \t}]{tolerance-runtime.csv};
-  }
-  \nextgroupplot[
-    table/y=NormalizedMessages,
-    ylabel={Number of messages}
-  ]
-  \foreach \t in {1,...,10} {
-    \addplot[color=black] table[only if={entry of SendTolerance is \t}]{tolerance-messages.csv};
   }
 \end{groupplot}
 \end{tikzpicture}
@@ -239,9 +239,9 @@ Let the \define{actual/estimated message reachability ratio} be defined as
   \text{A/E MRR} = \frac{\vReachability(\vVertex)}{\vEstimatedReachability(\vVertex)}.
 \end{equation*}
 
-Overall, \cref{eq:estreach} is a good estimator of \cref{eq:reach}. For synthetic networks, \cref{eq:estreach} underestimated \cref{eq:reach} with A/E MRR $(\num{0.71}, \num{0.84}, \num{0.98})$. For $\pTransmissionRate = \num{0.8}$ and $\pSendCoefficient = \num{0.6}$, the A/E MRR was $(\num{0.52}, \num{0.77}, \num{1.12})$ and $(\num{0.79}, \num{0.84}, \num{0.93})$, respectively. \Cref{tab:reachability} provides mean values of the A/E MRR for synthetic and real-world contact networks. \Cref{fig:ratio} indicates that moderate send coefficients tend toward more stable A/E MRRs. The A/E MRR tends to decrease as the transmission rate increases, but also exhibits larger interquartile ranges.
+Overall, \cref{eq:estimated-message-reachability} is a good estimator of \cref{eq:initial-message-reachability}. For synthetic networks, \cref{eq:estimated-message-reachability} underestimated \cref{eq:initial-message-reachability} with A/E MRR $(\num{0.71}, \num{0.84}, \num{0.98})$. For $\pTransmissionRate = \num{0.8}$ and $\pSendCoefficient = \num{0.6}$, the A/E MRR was $(\num{0.52}, \num{0.77}, \num{1.12})$ and $(\num{0.79}, \num{0.84}, \num{0.93})$, respectively. \Cref{tab:reachability} provides mean values of the A/E MRR for synthetic and real-world contact networks. \Cref{fig:ratio} indicates that moderate send coefficients tend toward more stable A/E MRRs. The A/E MRR tends to have an inverse relationship with the transmission rate.
 
-Because \cref{eq:estreach} does not account for the temporality constraints \cref{eq:contact-const} and \cref{eq:time-const}, it does not perfectly estimate \cref{eq:reach}. With lower $\pSendCoefficient$ and higher $\pTransmissionRate$, \cref{eq:estreach} suggests higher message reachability. However, because a message is only passed under certain conditions (see Algorithm \ref{alg:rp-msg}), this causes \cref{eq:estreach} to overestimate \cref{eq:reach}. While \cref{eq:estreach} theoretically is an upper bound on \cref{eq:reach}, it is possible for \cref{eq:estreach} to underestimate \cref{eq:reach} if the specified value of the initial risk score overestimates its actual value. When computing the A/E MRR for \Cref{fig:ratio}, the mean initial risk score was used, so the A/E MRR is greater than 1 in some cases.
+With a lower send coefficient and higher transmission rate, \cref{eq:estimated-message-reachability} suggests higher message reachability. However, because \cref{eq:estimated-message-reachability} does not account for the temporality constraints of message passing in risk propagation, \cref{eq:estimated-message-reachability} overestimates \cref{eq:initial-message-reachability}. While \cref{eq:estimated-message-reachability} is theoretically an upper bound on \cref{eq:initial-message-reachability}, it is possible for \cref{eq:estimated-message-reachability} to underestimate \cref{eq:initial-message-reachability} if the specified value of the initial risk score overestimates its actual value. When computing the A/E MRR for \Cref{fig:ratio}, the mean initial risk score was used, so the A/E MRR is greater than \num{1} in some cases.
 
 \begin{figure}[htbp]
 \centering

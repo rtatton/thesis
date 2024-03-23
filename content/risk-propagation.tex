@@ -385,20 +385,20 @@ where $\vMessages$ is the set of messages associated with the \verticesName in $
 \subsubsection*{Asynchronous Risk Propagation}
 
 Let $\vPath$ be the set of contact edges along the shortest path from actor $\vSourceVertex$ to actor $\vTargetVertex$ such that the actors are enumerated $1, \ldots, \card{\vPath}$. Let $(\vScore_\vSourceVertex, \vTime_\vSourceVertex)$ be a symptom score of actor $\vSourceVertex$. Let $\vScore_{ij}$ be the send threshold of \indexed{i}{actor} for \indexed{j}{actor}. Then message reachability for asynchronous risk propagation is defined as
-\begin{equation}\label{eq:reach}
+\begin{equation}\label{eq:message-reachability}
   \vReachability(\vSourceVertex, \vTargetVertex) = \sum_{(i, j) \in \vPath} [\pTransmissionRate^i \vScore_\vSourceVertex > \pSendCoefficient \pTransmissionRate \vScore_{ij}] \cdot [\vTime_\vSourceVertex < \vTime_{ij} + \pTimeBuffer],
 \end{equation}
 where $[\cdot]$ is the Iverson bracket\footnote{The \define{Iverson bracket} $[x]$ is the indicator function of the set values for which $x$ is true.}.
 
-By relaxing the temporal constraint in \cref{eq:reach}, an upper bound on the reachability of a symptom score can be defined. Reversing the inequality of the first term in \cref{eq:reach} and solving for $i$,
-\begin{equation}\label{eq:estreach}
+By relaxing the temporal constraint in \cref{eq:message-reachability}, an upper bound on the reachability of a symptom score can be defined. Reversing the inequality of the first term in \cref{eq:message-reachability} and solving for $i$,
+\begin{equation}\label{eq:estimated-message-reachability}
   \vEstimatedReachability(\vSourceVertex, \vTargetVertex) \leq \begin{cases} 
       0 & \text{if $\vScore_\vSourceVertex = 0$} \\
       \card{\vPath} & \text{if $\vScore_\vTargetVertex = 0$} \\
       \log_{\pTransmissionRate}\pSendCoefficient + \log_{\pTransmissionRate}\vScore_\vTargetVertex - \log_{\pTransmissionRate}\vScore_\vSourceVertex & \text{otherwise,}
     \end{cases}
 \end{equation}
-where $\vScore_\vTargetVertex$ is the send threshold for actor $\vTargetVertex$ of the preceding actor along the path $\vPath$. Assuming a transmission rate of $\pTransmissionRate = 0.8$ \citep{Hamner2020} and a send coefficient of $\pSendCoefficient = 1$, \cref{fig:reach} provides a visual interpretation of \cref{eq:estreach}. 
+where $\vScore_\vTargetVertex$ is the send threshold for actor $\vTargetVertex$ of the preceding actor along the path $\vPath$. Assuming a transmission rate of $\pTransmissionRate = 0.8$ \citep{Hamner2020} and a send coefficient of $\pSendCoefficient = 1$, \cref{fig:reach} provides a visual interpretation of \cref{eq:estimated-message-reachability}. 
 
 \begin{figure}[htb]
 \centering
@@ -433,7 +433,7 @@ where $\vScore_\vTargetVertex$ is the send threshold for actor $\vTargetVertex$ 
 \label{fig:reach}
 \end{figure}
 
-\Cref{eq:estreach} indicates that a lower send coefficient will generally result in higher message reachability, which increases the likelihood of redundant communication (i.e., sending risk scores that do not update the exposure scores of other actors). \Cref{eq:estreach} also quantifies the effect of the transmission rate. However, the transmission rate should be derived from epidemiology in order to quantify infectivity, so it should not be optimized to improve performance.
+\Cref{eq:estimated-message-reachability} indicates that a lower send coefficient will generally result in higher message reachability, which increases the likelihood of redundant communication (i.e., sending risk scores that do not update the exposure scores of other actors). \Cref{eq:estimated-message-reachability} also quantifies the effect of the transmission rate. However, the transmission rate should be derived from epidemiology in order to quantify infectivity, so it should not be optimized to improve performance.
 
 \section{Mobile Crowdsensing}
 
