@@ -35,13 +35,6 @@ Thus, $\pr{\vVariable[i]}[\vTime] = \vScore_\vTime$ is a risk score of \indexed{
 
 \section{Synchronous Risk Propagation}\label{sec:synchronous}
 
-\newcommand{\pDiff}{\epsilon}
-\newcommand{\topK}[1]{\text{top } k \text{ of } #1}
-\newcommand{\vRiskScores}[2]{\vSet{R}_{#1}^{(#2)}}
-\newcommand{\vExposureScore}[2]{r_{#1}^{(#2)}}
-\newcommand{\vExposureScores}[1]{\mathbf{r}^{(#1)}}
-\newcommand{\dist}{d}
-
 \citet{Ayday2021} first proposed risk propagation as a synchronous, iterative message-passing algorithm that uses the factor graph to compute exposure scores. The first input to \cRiskPropagation is the set family $\vScores$, where
 \begin{equation} \label{eq:score-set}
   \vScores_i =\setBuilder{\vScore_t}{\vReferenceTime - \vTime < \pScoreExpiry} \in \vScores

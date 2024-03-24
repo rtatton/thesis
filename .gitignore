@@ -42,6 +42,9 @@
 *.synctex.gz
 *.synctex.gz(busy)
 *.pdfsync
+*.dat
+*.lua
+*.table
 
 ## Build tool directories for auxiliary files
 # latexrun

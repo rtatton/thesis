@@ -20,7 +20,6 @@
 \usepackage{xparse}
 
 % Define commands that appear not to eat spaces
-% https://ctan.org/pkg/xspace
 \usepackage{xspace}
 
 % Math symbols and fonts
@@ -32,11 +31,10 @@
 \usepackage{enumitem}
 
 % Prevent figures from being placed in other sections
-% Ref: https://tex.stackexchange.com/a/282
+% https://tex.stackexchange.com/a/282
 \usepackage[section]{placeins}
 
 % Circled numbers
-% https://ctan.org/pkg/pifont
 \usepackage{pifont}
 
 % SI unit formatting
@@ -89,7 +87,7 @@
 
 % TABLES AND FIGURES
 
-\newcommand{\tabindent}{ \hspace{3mm}}
+\newcommand{\tabindent}{\hspace{3mm}}
 
 \usepackage{booktabs}
 
@@ -129,7 +127,9 @@
 \newcommand{\verticesName}{vertices\xspace}
 
 \newcommand{\indexed}[2]{the $#1$-th #2}
+\newcommand{\Indexed}[2]{The $#1$-th #2}
 \newcommand{\twoindexed}[3]{the $#1$-th and $#2$-th #3}
+\newcommand{\Twoindexed}[3]{The $#1$-th and $#2$-th #3}
 
 \usepackage[plain,boxed]{algorithm}
 
@@ -192,15 +192,27 @@
 
 % Variables
 \newcommand{\vActor}{a}
+\newcommand{\vAngle}{\theta}
 \newcommand{\vContact}{c}
 \newcommand{\vGraph}{G}
+\newcommand{\vLatitude}{\phi}
+\newcommand{\vLocation}{\ell}
+\newcommand{\vLongitude}{\lambda}
 \newcommand{\vMessage}{m}
+\newcommand{\vRadius}{r}
 \newcommand{\vReachabilityRatio}{\rho}
 \newcommand{\vReachability}{r}
 \newcommand{\vReferenceTime}{\tau}
 \newcommand{\vScore}{s}
 \newcommand{\vSomeElement}{x}
 \newcommand{\vTime}{t}
+\newcommand{\vExposureScore}[2]{r_{#1}^{(#2)}}
+\newcommand{\vExposureScores}[1]{\mathbf{r}^{(#1)}}
+
+\newcommand{\vSomeObject}{\var{o}}
+\newcommand{\vSomeAttribute}{\var{a}}
+
+\newcommand{\vKey}{k}
 
 \newcommand{\vVertex}{v}
 \newcommand{\vSourceVertex}{u}
@@ -212,8 +224,9 @@
 \newcommand{\vFactorMessage}[3]{\lambda_{#1#2}^{(#3)}}
 
 \newcommand{\vNewScore}{\vScore'}
-\newcommand{\vInitScore}{\vScore_0}
 \newcommand{\vEstimatedReachability}{\hat{\vReachability}}
+
+\newcommand{\topK}[1]{\text{top } k \text{ of } #1}
 
 % Sets
 \newcommand{\vSet}[1]{#1}
@@ -222,7 +235,9 @@
 \newcommand{\vEdges}{\vSet{E}}
 \newcommand{\vFactorMessages}{\varLambda}
 \newcommand{\vFactors}{\vSet{F}}
+\newcommand{\vGraphs}{\vSet{G}}
 \newcommand{\vInfluenceSet}{\vSet{I}}
+\newcommand{\vLocations}{\vSet{L}}
 \newcommand{\vMessages}{\vSet{M}}
 \newcommand{\vNeighbors}{\vSet{N}}
 \newcommand{\vPath}{\vSet{P}}
@@ -231,16 +246,18 @@
 \newcommand{\vSourceSet}{\vSet{S}}
 \newcommand{\vVariables}{\vSet{X}}
 \newcommand{\vVertices}{\vSet{V}}
-\newcommand{\vGraphs}{\vSet{G}}
+\newcommand{\vRiskScores}[2]{\vSet{R}_{#1}^{(#2)}}
 
 % Parameters
 \newcommand{\pExpiry}{T}
 \newcommand{\pMinContactDuration}{\delta}
+\newcommand{\pNumberOfSubgraphs}{n}
+\newcommand{\pProximity}{\epsilon}
+\newcommand{\pRateConstant}{\lambda}
 \newcommand{\pSendCoefficient}{\gamma}
 \newcommand{\pTimeBuffer}{\beta}
 \newcommand{\pTransmissionRate}{\alpha}
-\newcommand{\pNumberOfSubgraphs}{n}
-\newcommand{\pRateConstant}{\lambda}
+\newcommand{\pDiff}{\epsilon}
 
 \newcommand{\pContactExpiry}{\pExpiry_\vContact}
 \newcommand{\pScoreExpiry}{\pExpiry_\vScore}
@@ -275,12 +292,16 @@
 \newcommand{\aScoreSender}{\aSender{\vScore}}
 \newcommand{\aScoreTime}{\aTime{\vScore}}
 \newcommand{\aScoreValue}{\aValue{\vScore}}
+\newcommand{\aSomeObjectAttribute}{\attr{\vSomeObject}{\vSomeAttribute}}
+\newcommand{\aSomeElementKey}{\aKey{\vSomeElement}}
 
 % Function names
 \newcommand{\nApplyRiskScore}{Apply-Risk-Score}
+\newcommand{\nComputeMessage}{Compute-Message}
 \newcommand{\nContactTtl}{Contact-Ttl}
 \newcommand{\nCreateActor}{Create-Actor}
 \newcommand{\nCreateFactorGraph}{Factor-Graph}
+\newcommand{\nCreateContactNetwork}{Contact-Network}
 \newcommand{\nCreate}{Create}
 \newcommand{\nDelete}{Delete}
 \newcommand{\nHandleContact}{Handle-Contact}
@@ -293,24 +314,25 @@
 \newcommand{\nMinimum}{Minimum}
 \newcommand{\nNullRiskScore}{Null-Risk-Score}
 \newcommand{\nPredicate}{Predicate}
+\newcommand{\nReceive}{Receive}
+\newcommand{\nRiskPropagationActor}{Risk-Propagation-Actor}
+\newcommand{\nRiskPropagationMain}{Risk-Propagation-Main}
 \newcommand{\nRiskPropagation}{Risk-Propagation}
 \newcommand{\nRiskScoreTtl}{Risk-Score-Ttl}
 \newcommand{\nSearch}{Search}
 \newcommand{\nSend}{Send}
-\newcommand{\nReceive}{Receive}
 \newcommand{\nSetSendThreshold}{Set-Send-Threshold}
 \newcommand{\nUpdateExposureScore}{Update-Exposure-Score}
 \newcommand{\nUpdateSendThreshold}{Update-Send-Threshold}
-\newcommand{\nRiskPropagationMain}{Risk-Propagation-Main}
-\newcommand{\nRiskPropagationActor}{Risk-Propagation-Actor}
-\newcommand{\nComputeMessage}{Compute-Message}
 
 % Function calls
 \newcommand{\cApplyRiskScore}[1][]{\Call{\nApplyRiskScore}{#1}\xspace}
 \newcommand{\cBecome}[1][]{\Call{\nBecome}{#1}\xspace}
+\newcommand{\cComputeMessage}[1][]{\Call{\nComputeMessage}{#1}\xspace}
 \newcommand{\cContactTtl}[1][]{\Call{\nContactTtl}{#1}\xspace}
 \newcommand{\cCreateActor}[1][]{\Call{\nCreateActor}{#1}\xspace}
 \newcommand{\cCreateFactorGraph}[1][]{\Call{\nCreateFactorGraph}{#1}\xspace}
+\newcommand{\cCreateContactNetwork}[1][]{\Call{\nCreateContactNetwork}{#1}\xspace}
 \newcommand{\cCreate}[1][]{\Call{\nCreate}{#1}\xspace}
 \newcommand{\cDelete}[1][]{\Call{\nDelete}{#1}\xspace}
 \newcommand{\cHandleContact}[1][]{\Call{\nHandleContact}{#1}\xspace}
@@ -323,17 +345,16 @@
 \newcommand{\cMinimum}[1][]{\Call{\nMinimum}{#1}\xspace}
 \newcommand{\cNullRiskScore}[1][]{\Call{\nNullRiskScore}{#1}\xspace}
 \newcommand{\cPredicate}[1][]{\Call{\nPredicate}{#1}\xspace}
+\newcommand{\cReceive}[1][]{\Call{\nReceive}{#1}\xspace}
+\newcommand{\cRiskPropagationActor}[1][]{\Call{\nRiskPropagationActor}{#1}\xspace}
+\newcommand{\cRiskPropagationMain}[1][]{\Call{\nRiskPropagationMain}{#1}\xspace}
 \newcommand{\cRiskPropagation}[1][]{\Call{\nRiskPropagation}{#1}\xspace}
 \newcommand{\cRiskScoreTtl}[1][]{\Call{\nRiskScoreTtl}{#1}\xspace}
 \newcommand{\cSearch}[1][]{\Call{\nSearch}{#1}\xspace}
 \newcommand{\cSend}[1][]{\Call{\nSend}{#1}\xspace}
-\newcommand{\cReceive}[1][]{\Call{\nReceive}{#1}\xspace}
 \newcommand{\cSetSendThreshold}[1][]{\Call{\nSetSendThreshold}{#1}\xspace}
 \newcommand{\cUpdateExposureScore}[1][]{\Call{\nUpdateExposureScore}{#1}\xspace}
 \newcommand{\cUpdateSendThreshold}[1][]{\Call{\nUpdateSendThreshold}{#1}\xspace}
-\newcommand{\cRiskPropagationMain}[1][]{\Call{\nRiskPropagationMain}{#1}\xspace}
-\newcommand{\cRiskPropagationActor}[1][]{\Call{\nRiskPropagationActor}{#1}\xspace}
-\newcommand{\cComputeMessage}[1][]{\Call{\nComputeMessage}{#1}\xspace}
 
 % Standard number sets
 \newcommand{\naturals}{\mathbb{N}}
@@ -352,16 +373,14 @@
 \DeclareMathOperator{\argmax}{\arg\max}
 \DeclareMathOperator{\hav}{hav}
 \DeclareMathOperator{\vers}{vers}
-
+\newcommand{\dist}{d}
+\newcommand{\bigO}[1]{O(#1)}
 \newcommand{\card}[1]{\left\vert #1 \right\vert}
-\newcommand{\ceil}[1]{\left\lceil #1 \right\rceil}
-\newcommand{\floor}[1]{\left\lfloor #1 \right\rfloor}
 
 % Proper bracket formatting
 \usepackage{braket}
 \newcommand{\setBuilder}[2]{\set{ #1 | #2}}
 \newcommand{\SetBuilder}[2]{\Set{ #1 | #2}}
 
-% Ref: https://tex.stackexchange.com/a/304667
-\newcommand{\twoDots}{\mathinner {\ldotp \ldotp}}
-\newcommand{\intInterval}[2]{[#1 \twoDots #2]}
+% https://tex.stackexchange.com/a/304667
+\newcommand{\intInterval}[2]{[#1 \mathinner{\ldotp \ldotp} #2]}
