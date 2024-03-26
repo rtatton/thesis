@@ -13,12 +13,12 @@
   - Extreme left skew: (0.1, 10)
 - Uniform(0, 1)
 
-## Graphs
+## Graphs (53)
 
-### Synthetic 
+### Synthetic (47)
 
 - $G_{nm}$ random:
-  - Number of nodes: $n$ ($N = \frac{n(n - 1)}{2}$)
+  - Number of nodes: $n$ ($N = n(n - 1) / 2$)
   - Number of edges: (0.01–0.1 in increments of 0.01)N
 - Random regular:
   - Degree: 20, 40, 60, 80, 100
