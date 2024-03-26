@@ -13,22 +13,22 @@
   - Extreme left skew: (0.1, 10)
 - Uniform(0, 1)
 
-## Graphs (53)
+## Graphs (36)
 
-### Synthetic (47)
+### Synthetic (30)
 
-- $G_{nm}$ random:
+- $G_{nm}$ random (10):
   - Number of nodes: $n$ ($N = n(n - 1) / 2$)
   - Number of edges: (0.01–0.1 in increments of 0.01)N
-- Random regular:
+- Random regular (5):
   - Degree: 20, 40, 60, 80, 100
-- Barabasi Albert:
+- Barabasi Albert (4):
   - Number of initial nodes: 5, 10, 15, 20
   - Number of new edges: 5, 10, 15, 20
-- Watts Strogatz:
+- Watts Strogatz (15):
   - Nearest neighbors: 20, 40, 60, 80, 100
   - Rewiring probability: 0.2, 0.4, 0.6
-- Scale free
+- Scale free (1)
   - Number of nodes: $n$ 
 
 ### Real-world (6)
