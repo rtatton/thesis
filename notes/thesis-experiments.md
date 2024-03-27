@@ -39,7 +39,8 @@
 ## Experment 1: Send coefficient tuning
 
 - Send coefficients (5): 0.5–1.5 in increments of 0.25
-- Number of nodes: 10K (synthetic)
+- Number of nodes: 10K
+- Use synthetic networks only
 - Run risk propagation for 5 iterations for every distribution-network combination.
 
 ## Experiment 2: Scalability
@@ -51,10 +52,10 @@
 ## Experiment 3: Exploratory
 
 - Number of nodes: 10K
+- Use synthetic and real-world networks
 - Run risk propagation for 5 iterations for every distribution-network combination.
 - Metrics to compare:
   - Reachability statistics
   - User statistics
   - Event timelines
   - Graph metrics
-- Re-use the datasets from experiment 1 with the optimal send coefficient. 
