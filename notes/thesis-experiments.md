@@ -2,10 +2,10 @@
 
 ## Distributions (8)
 
-- Normal($\mu$, $\sigma^2$):
+- Normal($\mu$, $\sigma$):
   - Standard: (0, 1)
-  - Narrow: (0, 0.2)
-  - Wide: (0, 5)
+  - Narrow: (0, 0.4)
+  - Wide: (0, 2)
 - Beta($\alpha$, $\beta$):
   - Modest right skew: (5, 2)
   - Modest left skew: (2, 5)
