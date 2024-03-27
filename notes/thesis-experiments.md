@@ -42,13 +42,15 @@
 - Number of nodes: 10K
 - Use synthetic networks only
 - Number of iterations: 5
+- Number of datasets: $4^3 \times 22 \times 5 \times 5 = 35200$
 
 ## Experiment 2: Scalability
 
 - Use synthetic networks only
 - Number of iterations: 5
 - Number of nodes: 100K–1M in increments of 100K (10 steps)
-
+- Number of datasets: $10 \times 4^3 \times 22 \times 5 = 70400$
+ 
 ## Experiment 3: Exploratory
 
 - Number of nodes: 10K
@@ -59,3 +61,4 @@
   - User statistics
   - Event timelines
   - Graph metrics
+- Number of datasets: $4^3 \times 28 \times 5 = 8960$
