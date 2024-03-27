@@ -62,3 +62,4 @@
   - Event timelines
   - Graph metrics
 - Number of datasets: $4^3 \times 28 \times 5 = 8960$
+- Reuse datasets associated with optimal send coefficient from experiment 1
