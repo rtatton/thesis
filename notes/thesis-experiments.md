@@ -1,16 +1,11 @@
 # Thesis experiments
 
-## Distributions (8)
+## Distributions (4)
 
-- Normal($\mu$, $\sigma$):
-  - Standard: (0, 1)
-  - Narrow: (0, 0.4)
-  - Wide: (0, 2)
+- Normal(0, 1):
 - Beta($\alpha$, $\beta$):
-  - Modest right skew: (5, 2)
-  - Modest left skew: (2, 5)
-  - Extreme right skew: (10, 0.1)
-  - Extreme left skew: (0.1, 10)
+  - Right skew: (5, 2)
+  - Left skew: (2, 5)
 - Uniform(0, 1)
 
 ## Graphs (28)
@@ -27,7 +22,7 @@
   - Number of new edges: 5, 10, 15, 20
 - Watts Strogatz (9):
   - Nearest neighbors: 20, 40, 80
-  - Rewiring probability: 0.2, 0.4, 0.6
+  - Rewiring probability: 0.2, 0.4, 0.8
 - Scale free (1)
   - Number of nodes: $n$ 
 
@@ -43,17 +38,15 @@
 
 ## Experment 1: Send coefficient tuning
 
-- Send coefficients (11): 0.5–1.5 in increments of 0.1
+- Send coefficients (5): 0.5–1.5 in increments of 0.25
 - Number of nodes: 10K (synthetic)
 - Run risk propagation for 5 iterations for every distribution-network combination.
-- Total number of runs: $11 \times 5 \times 8 \times 28 = 12320$ 
 
 ## Experiment 2: Scalability
 
 - Only use synthetic contact networks.
 - Run risk propagation for 5 iterations for every distribution-network combination.
 - Number of nodes: 100K–1M in increments of 100K (10 steps)
-- Total number of runs: $10 \times 5 \times 8 \times 28 = 11200$ 
 
 ## Experiment 3: Exploratory
 
@@ -64,5 +57,4 @@
   - User statistics
   - Event timelines
   - Graph metrics
-- Total number of runs: $5 \times 8 \times 28 = 1120$
-  - Re-use the datasets from experiment 1 with the optimal send coefficient. 
+- Re-use the datasets from experiment 1 with the optimal send coefficient. 
