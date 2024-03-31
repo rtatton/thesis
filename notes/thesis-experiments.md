@@ -4,8 +4,8 @@
 
 - Normal(0, 1):
 - Beta($\alpha$, $\beta$):
-  - Right skew: (5, 2)
-  - Left skew: (2, 5)
+  - Right skew: (8, 2)
+  - Left skew: (2, 8)
 - Uniform(0, 1)
 
 ## Graphs (28)
