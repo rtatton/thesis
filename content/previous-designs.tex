@@ -28,7 +28,7 @@ Risk propagation was implemented as defined by \citet{Ayday2020,Ayday2021}, usin
 A couple factors prompted me to search for an alternative implementation.
   \begin{enumerate}
     \item \emph{Dependency management incompatibility}. The primary impetus for reimplementation was the dependency conflicts between Giraph and other libraries. Despite several attempts (e.g., using different library versions, using different versions of Giraph, and forcing specific versions of transitive dependencies) to resolve the conflicts, a lack of personal development experience and stalled progress prompted me pursue alternative implementations.
-    \item \emph{Implementation complexity}. For a relatively straightforward data flow, the architecture in \cref{fig:aws-architecture} corresponded to over \num{4000} lines of source code. In retrospect, AWS Step Functions\footnote{\url{https://aws.amazon.com/step-functions}} could have been used to orchestrate the workflow, including the fan-out design pattern, which would have simplified the Lambda function implementations. Regarding the implementation of risk propagation, one-mode projection (first used in \cref{sec:projected-subgraphs}) would have simplified the implementation since it avoids types of \verticesName and messages.
+    \item \emph{Implementation complexity}. For a relatively straightforward data flow, the architecture in \cref{fig:aws-architecture} corresponded to over \num{4000} lines of source code. In retrospect, AWS Step Functions\footnote{\url{https://aws.amazon.com/step-functions}} could have been used to orchestrate the workflow, including the fan-out design pattern, which would have simplified the Lambda function implementations. Regarding the implementation of risk propagation, one-mode projection (first used in \cref{sec:projected-subgraphs}) would have simplified the implementation since it avoids multiple types of \verticesName and messages.
   \end{enumerate}
 
 \section{Factor Subgraph Actors}\label{sec:subgraph-actors}
@@ -54,7 +54,7 @@ For risk propagation, the driver creates the factor graph from the set of risk s
 
 The MWD framework was the first approach that utilized the send coefficient to ensure the convergence and termination of message passing. However, because the MWD-based implementation assumed the factor graph representation of the contact network, the send coefficient was applied to both variable and factor messages.
 
-Compared to \cref{sec:subgraph-actors}, this implementation provided a cleaner design and less communication overhead. However, what prompted (yet another) an alternative implementation was its scalability. Because the monitor processes messages serially, it is a bottleneck for algorithms in which the workers perform fine-grained tasks. Indeed, the Ray documentation\footnote{\url{https://docs.ray.io/en/latest/ray-core/patterns/too-fine-grained-tasks.html}} notes that the parallelization of small tasks is an anti-pattern because the interprocess communication cost exceeds the benefit of multiprocessing. Unfortunately, the computation performed by factor \verticesName and variable \verticesName was fine-grained, so the scalability of the MWD framework was demonstrably poor.
+Compared to \cref{sec:subgraph-actors}, this implementation provided a cleaner design and less communication overhead. However, what prompted yet another alternative implementation was its scalability. Because the monitor processes messages serially, it is a bottleneck for algorithms in which the workers perform fine-grained tasks. Indeed, the Ray documentation\footnote{\url{https://docs.ray.io/en/latest/ray-core/patterns/too-fine-grained-tasks.html}} notes that the parallelization of small tasks is an anti-pattern because the interprocess communication cost exceeds the benefit of multiprocessing. Unfortunately, the computation performed by factor \verticesName and variable \verticesName was fine-grained, so the scalability of the MWD framework was demonstrably poor.
 
 \section{Projected Subgraph Actors}\label{sec:projected-subgraphs}
 
@@ -96,7 +96,7 @@ The \cRiskPropagationActor operation defines the behavior of an actor. According
 Compared to asynchronous risk propagation (\cref{sec:asynchronous}), actor behavior differs in two significant ways:
 \begin{enumerate}
   \item The send threshold is applied \emph{across} contacts and discriminates against risk scores that are newer than the initial exposure score $\dot{\vScore}_\vTime$. The latter is based on the assumption that newer risk scores are less likely to be propagated by other actors.
-  \item The initial risk score to sent to each contact accounts for recency, which is assumed to exponentially decay with a rate constant of $\pRateConstant > 0$.
+  \item The initial risk score that is sent to each contact accounts for recency, which is assumed to exponentially decay with a rate constant of $\pRateConstant > 0$.
 \end{enumerate}
 As such, message reachability differs from \cref{eq:message-reachability}:
 \begin{equation}\label{eq:initial-message-reachability}
@@ -107,8 +107,8 @@ As such, message reachability differs from \cref{eq:message-reachability}:
 
 The following experiments were performed using the implementation of risk propagation available on GitHub\footnote{\url{https://github.com/cwru-xlab/sharetrace-ray}}:
 \begin{itemize}
-  \item \emph{Efficiency}. How does the transmission rate and send coefficient affect the runtime and number of messages sent during risk propagation? What send coefficient provides the most efficiency without impacting accuracy?
-  \item \emph{Message reachability}. How accurately does \cref{eq:estimated-message-reachability} estimate \cref{eq:initial-estimated-message-reachability}?
+  \item \emph{Efficiency}. How does the transmission rate and send coefficient affect the runtime and number of messages sent during risk propagation? What is the optimal send coefficient for efficiency and accuracy?
+  \item \emph{Message reachability}. How accurately does \cref{eq:estimated-message-reachability} estimate \cref{eq:initial-message-reachability}?
   \item \emph{Scalability}. How does the runtime of risk propagation relate to the size of the contact network?
 \end{itemize}
 \Cref{tab:experiments} summarizes the types of contact networks used for the experiments.
@@ -164,7 +164,7 @@ The following defines the data generation process. Let $j \in \intInterval{0}{\p
       \SetBuilder{\vScore_{\vTime_j} \sim \uniformDistribution(\num{0.5}, \num{1})}{\vTime_j = \vReferenceTime + \delta_i + j \text{ days}} & \text{with probability } 1 - p.
     \end{cases}
 \end{equation*}
-Contact times were similarly generated. For real-world contact networks, to ensure that all risk scores were initially propagated, the contact times were shifted forward by $\vReferenceTime$ and $\vReferenceTime - 1 \text{ day}$ was used for generating the timestamps of risk scores. In this way, the newest risk score was older than the oldest contact.
+Contact times were similarly generated. For real-world contact networks, to ensure that all risk scores were initially propagated, the contact times were shifted forward by $\vReferenceTime$ and $\vReferenceTime - (1 \text{ day})$ was used for generating the timestamps of risk scores. In this way, the newest risk score was older than the oldest contact.
 
 To measure efficiency and message reachability, various transmission rates and send coefficients were evaluated:
 \begin{equation*}

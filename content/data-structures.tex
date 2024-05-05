@@ -6,6 +6,6 @@ Let a \define{dynamic set} $\vSomeSet$ be a mutable collection of distinct eleme
   \item $\cInsert[\vSomeSet, \vSomeElement]$ adds the element pointed to by $\vSomeElement$ to $\vSomeSet$.
   \item $\cDelete[\vSomeSet, \vSomeElement]$ removes the element pointed to by $\vSomeElement$ from $\vSomeSet$.
   \item $\cSearch[\vSomeSet, \vKey]$ returns a pointer $\vSomeElement$ to an element in the set $\vSomeSet$ such that $\aSomeElementKey \equals \vKey$; or $\nil$, if no such element exists in $\vSomeSet$.
-  \item $\cMerge[\vSomeSet, \vSomeElement]$ adds the element pointed to by $\vSomeElement$, if no such element exists in $\vSomeSet$; otherwise, the result of applying a function to $\vSomeElement$ and the existing element is added to $\vSomeSet$.
+  \item $\cMerge[\vSomeSet, \vSomeElement]$ adds the element pointed to by $\vSomeElement$, if no such element exists in $\vSomeSet$; otherwise, the result of applying a function to the element pointed to by $\vSomeElement$ and the existing element is added to $\vSomeSet$.
   \item $\cMaximum[\vSomeSet]$ returns a pointer $\vSomeElement$ to the maximum element of the totally ordered set $\vSomeSet$; or $\nil$ if $\vSomeSet$ is empty.
 \end{itemize}

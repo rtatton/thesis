@@ -55,13 +55,13 @@ A \define{factor message} $\vFactorMessage{i}{j}{n}$ from the factor \vertexName
 \begin{equation*}
   \setBuilder{\vVertex \in \vVariables \cap \vFactors \setminus \{\vVariable[j], \vFactor[ij]\}}{\dist(\vVariable[i], \vVertex) \leq 2(n - 1)},
 \end{equation*}
-where $\dist(\vSourceVertex, \vTargetVertex)$ is the distance between the \verticesName $\vSourceVertex, \vTargetVertex$. The computation of a factor message assumes the following.
+where $\dist(\vSourceVertex, \vTargetVertex)$ is the shortest-path distance between the \verticesName $\vSourceVertex, \vTargetVertex$. The computation of a factor message assumes the following.
 \begin{enumerate}
   \item Contacts have a nondecreasing effect on an individual's exposure score.
   \item A risk score $\vScore_\vTime$ is \define{relevant} to the contact $(i, j, \vTime_{ij})$ if $\vTime < \vTime_{ij} +\pTimeBuffer$, where $\pTimeBuffer \in \naturals$ is a \define{time buffer} that accounts for the incubation period, along with the delayed reporting of symptom scores and contacts.
   \item Risk transmission between contacts is incomplete. Thus, a risk score decays exponentially along its transmission path in $\vGraph$ at a rate of $\log \pTransmissionRate$, where $\pTransmissionRate \in (0, 1)$ is the \define{transmission rate}. \Cref{fig:decay} visualizes this decay, assuming a transmission rate of $\pTransmissionRate = 0.8$ \citep{Hamner2020}.\end{enumerate}
 
-\begin{figure}[htb]
+\begin{figure}[htbp]
 \centering
 \begin{tikzpicture}
 \begin{axis}[
@@ -89,7 +89,7 @@ where $\dist(\vSourceVertex, \vTargetVertex)$ is the distance between the \verti
 
 To reiterate, a factor message $\vFactorMessage{i}{j}{n}$ is the maximum relevant risk score in the variable message $\vVariableMessage{i}{j}{n}$ (or 0) that is scaled by the transmission rate $\pTransmissionRate$.
 
-\citet{Ayday2021} assume that the contact set $\vContacts$ may contain (1) multiple contacts between the same two individuals and (2) \define{invalid} contacts, or those lasting less than $\pMinContactDuration$ time. However, these assumptions introduce unnecessary complexity. Regarding assumption 1, suppose \twoindexed{i}{j}{individual} come into contact $m$ times such that $\vTime_k < \vTime_\ell$ for $1 \leq k < \ell \leq m$. Let $\vFactorMessages_k$ be the set of relevant risk scores, according to the contact time $\vTime_k$, where
+\citet{Ayday2021} assume that the contact set $\vContacts$ may contain (1) multiple contacts between the same two individuals and (2) invalid contacts, or those lasting less than $\pMinContactDuration$ time. However, these assumptions introduce unnecessary complexity. Regarding assumption 1, suppose \twoindexed{i}{j}{individual} come into contact $m$ times such that $\vTime_k < \vTime_\ell$ for $1 \leq k < \ell \leq m$. Let $\vFactorMessages_k$ be the set of relevant risk scores, according to the contact time $\vTime_k$, where
 \begin{equation*}
   \vFactorMessages_k = \setBuilder{\pTransmissionRate \vScore_t}{\vScore_\vTime \in \vVariableMessage{i}{j}{n}, \vTime < \vTime_k + \pTimeBuffer}.
 \end{equation*}
@@ -133,11 +133,12 @@ To detect convergence, the normed difference between the current and previous ex
 
 \section{Asynchronous Risk Propagation}\label{sec:asynchronous}
 
-While \cRiskPropagation offers proof of concept, it is not viable for real-world application. \cRiskPropagation is an \define{offline algorithm} \citep{Cormen2022}, because it requires the contact and health information of all individuals as input. As \citet{Ayday2021} note, this centralization of personal data is not privacy-preserving. \cRiskPropagation is also inefficient. Most exposure scores are not likely to change across frequent invocations, which implies communication overhead and computational redundancy. To mitigate this inefficiency, \citet{Ayday2020} suggest running \cRiskPropagation once or twice per day. Unfortunately, this cadence introduces substantial delay in updating individuals' exposure scores. In the midst of a pandemic, timely information is essential for individual and collective health.
+While \cRiskPropagation offers proof of concept, it is not viable for real-world application. \cRiskPropagation is an \define{offline algorithm} \citep{Cormen2022}, because it requires the contact and health information of all individuals as input. As \citet{Ayday2021} note, this centralization of personal data is not privacy-preserving. \cRiskPropagation also introduces communication overhead and computational redundancy since most exposure scores are unlikely to change across frequent invocations. To mitigate this inefficiency, \citet{Ayday2020} suggest running \cRiskPropagation once or twice per day. Unfortunately, this cadence incurs substantial delay in updating individuals' exposure scores. In the midst of a pandemic, timely information is essential for individual and collective health.
 
+% TODO - Update citation about actor model 
 To address the limitations of \cRiskPropagation, \citet{Ayday2021} propose decentralizing the factor graph such that the processing entity associated with \indexed{i}{individual} maintains the state of \indexed{i}{variable \vertexName} and the neighboring factor \verticesName. Applying one-mode projection onto the variable \verticesName \citep{Zhou2007}, \cref{fig:projected} illustrates how each entity corresponds to a portion of the factor graph. More generally, \citet{Ayday2021} envision risk propagation as a decentralized communication protocol for informing individuals about their infection risk. Such a message-passing protocol naturally aligns with the \define{actor model} which describes concurrent computation as the sending and processing of messages amongst \define{actors} (\cref{ch:actor-model}). Since communication is asynchronous in the actor model, risk propagation defined in this way is called \define{asynchronous risk propagation}.
 
-\begin{figure}[htb]
+\begin{figure}[htbp]
 \centering
 \begin{tikzpicture}[ampersand replacement=\&]
   \matrix[row sep=7em, column sep=2em] {
@@ -188,7 +189,7 @@ An actor in the ShareTrace actor system corresponds to an individual. The \cCrea
   \State \Return $\vActor$
 \end{function}
 
-\begin{figure}[htb]
+\begin{figure}[htbp]
 \centering
 \begin{tikzpicture}
 \begin{axis}[
@@ -264,7 +265,7 @@ The intent of sending a risk score to an actor is to update its exposure score. 
   \State $\aContactThreshold \assign \vNewScore$
 \end{function}
 
-The \cApplyRiskScore operation that incorporates the concept of a send threshold  is defined below. Assuming a finite number of actors, a positive send coefficient guarantees that a risk score has finite propagation.
+The \cApplyRiskScore operation that incorporates the concept of a send threshold is defined below. Assuming a finite number of actors, a positive send coefficient guarantees that a risk score has finite propagation.
 
 \begin{function}{\nApplyRiskScore}[\vActor, \vContact, \vScore]
   \If{$\aContactThresholdValue < \aScoreValue \AND \aContactTime + \pTimeBuffer > \aScoreTime$}
@@ -274,17 +275,17 @@ The \cApplyRiskScore operation that incorporates the concept of a send threshold
   \EndIf
 \end{function}
 
-The \cSetSendThreshold operation defines \emph{how} the send threshold is updated, but not \emph{when} it should be updated; the \cUpdateSendThreshold operation encapsulates the latter. The second predicate on Line \ref{step:should-update-threshold} stems from the fact that the send threshold is a risk score and thus subject to expiry. The first predicate, however, is more subtle and will be revisited shortly. The \cMaximumOlderThan operation is the same as \cMaximum, with the constraint that the key of the risk score intersects the query interval $(-\infty, \aContactTime + \pTimeBuffer)$. Thus, the returned risk score is always relevant to the contact. Consistent with \cApplyRiskScore, the risk score retrieved from $\aActorScores$ is scaled by the transmission rate and set as the new send threshold.
+The \cSetSendThreshold operation defines \emph{how} the send threshold is updated, but not \emph{when} it should be updated; the \cUpdateSendThreshold operation encapsulates the latter. The second predicate on Line \ref{step:should-update-threshold} stems from the fact that the send threshold is a risk score and thus subject to expiry. The first predicate, however, is more subtle and will be revisited shortly. The \cMaximumOlderThan operation is the same as \cMaximum, with the constraint that the key of the risk score intersects the interval $(-\infty, \aContactTime + \pTimeBuffer)$. Thus, the returned risk score is always relevant to the contact. Consistent with \cApplyRiskScore, the risk score retrieved from $\aActorScores$ is scaled by the transmission rate and set as the new send threshold.
 
 \begin{function}{\nUpdateSendThreshold}[\vActor, \vContact]
   \If{$\aContactThresholdValue > 0 \AND \cRiskScoreTtl[\aContactThreshold] \leq 0$} \label{step:should-update-threshold}
-    \State $\vScore \assign \cMaximumOlderThan[\aActorScores, \aContactTime + \pTimeBuffer]$
+    \State $\vScore \assign \cMaximumOlderThan[\aActorScores, \aContactTime + \pTimeBuffer]$ \label{step:get-max-older-than}
     \State $\aNewScoreValue \assign \pTransmissionRate \cdot \aScoreValue$
     \State $\cSetSendThreshold[\vContact, \vNewScore]$
   \EndIf
 \end{function}
 
-The send threshold should be current when evaluating Line \ref{step:should-update-threshold} of \cApplyRiskScore above, so the \cUpdateSendThreshold operation should be invoked beforehand.
+The send threshold should be current when evaluating Line \ref{step:should-update-threshold} of \cApplyRiskScore above, so \cUpdateSendThreshold is invoked beforehand.
 
 \begin{function}{\nApplyRiskScore}[\vActor, \vContact, \vScore]
   \State $\cUpdateSendThreshold[\vActor, \vContact]$
@@ -295,9 +296,9 @@ The send threshold should be current when evaluating Line \ref{step:should-updat
   \EndIf
 \end{function}
 
-Returning to the first predicate on Line \ref{step:should-update-threshold} of \cUpdateSendThreshold, the send threshold has a value of 0 when initially assigning the send threshold to be the null risk score; and when no key in $\aActorScores$ intersects the query interval, so the send threshold is again assigned the null risk score. Suppose the first predicate is omitted from Line \ref{step:should-update-threshold}. Given that \cUpdateSendThreshold is the first statement in \cApplyRiskScore, it is possible that the send threshold is set prior to sending the target actor a relevant risk score. In the worst case, this prevents \emph{all} risk scores from being sent to that actor, and the corresponding individual is inaccurately provided a low risk of infection. For correct message-passing behavior, the send threshold is updated only when its value is nonzero.
+Returning to the first predicate on Line \ref{step:should-update-threshold} of \cUpdateSendThreshold, the send threshold has a value of 0 when initially setting the send threshold as the null risk score and when no key in $\aActorScores$ intersects the query interval on (Line \ref{step:get-max-older-than}). Suppose the first predicate is omitted from Line \ref{step:should-update-threshold}. Given that \cUpdateSendThreshold is the first statement in \cApplyRiskScore, it is possible that the send threshold is set prior to sending the target actor a relevant risk score. In the worst case, this prevents \emph{all} risk scores from being sent to that actor. As a result, that individual would not receive risk scores that may impact their exposure score. Therefore, for correct message-passing behavior, the send threshold is updated only when its value is nonzero.
 
-The aforementioned refinements to \cApplyRiskScore have focused on ensuring that message passing terminates and behaves correctly over time. To conclude the definition of \cApplyRiskScore, a message-passing optimization, called \define{sender-side aggregation} \citep{McCune2015}, will be introduced. Over a given period of time, an actor may receive several risk scores that are subsequently sent to multiple target actors. Rather than sending multiple risk scores, it would be more efficient to just send the final risk score. As a heuristic, \cApplyRiskScore can be modified so that a contact ``buffers'' a risk score that the target actor should receive.
+The aforementioned refinements to \cApplyRiskScore have focused on ensuring that message passing terminates and behaves correctly over time. To conclude the definition of \cApplyRiskScore, a message-passing optimization, called \define{sender-side aggregation} \citep{McCune2015}, is incorporated. Over a given period of time, an actor may receive several risk scores that are subsequently sent to multiple target actors. Rather than sending multiple risk scores, it would be more efficient to just send the final risk score. As a heuristic, \cApplyRiskScore can be modified so that a contact ``buffers'' a risk score that the target actor should receive.
 
 \begin{function}{\nApplyRiskScore}[\vActor, \vContact, \vScore]
   \State $\cUpdateSendThreshold[\vActor, \vContact]$
@@ -349,35 +350,35 @@ A primitive of temporal reachability analysis is the \define{time-respecting pat
 \end{itemize}
 Generally, a message-passing algorithm specifies constraints that determine when and what messages are sent between \verticesName. Even if operating on a temporal network, those constraints may be more or less strict than requiring temporal reachability. As a dynamic process, message passing on a time-varying network requires a broader definition of reachability that accounts for network topology \emph{and} message-passing semantics \citep{Barrat2013}.
 
-Formally, the \emph{reachability of a message $\vMessage$ from \vertexName $\vSourceVertex$ to \vertexName $\vTargetVertex$} is the number of edges along the shortest path $\vPath$ that satisfy the message-passing constraints,
+Formally, the \define{reachability} of a message $\vMessage$ from \vertexName $\vSourceVertex$ to \vertexName $\vTargetVertex$ is the number of edges along the shortest path $\vPath$ that satisfy the message-passing constraints,
 \begin{equation*}
-  \vReachability_\vMessage(\vSourceVertex, \vTargetVertex) = \sum_{(i, j) \in \vPath} f_\vMessage(\vSourceVertex, i, j, \vTargetVertex),
+  \vReachability(\vSourceVertex, \vTargetVertex) = \sum_{(i, j) \in \vPath} f(\vSourceVertex, i, j, \vTargetVertex),
 \end{equation*}
 where
 \begin{equation*}
-  f_\vMessage(\vSourceVertex, i, j, \vTargetVertex) = 
+  f(\vSourceVertex, i, j, \vTargetVertex) = 
     \begin{cases}
       1 & \text{if all constraints are satisfied} \\ 
       0 & \text{otherwise.}
     \end{cases}
 \end{equation*}
 
-The \vertexName $\vTargetVertex$ is \define{reachable from \vertexName $\vSourceVertex$ for the message $\vMessage$} if there exists a shortest path $\vPath$ such that $\vReachability_\vMessage(\vSourceVertex, \vTargetVertex) = \card{\vPath}$. The \define{reachability of a message $\vMessage$ from \vertexName $\vSourceVertex$} is
+\VertexName $\vTargetVertex$ is \define{reachable} from \vertexName $\vSourceVertex$ for the message $\vMessage$ if there exists a shortest path $\vPath$ such that $\vReachability(\vSourceVertex, \vTargetVertex) = \card{\vPath}$. The \define{reachability} of a message $\vMessage$ from \vertexName $\vSourceVertex$ is
 \begin{equation}\label{eq:vreach}
-  \vReachability_\vMessage(\vSourceVertex) = \max_{\vTargetVertex \in \vVertices} \, \vReachability_\vMessage(\vSourceVertex, \vTargetVertex).
+  \vReachability(\vSourceVertex) = \max_{\vTargetVertex \in \vVertices} \, \vReachability(\vSourceVertex, \vTargetVertex).
 \end{equation}
 
 Measures of temporal reachability can be extended to message reachability,
 \begin{align*}
-  \vInfluenceSet_\vMessage(\vSourceVertex) &= \setBuilder{\vTargetVertex \in \vVertices}{\vReachability_\vMessage(\vSourceVertex, \vTargetVertex) = \card{\vPath}} \\[5pt]
-  \vSourceSet_\vMessage(\vTargetVertex) &= \setBuilder{\vSourceVertex \in \vVertices}{\vReachability_\vMessage(\vSourceVertex, \vTargetVertex) = \card{\vPath}} \\[5pt]
-  \vReachabilityRatio(\vGraph, \vMessages) &= \sum_{\vTargetVertex \in \vVertices, \,\vMessage \in \vMessages} \card{\vInfluenceSet_{\vMessage}(\vTargetVertex)} \cdot \card{\vVertices}^{-1},
+  \vInfluenceSet(\vSourceVertex) &= \setBuilder{\vTargetVertex \in \vVertices}{\vReachability(\vSourceVertex, \vTargetVertex) = \card{\vPath}} \\[5pt]
+  \vSourceSet(\vTargetVertex) &= \setBuilder{\vSourceVertex \in \vVertices}{\vReachability(\vSourceVertex, \vTargetVertex) = \card{\vPath}} \\[5pt]
+  \vReachabilityRatio(\vGraph, \vMessages) &= \sum_{\vTargetVertex \in \vVertices, \,\vMessage \in \vMessages} \card{\vInfluenceSet(\vTargetVertex)} \cdot \card{\vVertices}^{-1},
 \end{align*}
-where $\vMessages$ is the set of messages associated with the \verticesName in $\vVertices$.
+where $\vMessages$ is the set of messages associated with the \verticesName $\vVertices$.
 
 \subsubsection*{Asynchronous Risk Propagation}
 
-Let $\vPath$ be the set of contact edges along the shortest path from actor $\vSourceVertex$ to actor $\vTargetVertex$ such that the actors are enumerated $1, \ldots, \card{\vPath}$. Let $(\vScore_\vSourceVertex, \vTime_\vSourceVertex)$ be a symptom score of actor $\vSourceVertex$. Let $\vScore_{ij}$ be the send threshold of \indexed{i}{actor} for \indexed{j}{actor}. Then message reachability for asynchronous risk propagation is defined as
+Let $\vPath$ be the set of contact edges along the shortest path from actor $\vSourceVertex$ to actor $\vTargetVertex$ such that the actors are enumerated $1, \ldots, \card{\vPath}$. Let $(\vScore_\vSourceVertex, \vTime_\vSourceVertex)$ be a symptom score of actor $\vSourceVertex$. Let $\vScore_{ij}$ be the value of the risk score that is associated with the send threshold of \indexed{i}{actor} for \indexed{j}{actor}. Finally, let $\vTime_{ij}$ be the most recent contact time between the \twoindexed{i}{j}{individual}. Then message reachability for asynchronous risk propagation is defined as
 \begin{equation}\label{eq:message-reachability}
   \vReachability(\vSourceVertex, \vTargetVertex) = \sum_{(i, j) \in \vPath} [\pTransmissionRate^i \vScore_\vSourceVertex > \pSendCoefficient \pTransmissionRate \vScore_{ij}] \cdot [\vTime_\vSourceVertex < \vTime_{ij} + \pTimeBuffer],
 \end{equation}
@@ -388,12 +389,12 @@ By relaxing the temporal constraint in \cref{eq:message-reachability}, an upper 
   \vEstimatedReachability(\vSourceVertex, \vTargetVertex) \leq \begin{cases} 
       0 & \text{if $\vScore_\vSourceVertex = 0$} \\
       \card{\vPath} & \text{if $\vScore_\vTargetVertex = 0$} \\
-      \log_{\pTransmissionRate}\pSendCoefficient + \log_{\pTransmissionRate}\vScore_\vTargetVertex - \log_{\pTransmissionRate}\vScore_\vSourceVertex & \text{otherwise,}
+      \log_\pTransmissionRate \dfrac{\pSendCoefficient \pTransmissionRate \vScore_\vTargetVertex}{\vScore_\vSourceVertex} & \text{otherwise,}
     \end{cases}
 \end{equation}
-where $\vScore_\vTargetVertex$ is the send threshold for actor $\vTargetVertex$ of the preceding actor along the path $\vPath$. Assuming a transmission rate of $\pTransmissionRate = 0.8$ \citep{Hamner2020} and a send coefficient of $\pSendCoefficient = 1$, \cref{fig:reach} provides a visual interpretation of \cref{eq:estimated-message-reachability}. 
+where $\pSendCoefficient \pTransmissionRate \vScore_\vTargetVertex$ is the send threshold of the actor that precedes actor $\vTargetVertex$ along the path $\vPath$. Assuming a transmission rate of $\pTransmissionRate = 0.8$ and a send coefficient of $\pSendCoefficient = 1$, \cref{fig:reach} visualizes \cref{eq:estimated-message-reachability}.
 
-\begin{figure}[htb]
+\begin{figure}[htbp]
 \centering
 \begin{tikzpicture}
 \begin{semilogyaxis}[
@@ -422,15 +423,13 @@ where $\vScore_\vTargetVertex$ is the send threshold for actor $\vTargetVertex$ 
   ] {log2(y / x) / log2(0.8)};
 \end{semilogyaxis}
 \end{tikzpicture}
-\caption[Message reachability for asynchronous risk propagation]{Message reachability for asynchronous risk propagation. Contour lines are shown for integral reachability values. Given a symptom score, the contour lines indicate the maximum send threshold that permits sending the risk score.}
+\caption[Message reachability for asynchronous risk propagation]{Message reachability for asynchronous risk propagation. Contour lines are shown for integral reachability values, indicating the maximum send threshold that permits sending the risk score.}
 \label{fig:reach}
 \end{figure}
 
-\Cref{eq:estimated-message-reachability} indicates that a lower send coefficient will generally result in higher message reachability, which increases the likelihood of redundant communication (i.e., sending risk scores that do not update the exposure scores of other actors). \Cref{eq:estimated-message-reachability} also quantifies the effect of the transmission rate. However, the transmission rate should be derived from epidemiology in order to quantify infectivity, so it should not be optimized to improve performance.
-
 \section{Mobile Crowdsensing}
 
-\define{Mobile crowdsensing} (MCS) is a ``sensing paradigm that empowers ordinary citizens to contribute data sensed or generated from their mobile devices'' that is aggregated  ``in the cloud for crowd intelligence extraction and human-centric service delivery'' \citep{Guo2015}. Over the past decade, substantial research has been conducted on defining and classifying MCS applications \cite[and references therein]{Capponi2019, Guo2015}. While not discussed in previous work \cite{Ayday2020, Ayday2021}, ShareTrace is a MCS application. The following characterization of ShareTrace assumes the four-layered architecture of a MCS application \cite{Capponi2019}, which offers a comprehensive set of classification criteria that To offer a clear comparison, \cref{tab:classification} follows the same structure as \citet{Capponi2019}. Some aspects of the architecture, namely sampling frequency and sensor activity, are marked according to how ShareTrace is described in previous work, rather than how it would function to optimize for energy efficiency. More detail is provided below in this regard. When classifying ShareTrace as an MCS application, the following description is helpful:
+\define{Mobile crowdsensing} (MCS) is a ``sensing paradigm that empowers ordinary citizens to contribute data sensed or generated from their mobile devices'' that is aggregated ``in the cloud for crowd intelligence extraction and human-centric service delivery'' \citep{Guo2015}. Over the past decade, substantial research has been conducted on defining and classifying MCS applications \cite[and references therein]{Capponi2019, Guo2015}. While not discussed in previous work \cite{Ayday2020, Ayday2021}, ShareTrace is a MCS application. The following characterization of ShareTrace assumes the four-layered architecture of a MCS application \cite{Capponi2019}, which offers a comprehensive set of classification criteria that To offer a clear comparison, \cref{tab:classification} follows the same structure as \citet{Capponi2019}. Some aspects of the architecture, namely sampling frequency and sensor activity, are marked according to how ShareTrace is described in previous work, rather than how it would function to optimize for energy efficiency. More detail is provided below in this regard. When classifying ShareTrace as an MCS application, the following description is helpful:
 \begin{quote}
   \emph{ShareTrace is a decentralized, delay-tolerant contact-tracing application that estimates infection risk from proximal user interactions and user symptoms.}
 \end{quote}
@@ -449,7 +448,7 @@ where $\vScore_\vTargetVertex$ is the send threshold for actor $\vTargetVertex$ 
 
 \paragraph{Task Execution}
 
-With \emph{single-task execution}, MCS applications assign one type of task to users, while \emph{multi-task execution} assigns  multiple types of tasks \cite{Capponi2019}. ShareTrace only involves the single task of sensing proximal interactions. Alternatively, ShareTrace could be defined more abstractly as sensing infection risk through interactions and user symtpoms. In this case, ShareTrace would follow a multi-tasked execution model, where the task of sensing user symptoms is achieved through user reporting or bodily sensors.
+With \emph{single-task execution}, MCS applications assign one type of task to users, while \emph{multi-task execution} assigns multiple types of tasks \cite{Capponi2019}. ShareTrace only involves the single task of sensing proximal interactions. Alternatively, ShareTrace could be defined more abstractly as sensing infection risk through interactions and user symtpoms. In this case, ShareTrace would follow a multi-tasked execution model, where the task of sensing user symptoms is achieved through user reporting or bodily sensors.
 
 \subsubsection{Application Users}
 
@@ -551,7 +550,7 @@ When the \emph{mobile device} is responsible, ``devices or users take sampling d
 
 \emph{Participatory involvement} ``requires active actions from users, who are explicitly asked to perform specific tasks. They are responsible to consciously meet the application requests by deciding when, what, where, and how to perform sensing tasks.'' \emph{Opportunistic involvement} means that ``users do not have direct involvement, but only declare their interest in joining a campaign and providing their sensors as a service. Upon a simple handshake mechanism between the user and the MCS platform, a MCS thread is generated on the mobile device (e.g., in the form of a mobile app), and the decisions of what, where, when, and how to perform the sensing are delegated to the corresponding thread. After having accepted the sensing process, the user is totally unconscious with no tasks to perform and data collection is fully automated{\ldots}The smartphone itself is context-aware and makes decisions to sense and store data, automatically determining when its context matches the requirements of an application. Therefore, coupling opportunistic MCS systems with context-awareness is a crucial requirement'' \citep{Capponi2019}. Earlier works on MCS refer to user involvement as the \emph{sensing paradigm} \citep{Lane2010, Ganti2011, Ma2014}. ShareTrace is opportunistic, ideally with context-awareness.
 
-\begin{table}[htb]
+\begin{table}[htbp]
 \renewcommand{\arraystretch}{0.85}
 \scriptsize
 \centering
