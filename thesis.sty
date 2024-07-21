@@ -27,6 +27,10 @@
 \usepackage{amssymb}
 \usepackage{amsfonts}
 
+% Formatting optimization problems
+% See documentation for notes on usage with cleveref - http://ctan.math.utah.edu/ctan/tex-archive/macros/latex/contrib/optidef/optidef.pdf
+\usepackage{optidef}
+
 % Customize itemize and enumerate environments 
 \usepackage{enumitem}
 
@@ -67,7 +71,12 @@
 
  % Bibliography citations
  % https://ctan.org/pkg/biblatex
-\usepackage[backend=bibtex,natbib=true]{biblatex}
+\usepackage[
+  backend=bibtex,
+  natbib=true,
+  citestyle=authoryear,
+  backref=true
+]{biblatex}
 \addbibresource{content/references.bib}
 
 % Uncomment to find unused references
@@ -191,6 +200,8 @@
 }
 
 % PSEUDOCODE and MATH SYMBOLS
+
+\newcommand{\class}[1]{\texttt{#1}}
 
 % Variables
 \newcommand{\vActor}{a}
@@ -375,6 +386,7 @@
 \DeclareMathOperator{\argmax}{\arg\max}
 \DeclareMathOperator{\hav}{hav}
 \DeclareMathOperator{\vers}{vers}
+\DeclareMathOperator{\fracpart}{frac}
 \newcommand{\dist}{d}
 \newcommand{\bigO}[1]{O(#1)}
 \newcommand{\card}[1]{\left\vert #1 \right\vert}
