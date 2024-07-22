@@ -14,7 +14,20 @@
 \usepackage{csquotes}
 
 % Hyphenation
-\usepackage{hyphenat}
+% https://ctan.org/pkg/hyphenat
+\usepackage[htt]{hyphenat}
+\hyphenation{Post-Stop}
+\hyphenation{Run-Message}
+\hyphenation{Risk-Score-Message}
+\hyphenation{Contact-Message}
+\hyphenation{Risk-Propagation}
+\hyphenation{User-Event}
+\hyphenation{Last-Event}
+\hyphenation{Receive-Event}
+\hyphenation{Update-Event}
+\hyphenation{Lifecycle-Event}
+\hyphenation{User-Updated-Message}
+\hyphenation{Actor-System}
 
 % Provides NewDocumentCommand and NewDocumentEnvironment 
 \usepackage{xparse}
@@ -33,6 +46,10 @@
 
 % Customize itemize and enumerate environments 
 \usepackage{enumitem}
+
+% Used to make itemize and enumerate environments multi-column
+% https://www.ctan.org/pkg/multicol 
+\usepackage{multicol}
 
 % Prevent figures from being placed in other sections
 % https://tex.stackexchange.com/a/282
