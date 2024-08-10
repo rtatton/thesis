@@ -28,6 +28,7 @@ A reference implementation of \cref{sec:asynchronous} is available on GitHub\foo
 For reachability analysis, \class{RiskScoreMessage} contains the identifier of the \class{User} from which the message originated.
 
 \class{Monitor} is an actor that is responsible for transforming the \class{ContactNetwork} into a collection of \class{User} actors and terminating when no \class{UpdateEvent} has occurred for a period of time. As with \class{User} actors, the \class{Monitor} logs several types of \class{LifecycleEvent}, the meanings of which should be self-explanatory:
+
 \begin{multicols}{2}
 \begin{itemize}
   \item \class{CreateUsersStart}
@@ -38,32 +39,32 @@ For reachability analysis, \class{RiskScoreMessage} contains the identifier of t
   \item \class{SendContactsEnd}
   \item \class{RiskPropagationStart}
   \item \class{RiskPropagationEnd}
-\end{itemize}  
+\end{itemize}
 \end{multicols}
 
-\class{RiskPropagation} logs execution properties, creates an Akka \class{ActorSystem} that creates a \class{Monitor} actor and sends it a \class{RunMessage}, and then waits until the \class{ActorSystem} terminates.
+\class{RiskPropagation} logs execution properties, creates an Akka \class{ActorSystem} that creates a \class{Monitor} actor and sends it a \class{RunMessage}, and then waits until the \class{ActorSystem} terminates. Each execution of \class{RiskPropagation} is associated with a unique key that is included in each event record as mapped diagnostic context (MDC)\footnote{https://logback.qos.ch/manual/mdc.html}.
 
 The \class{Runner} specifies how \class{RiskPropagation} is created and invoked, usually through some combination of statically defined behavior and runtime configuration.
 
 Finally, \class{Main} is the entry point into the application. It is responsible for parsing \class{Context}, \class{Parameters}, and \class{Runner} from configuration and invoking \class{Runner} with \class{Context} and \class{Parameters} inputs. \class{Context} makes application-wide information accessible, such as the system time and user time\footnote{System time is always the wall-clock time and is included in each logged event record. User time is configurable to either be the wall-clock time or fixed at the reference time. The latter is ensures that no \class{RiskScoreMessage} and \class{ContactMessage} expires across executions of \class{RiskPropagation}.}, a pseudorandom number generator, \class{Runner} configuration, and loggers. \class{Parameters}, as the name suggests, is a collection of parameters that modify the behavior of the \class{Monitor}, \class{User}, and \class{Contact}.
 
-An experiment typically composed of multiple configuration files in order to vary an aspect of the 
-
-An execution is defined by one or more invocations of risk propagation that are associated with the same configuration file. 
-
-Multiple invocations may be needed to compute statistics when the data generation process is stochastic.
-
-An execution may involve multiple invocations of risk propagation in order to collect multiple results from the same configuration. This is particularly relevant when the data generation process involves 
-
-Analysis sequence:
-
+In order to analyze the logs that were generated during the execution of \class{RiskPropagation}, they are transformed into a tabular dataset as follows:
 \begin{enumerate}
-  \item Load execution properties.
-  \item Stream the event log and process each record by one or more \class{EventHandler}s.
-  \item Put the results from each \class{EventHandler} in a \class{Results} object.
-  \item Transform the \class{Results} instance it into a tabular dataset.
-  \item Analyze the dataset.
+  \item Load the execution properties for all executions of \class{RiskPropagation} that are associated with the same configuration.
+  \item Process the stream of event records with one \class{EventHandler} per execution of \class{RiskPropagation}.
+  \item Collect the results from each \class{EventHandler} and store them in a file.
+  \item To analyze different configurations of \class{RiskPropagation}, load multiple result files and augment the results of each \class{RiskPropagation} execution with its execution properties.
+  \item Flatten the resulting data structure and store the tabular dataset.
 \end{enumerate}
+
+For evaluation, the following event handlers were implemented:
+
+\begin{itemize}
+  \item \class{Reachability}: aggregates \class{ReceiveEvent}s that involve a distinct sender and receiver to determine the influence set cardinality, source set cardinality, and message reachability of each \class{User}.
+  \item \class{Runtimes}: aggregates \class{LifecycleEvent}s and \class{LastEvent}s to determine the runtime of creating \class{User}s, sending \class{ContactMessage}s, sending \class{RiskScoreMessage}s, message passing, and the overall execution of \class{RiskPropagation}. Message passing runtime is the time elapsed from the start of sending \class{RiskScoreMessage}s until the last \class{LastEvent}.
+  \item \class{UserEventCounts}: aggregates \class{UserEvent}s to determine the frequency of each subtype for each \class{User}.
+  \item \class{UserUpdates}: aggregates \class{UpdateEvent}s to determine the new exposure score of each \class{User} and the change in value.
+\end{itemize}
 
 \subsection{Experimental Design}
 
@@ -74,13 +75,13 @@ The following research questions were the focus of evaluation:
   \item What is the runtime performance of risk propagation?
 \end{enumerate}
 
-Barabasi--Albert graphs \citep{Barabasi1999} are parametrized by the order $n$, the initial order $n_0$, and the size increase $m_0$ upon each incremental increase to the order. The latter two parameters are determined by solving \cref{eq:barabasi-albert-optimization}, where $\fracpart(x)$ is the fractional part of a real number $x$.
+Barabasi-Albert graphs \citep{Barabasi1999} are parametrized by the order $n$, the initial order $n_0$, and the size increase $m_0$ upon each incremental increase to the order. The latter two parameters are determined by solving \cref{eq:barabasi-albert-optimization}, where $\fracpart(x)$ is the fractional part of a real number $x$.
 \begin{argmini}{n_0, m_0}{\fracpart(m_0)}{\protect\label{eq:barabasi-albert-optimization}}{}
   \addConstraint{n_0}{\in \intInterval{1}{n - 1}}
   \addConstraint{m_0}{\in \intInterval{1}{n_0}}
   \addConstraint{m_0}{= \frac{2m - n_0 (n_0 - 1)}{2(n - n_0)}}
 \end{argmini}
-Erd\"{o}s--R\'{e}nyi $G_{n,m}$ random graphs \citep{Erdos1959} are parametrized by the order $n$ and the size $m$. Random regular graphs \citep{Kim2003} are parametrized by the order $n$ and, using the degree sum formula, the degree $d = \lfloor \frac{2m}{n} \rfloor$. Lastly, Watts--Strogatz graphs \citep{Watts1998} are parametrized by the order $n$, the rewiring probability $p$ and the number of nearest neighbors $k = d + (d \bmod 2)$, which must be even.
+Erd\"{o}s-R\'{e}nyi $G_{n,m}$ random graphs \citep{Erdos1959} are parametrized by the order $n$ and the size $m$. Random regular graphs \citep{Kim2003} are parametrized by the order $n$ and, using the degree sum formula, the degree $d = \lfloor \frac{2m}{n} \rfloor$. Lastly, Watts-Strogatz graphs \citep{Watts1998} are parametrized by the order $n$, the rewiring probability $p$ and the number of nearest neighbors $k = d + (d \bmod 2)$, which must be even.
 
 \begin{table}
   \centering
@@ -103,23 +104,8 @@ Erd\"{o}s--R\'{e}nyi $G_{n,m}$ random graphs \citep{Erdos1959} are parametrized 
   \label{tab:default-parameters}
 \end{table}
 
-The default Akka configuration\footnote{\url{https://doc.akka.io/docs/akka/current/general/configuration-reference.html}}.
-
 \begin{itemize}
-  \item Fixed clock time
-  \item Monitor actor:
-    \begin{itemize}
-      \item PinnedDispatcher
-      \item Thread pool executor 
-      \item No core timeout
-    \end{itemize}
-  \item User actors:
-    \begin{itemize}
-      \item Dispatcher
-      \item Thread pool executor
-      \item \num{100} throughput
-      \item Max pool size: \num{2147483647} (max Java integer value)
-    \end{itemize}
+  \item Fixed user time
   \item 5 contact networks with distinct risk scores and contact times
   \item Sampling procedure to generate dataset values: Given the probability density function $f_X$ and the cumulative distribution function $F_X$ of a random variable $X$, sample a value $x \sim f_X$ and evaluate $F_X(x)$.
 \end{itemize}
@@ -147,7 +133,7 @@ Runtime baseline experiment:
 Runtime experiment:
 
 \begin{itemize}
-  \item Cross product of $n \in \setBuilder{10^5x}{x \in [1, 10]}$ and $m \in \setBuilder{10^6x}{x \in [1, 10]}$
+  \item $n \in \setBuilder{10^5x}{x \in [1, 10]} \times m \in \setBuilder{10^6x}{x \in [1, 10]}$
   \item Uniform distribution for all 3 data types
   \item 1 burn-in + 5 contact networks with distinct risk scores and contact times
   \item Log lifecycle events and last event for message-passing runtime
