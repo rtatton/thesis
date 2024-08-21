@@ -1,0 +1,135 @@
+\chapter{Evaluation}
+
+\section{Reference Implementation}
+
+A reference implementation of \cref{sec:asynchronous} is available on GitHub\footnote{\url{https://github.com/cwru-xlab/sharetrace-akka}}. Actors are implemented using the Akka toolkit\footnote{\url{https://doc.akka.io/docs/akka/2.8.5/typed/index.html}}, which offers high performance for large-scale actor systems. Experimental results indicate that the reference implementation can reliably handle contact networks with 1 million individuals and 10 million contacts, which makes it ideal for small-scale experiments. In addition to using the Akka toolkit, several other optimizations are implemented:
+\begin{itemize}
+  \item To reduce the size of event logs and result files, individual actor identifiers follow zero-based numbering and event records are serialized using the Ion format\footnote{\url{https://amazon-ion.github.io/ion-docs}} with shortened field names.
+  \item To reduce memory usage, FastUtil\footnote{\url{https://fastutil.di.unimi.it}} data structures are used, including a specialized integer-based JGraphT\footnote{\url{https://jgrapht.org}} graph implementation \citep{Michail2020}. Also, singletons \citep{Gamma1995}, primitive data types, and reference equality are preferred where feasible and do not impact readability.
+  \item To reduce runtime and increase throughput, logging is performed asynchronously with Logback\footnote{\url{https://logback.qos.ch/index.html}} and the LMAX Disruptor\footnote{\url{https://lmax-exchange.github.io/disruptor}}.
+\end{itemize}
+
+\Cref{fig:arrow-diagram} shows the dependencies among the application components. Contextualizing this implementation with prior implementations of the driver-monitor-worker (DMW) framework (see \cref{sec:dmw-framework}), \class{RiskPropagation} is the driver, \class{Monitor} is the monitor, and \class{User} is the worker. The key difference between this implementation and previous implementations of the DMW framework is that the workers are stateful, which is necessary for decentralization.
+\begin{figure}[htbp]
+\begin{equation*}
+  \class{Main} \rightarrow \class{Runner} \rightarrow \class{RiskPropagation} \rightarrow \class{Monitor} \rightarrow \class{User} \rightarrow \class{Contact}
+\end{equation*}
+\caption[Arrow diagram of the reference implementation]{Arrow diagram of the reference implementation.}
+\label{fig:arrow-diagram}
+\end{figure}
+
+\Cref{sec:asynchronous} describes the behavior of \class{User} and \class{Contact}. In order to evaluate \class{RiskPropagation}, each \class{User} also logs the following types of \class{UserEvent}:
+\begin{itemize}
+  \item \class{ContactEvent}: logged when the \class{User} receives an unexpired \class{ContactMessage}; contains the \class{User} identifier, the \class{Contact} identifier, and the contact time.
+  \item \class{ReceiveEvent}: logged when the \class{User} receives an unexpired \class{RiskScoreMessage}; contains the \class{User} identifier, the \class{Contact} identifier, and the \class{RiskScoreMessage}.
+  \item \class{UpdateEvent}: logged when the \class{User} updates its exposure score; contains the \class{User} identifier, the previous \class{RiskScoreMessage}, and the current \class{RiskScoreMessage}.
+  \item \class{LastEvent}: logged when the \class{User} receives a \class{PostStop} Akka signal\footnote{\url{https://doc.akka.io/docs/akka/current/typed/actor-lifecycle.html\#stopping-actors}} after the \class{Monitor} has stopped; contains the \class{User} identifier and the time of logging the last event, besides \class{LastEvent}; used to detect the end time of message passing.
+\end{itemize}
+For reachability analysis, \class{RiskScoreMessage} contains the identifier of the \class{User} from which the message originated.
+
+\class{Monitor} is an actor that is responsible for transforming the \class{ContactNetwork} into a collection of \class{User} actors and terminating when no \class{UpdateEvent} has occurred for a period of time. As with \class{User} actors, the \class{Monitor} logs several types of \class{LifecycleEvent}, the meanings of which should be self-explanatory:
+
+\begin{multicols}{2}
+\begin{itemize}
+  \item \class{CreateUsersStart}
+  \item \class{CreateUsersEnd}
+  \item \class{SendRiskScoresStart}
+  \item \class{SendRiskScoresEnd}
+  \item \class{SendContactsStart}
+  \item \class{SendContactsEnd}
+  \item \class{RiskPropagationStart}
+  \item \class{RiskPropagationEnd}
+\end{itemize}
+\end{multicols}
+
+\class{RiskPropagation} logs execution properties, creates an Akka \class{ActorSystem} that creates a \class{Monitor} actor and sends it a \class{RunMessage}, and then waits until the \class{ActorSystem} terminates. Each execution of \class{RiskPropagation} is associated with a unique key that is included in each event record as mapped diagnostic context (MDC)\footnote{\url{https://logback.qos.ch/manual/mdc.html}}.
+
+The \class{Runner} specifies how \class{RiskPropagation} is created and invoked, usually through some combination of statically defined behavior and runtime configuration.
+
+Finally, \class{Main} is the entry point into the application. It is responsible for parsing \class{Context}, \class{Parameters}, and \class{Runner} from configuration and invoking \class{Runner} with \class{Context} and \class{Parameters} inputs. \class{Context} makes application-wide information accessible, such as the system time and user time\footnote{System time is always the wall-clock time and is included in each logged event record. User time is configurable to either be the wall-clock time or fixed at the reference time. The latter is ensures that no \class{RiskScoreMessage} and \class{ContactMessage} expires across executions of \class{RiskPropagation}.}, a pseudorandom number generator, \class{Runner} configuration, and loggers. \class{Parameters}, as the name suggests, is a collection of parameters that modify the behavior of the \class{Monitor}, \class{User}, and \class{Contact}.
+
+In order to analyze the logs that were generated during the execution of \class{RiskPropagation}, they are transformed into a tabular dataset as follows:
+\begin{enumerate}
+  \item Load the execution properties for all executions of \class{RiskPropagation} that are associated with the same configuration.
+  \item Process the stream of event records with one \class{EventHandler} per execution of \class{RiskPropagation}.
+  \item Collect the results from each \class{EventHandler} and store them in a file.
+  \item To analyze different configurations of \class{RiskPropagation}, load multiple result files and augment the results of each \class{RiskPropagation} execution with its execution properties.
+  \item Flatten the resulting data structure and store the tabular dataset.
+\end{enumerate}
+
+For evaluation, the following event handlers were implemented:
+
+\begin{itemize}
+  \item \class{Reachability}: aggregates \class{ReceiveEvent}s that involve a distinct sender and receiver to determine the influence set cardinality, source set cardinality, and message reachability of each \class{User}.
+  \item \class{Runtimes}: aggregates \class{LifecycleEvent}s and \class{LastEvent}s to determine the runtime of creating \class{User}s, sending \class{ContactMessage}s, sending \class{RiskScoreMessage}s, message passing, and the overall execution of \class{RiskPropagation}. Message passing runtime is the time elapsed from the start of sending \class{RiskScoreMessage}s until the last \class{LastEvent}.
+  \item \class{UserEventCounts}: aggregates \class{UserEvent}s to determine the frequency of each subtype for each \class{User}.
+  \item \class{UserUpdates}: aggregates \class{UpdateEvent}s to determine the new exposure score of each \class{User} and the change in value.
+\end{itemize}
+
+\subsection{Experimental Design}
+
+The following research questions were the focus of evaluation:
+\begin{enumerate}
+  \item How do the send coefficient and tolerance affect the accuracy and efficiency of risk propagation?
+  \item Do the distributions of risk scores and contact times affect the runtime of risk propagation?
+  \item How does the contact network topology affect the runtime of risk propagation?
+\end{enumerate}
+
+Several graphs
+
+Barabasi-Albert graphs \citep{Barabasi1999} are parametrized by the order $n$, the initial order $n_0$, and the increase in size $m_0$ upon each incremental increase in order. The latter two parameters are determined by solving \cref{eq:barabasi-albert-optimization}, where $\fracpart(x)$ is the fractional part of a real number $x$.
+\begin{argmini}{n_0, m_0}{\fracpart(m_0)}{\protect\label{eq:barabasi-albert-optimization}}{}
+  \addConstraint{n_0}{\in \intInterval{1}{n - 1}}
+  \addConstraint{m_0}{\in \intInterval{1}{n_0}}
+  \addConstraint{m_0}{= \frac{2m - n_0 (n_0 - 1)}{2(n - n_0)}}
+\end{argmini}
+Erd\"{o}s-R\'{e}nyi $G_{n,m}$ random graphs \citep{Erdos1959} are parametrized by the order $n$ and the size $m$. Random regular graphs \citep{Kim2003} are parametrized by the order $n$ and, using the degree sum formula, the degree $d = \lfloor \frac{2m}{n} \rfloor$. Lastly, Watts-Strogatz graphs \citep{Watts1998} are parametrized by the order $n$, the rewiring probability $p$ and the number of nearest neighbors $k = d + (d \bmod 2)$, which must be even.
+
+\begin{table}
+  \centering
+  \begin{tabular}{ll}
+    \toprule
+    Parameter & Default value \\
+    \midrule
+    Transmission rate, $\pTransmissionRate$ & \num{0.8} \\
+    Send coefficient, $\pSendCoefficient$ & \num{1} \\
+    Tolerance, $\pTolerance$ & \num{0} \\
+    Time buffer, $\pTimeBuffer$ & \qty{2}{days} \\
+    Risk score expiry, $\pScoreExpiry$ & \qty{14}{days} \\
+    Contact expiry, $\pContactExpiry$ & \qty{14}{days} \\
+    Flush timeout & \qty{3}{seconds} \\
+    Idle timeout & \qty{1}{minute} \\
+    Seed & \num{12345} \\
+    \bottomrule
+  \end{tabular}
+  \caption[Default parameter values for evaluation]{Default parameter values for evaluation.}
+  \label{tab:default-parameters}
+\end{table}
+
+Common:
+\begin{itemize}
+  \item Fixed user time
+  \item Sampling procedure to generate dataset values: Given the probability density function $f_X$ and the cumulative distribution function $F_X$ of a random variable $X$, sample a value $x \sim f_X$ and evaluate $F_X(x)$.
+\end{itemize}
+
+Parmeter experiments:
+\begin{itemize}
+  \item Graph parameters: $n = 10^4$, $m = 5 \cdot 10^4$
+  \item Distributions: All combinations of uniform and standard normal
+  \item Parameters:$\pSendCoefficient \in \setBuilder{0.1x}{x \in \intInterval{8}{20}}$, $\pTolerance \in \setBuilder{0.001x}{x \in \intInterval{1}{10}}$
+  \item Contact networks: 5 with distinct risk scores and contact times
+\end{itemize}
+
+Runtime baseline experiment:
+\begin{itemize}
+  \item Graph parameters: $n = 10^4$, $m = 10^5$
+  \item Distributions: All combinations of uniform and standard normal
+  \item Contact networks: 1 burn-in + 5 contact networks with distinct risk scores and contact times
+\end{itemize}
+
+Runtime experiment:
+\begin{itemize}
+  \item Graph parameters: $n \in \setBuilder{10^5x}{x \in \intInterval{1}{10}} \times m \in \setBuilder{10^6x}{x \in \intInterval{1}{10}}$
+  \item Distributions: only uniform
+  \item Contact networks: 1 burn-in + 5 contact networks with distinct risk scores and contact times
+\end{itemize}
