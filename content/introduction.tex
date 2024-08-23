@@ -1,6 +1,8 @@
 \chapter{Introduction}
 
-\define{Contact tracing} is a non-pharmaceutical intervention that aims to halt the spread of infectious disease by identifying and quarantining individuals that have been in close physical proximity with the infected \citep{Brandt2022, PozoMartin2023}. In response to the pandemic of coronavirus disease 2019 (COVID-19) \citep{Zhu2020, Gorbalenya2020, Singh2021}, numerous approaches of automatic contact tracing (ACT) have been proposed. 
+\define{Contact tracing} is a non-pharmaceutical intervention that aims to halt the spread of infectious disease by identifying and quarantining individuals that have been in close physical proximity with the infected \citep{Brandt2022, PozoMartin2023}. Historically, contact tracing has been conducted manually
+
+In response to the pandemic of coronavirus disease 2019 (COVID-19) \citep{Zhu2020, Gorbalenya2020, Singh2021}, numerous approaches of \define{automatic contact tracing} (ACT) have been proposed \citep{Shubina2020, Reichert2021}.
 
 \citet{Shubina2020} provide an in-depth survey while \citet{Reichert2021} specifically focuses on techniques that utilize Bluetooth Low Energy (BLE) and provides a more current analysis of message-based approaches.
 
@@ -33,3 +35,15 @@ Higher-order contact tracing has demonstrated increased efficacy \citep{PozoMart
 %The evaluation of risk propagation in this work entails: (1) the efficiency of risk propagation on both synthetic and real-world contact networks; (2) the scalability of risk propagation on synthetic contact networks; and (3) the accuracy of message reachability on synthetic and real-world networks. To keep the scope of this work focused, we defer to \citep{Ayday2021} on the privacy and security aspects of ShareTrace.
 %
 %While message passing has been studied under specific epidemiological models \citep{Karrer2010, Li2021}, our formulation allows us to contextualize risk propagation as a novel usage of a contact network that does not require such assumptions to infer the transmission of disease. As a result, we introduce a form of reachability that can uniquely characterize the dynamics of message passing on a temporal graph. Our formulation of risk propagation aligns with its distributed extension, as introduced by \citet{Ayday2021}, which has connections to the actor model of concurrent computing \citep{Baker1977, Agha1986} and the ``think-like-a-vertex'' model of graph algorithms \citep{McCune2015}.
+
+
+% Organaization of paper
+
+% Risk propagation
+% Evaluation
+% Conclusion
+% Pseudocode conventions appendix
+% Data structures appendix
+% Previous designs appendix
+
+The remainder of this work is organized as follows.
