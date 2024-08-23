@@ -1,20 +1,24 @@
 \chapter{Introduction}
 
-% Define contact tracing
+\define{Contact tracing} is a non-pharmaceutical intervention that aims to halt the spread of infectious disease by identifying and quarantining individuals that have been in close physical proximity with the infected \citep{Brandt2022, PozoMartin2023}. In response to the pandemic of coronavirus disease 2019 (COVID-19) \citep{Zhu2020, Gorbalenya2020, Singh2021}, numerous approaches of automatic contact tracing (ACT) have been proposed. 
 
-\define{Contact tracing} is a non-pharmaceutical intervention that aims to halt the spread of infectious disease by identifying and quarantining individuals that have been in close physical proximity with the infected \citep{Brandt2022, PozoMartin2023}. 
+\citet{Shubina2020} provide an in-depth survey while \citet{Reichert2021} specifically focuses on techniques that utilize Bluetooth Low Energy (BLE) and provides a more current analysis of message-based approaches.
 
 % Define decentralized digital contact tracing and how its been used to mitigate COVID-19
-
-In response to the pandemic of coronavirus disease 2019 (COVID-19) \citep{Zhu2020, Gorbalenya2020, Singh2021},
 
 % Describe the efficacy of digital contact tracing and its shortcomings (privacy, security, widespread public adoption)
 
 Effective contact tracing is inherently difficult because of the complex interactions between epidemiology, public health, ethics, politics, and sociocultural norms \citep{Brandt2022}.
 
+% Improvements over other messaging-based approaches
+
+Privacy risk of message-based approaches is that an adversary can monitor network traffic in order to reconstruct the contact network. Using a decentralized data layer would mitigate this attack mode.
+
 %A common design element across all of the aforementioned contact tracing methodologies is that they only consider direct interactions between users. While there are privacy benefits to this approach, a major limitation is that they cannot utilize information about indirect contact to more effectively reduce the spread of disease. ShareTrace addresses this limitation by constructing a factor graph and estimating infection risk via a message-passing algorithm. As such, this work labels the ShareTrace algorithm as \define{risk propagation}. The first work on ShareTrace was a white paper that focused on the motivation, design, and engineering details. Exclusive to \citet{Ayday2020} is a discussion on privacy, network roaming, protocol interoperability, and the usage of geolocation data. Furthermore, it includes detail on the system model and data flow. The second work on ShareTrace \citep{Ayday2021} formalizes the algorithmic details in a centralized setting and demonstrates its improved efficacy, compared to the framework developed by Apple and Google \cite{AppleGoogle}.
 
 % Explain ShareTrace and why contact tracing still matters (e.g., impact of COVID-19, not the last pandemic)
+% Digital contact tracing has been the focus of research since at least 2011 - see Reichert's 2021 survey on BLE approaches
+% Research is still ongoing after WHO declared an end to the pandemic
 
 % Contributions of this work
 
@@ -29,61 +33,3 @@ Higher-order contact tracing has demonstrated increased efficacy \citep{PozoMart
 %The evaluation of risk propagation in this work entails: (1) the efficiency of risk propagation on both synthetic and real-world contact networks; (2) the scalability of risk propagation on synthetic contact networks; and (3) the accuracy of message reachability on synthetic and real-world networks. To keep the scope of this work focused, we defer to \citep{Ayday2021} on the privacy and security aspects of ShareTrace.
 %
 %While message passing has been studied under specific epidemiological models \citep{Karrer2010, Li2021}, our formulation allows us to contextualize risk propagation as a novel usage of a contact network that does not require such assumptions to infer the transmission of disease. As a result, we introduce a form of reachability that can uniquely characterize the dynamics of message passing on a temporal graph. Our formulation of risk propagation aligns with its distributed extension, as introduced by \citet{Ayday2021}, which has connections to the actor model of concurrent computing \citep{Baker1977, Agha1986} and the ``think-like-a-vertex'' model of graph algorithms \citep{McCune2015}.
-
-% Actor model
-
-%\newcommand{\vEvents}{\vSet{E}}
-%\newcommand{\vEvent}{e}
-%
-%The \define{actor model} is a local model of concurrent computing that defines computation as a strict partial ordering of events \citep{Hewitt1977a, Hewitt1977b}. An \define{event} is defined as ``a transition from one local state to another'' \citep{Hewitt1977b}; or, more concretely, ``a \textit{message} arriving at a computational agent called an \textit{actor}.'' The actor that receives the message of an event is called the \define{target} of the event. Message passing is the only means of actor communication \citep{Hewitt1977a}. Thus, control and data flow are inseparable in the actor model \citep{Hewitt1973}.
-%
-%% TODO - pull from Hewitt1977b regarding name
-%A minimal specification of an actor includes its \define{name} and \define{behavior}, or how it acts upon receiving a message. \citet{Clinger1981} explains,
-%\begin{displayquote}
-%  An actor's name is a necessary part of its description because two different actors may have the same behavior. An actor's behavior is a necessary part of its description because the same actor may have different behaviors at different times.
-%\end{displayquote}
-%
-%The \define{acquaintances} of an actor is the finite collection of actor names that it knows about \citep{Hewitt1977a}.
-%
-%The specification of an actor system consists of the following \citep{Hewitt1977a}.
-%
-%\begin{quote}
-%\begin{itemize}
-%  \item Deciding on the natural kinds of actors (objects) to have in the system to be constructed.
-%  \item Deciding for each kind of actor what kind of messages it should receive.
-%  \item Deciding for each kind of actor what it should do when it receives each kind of message.
-%\end{itemize}
-%\end{quote}
-%
-%% TODO Paraphrase - consider integrating this into chapter 2 when discussing mobile crowdsensing.
-%\citet{Agha1997} contextualizes the actor model as a natural paradigm in which to develop \define{open distributed systems}:
-%\begin{quote}
-%  The main characteristics of an open distributed system are that such systems allow the addition of new components, the replacement of existing components, and changes in interconnections between components, largely without disturbing the functioning of the system. Open distributed systems require a discipline in which a component may not have any direct control over other components with which it is connected. Instead, the behavior of a component is locally determined by its initial state and the history of its interactions with the environment. Moreover, interactions between components may occur only through their interfaces. Thus, the internal state of a component must only be accessible through operations provided by the interface.
-%  
-%  The actor model of computation has a built-in notion of local component and interface, and thus it is a natural model to use as a basis for a theory of open distributed computation. Specifically, we view actors as a model of coordination between autonomous interacting components.
-%\end{quote}
-
-%%%%%
-
-%Upon receipt, an actor may send messages to itself or other actors, update its local state, or create other actors.
-%
-%May send messages to other actors (Clinger)
-%Update its local state (Clinger)
-%Create other actors
-%
-%An event may \define{activate} subsequent events
-%
-%Formal works:
-%
-%\citet{Agha1997} (operational semantics), \citet{Clinger1981} (), \citet{Agha1985} ()
-
-% De_Koster also includes interface, state, and mailbox as part of an actor definition
-%
-% Some variation exists on exactly how actor behavior is defined \citep{Agha1985, Koster2016}. Perhaps the simplest definition is that the \emph{behavior of an actor} is both its \emph{interface} (i.e., the types of messages it can receive) and \emph{state} (i.e., the internal data it uses to process messages) \citep{Koster2016}. An \emph{actor system}\footnote{This is technically referred to as an \emph{actor system configuration}.} is defined as the set of actors it contains and the set of unprocessed messages\footnote{Formally, a \emph{message} is called a \emph{task} and is defined by a \emph{tag}, a unique identifier; a \emph{target}, the mail address to which the message is delivered; and a \emph{communication}, the message content \citep{Agha1985}.} in the actor mailboxes. An expanded definition of an actor system also includes a \emph{local states function} that maps mail addresses to behaviors, the set of \emph{receptionist actors} that can receive communication that is external to the actor system, and the set of \emph{external actors} that exist outside of the actor system \citep{Agha1985}. Practically, a local states function is unnecessary to specify, so the narrower definition of an actor system is used.
-
-%\begin{itemize}
-%  \item An actor follows the \define{active object pattern} \citep{Lavender1996, Koster2016} and the \define{Isolated Turn Principle} \citep{Koster2016}. Specifically, the state change of an actor is carried out by instance- variable assignment, instead of the canonical \cBecome{} primitive that provides a functional construct for pipelining actor behavior replacement \citep{Agha1985}. The interface of an actor is fixed in risk propagation, so the more general semantics of \cBecome{} is unnecessary.
-%  \item The term ``name'' \citep{Hewitt1977, Agha1985} is preferred over ``mail address'' \citep{Agha1985} to refer to the sender of a message. Generally, the mail address that is included in a message need not correspond to the actor that sent it. Risk propagation, however, requires this actor is identified in a risk score message. Therefore, to emphasize this requirement, ``name'' is used to refer to both the identity of an actor and its mail address.
-%  \item An actor is allowed to include a loop with finite iteration in its behavior definition; this is traditionally prohibited in the actor model \citep{Agha1985}.
-%  \item The behavior definition is implied by all procedures that take as input an actor.
-%\end{itemize}

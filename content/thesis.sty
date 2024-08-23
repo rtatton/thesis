@@ -1,10 +1,10 @@
 \ProvidesPackage{thesis}
 
-% GENERAL
-
 \usepackage[utf8]{inputenc}
 
 \usepackage[margin=1.5in]{geometry}
+
+\newcommand{\thesisTitle}{ShareTrace: Proactive and Automatic Contact Tracing with Message Passing}
 
 % Adjust line spacing
 \usepackage{setspace}
@@ -56,7 +56,8 @@
 \usepackage{amsfonts}
 
 % Formatting optimization problems
-% See documentation for notes on usage with cleveref - http://ctan.math.utah.edu/ctan/tex-archive/macros/latex/contrib/optidef/optidef.pdf
+% See documentation for notes on usage with cleveref:
+% https://ctan.org/pkg/optidef
 \usepackage{optidef}
 
 % Customize itemize and enumerate environments 
@@ -86,8 +87,6 @@
 % Use to define key terms in-text
 \newcommand{\define}[1]{\emph{#1}}
 
-% TABLE OF CONTENTS
-
 \usepackage[nottoc]{tocbibind}
 
 % Include subsections in the table of contents
@@ -99,35 +98,27 @@
 % Add appendices to the table of contents
 \usepackage[titletoc]{appendix}
 
-% CROSS REFERENCING
-
  % Bibliography citations
  % https://ctan.org/pkg/biblatex
-\usepackage[
-  backend=bibtex,
-  natbib=true,
-  backref=true,
-  sortcites=true
-]{biblatex}
+\usepackage[backend=bibtex, natbib=true, backref=true, sortcites=true]{biblatex}
 \addbibresource{references.bib}
 
-% Uncomment to find unused references
-%\usepackage{refcheck}
-
 % Citations and cross-referencing
-\usepackage[hidelinks]{hyperref}
+
+% pdflang and pdftitle needed for accessibility requirement
+\usepackage[pdflang=en-US, pdftitle=\thesisTitle, hidelinks]{hyperref}
 
 % Add support for hyperlinked URLs and DOIs
 \usepackage{url}
 \usepackage{doi}
 
 % Unified cross-referencing for figures, tables, and equations
-\usepackage[nameinlink,capitalize,noabbrev]{cleveref}
+\usepackage[nameinlink, capitalize, noabbrev]{cleveref}
 \newcommand{\crefconjunction}{\textendash}
 \Crefname{equation}{Equation}{Equations}
 \crefname{equation}{}{}
 
-% TABLES AND FIGURES
+% Tables and figures
 
 \newcommand{\tabindent}{\hspace{3mm}}
 
@@ -142,7 +133,7 @@
 
 \usepackage{tikz}
 \graphicspath{{assets/}}
-\usetikzlibrary{bayesnet,plotmarks,calc,angles,quotes,arrows}
+\usetikzlibrary{bayesnet, plotmarks, calc, angles, quotes, arrows}
 
 % If using Texifier, use LuaLaTex and disable 'Hide intermediate files'.
 \usepackage{pgfplots}
@@ -163,7 +154,7 @@
   }
 }
 
-% ALGORITHM AND PSEUDOCODE
+% Algorithms and pseudocode
 
 \newcommand{\vertexName}{vertex\xspace}
 \newcommand{\VertexName}{Vertex\xspace}
@@ -174,7 +165,7 @@
 \newcommand{\twoindexed}[3]{the $#1$-th and $#2$-th #3}
 \newcommand{\Twoindexed}[3]{The $#1$-th and $#2$-th #3}
 
-\usepackage[plain,boxed]{algorithm}
+\usepackage[plain, boxed]{algorithm}
 
 % Provides good formatting and \Call command
 \usepackage[noend]{algpseudocode}
@@ -230,8 +221,6 @@
     \end{algorithmic}
   \end{algorithm}
 }
-
-% PSEUDOCODE and MATH SYMBOLS
 
 \newcommand{\class}[1]{\texttt{#1}}
 
@@ -317,7 +306,6 @@
 \newcommand{\aKey}[1]{\attr{#1}{key}}
 \newcommand{\aName}[1]{\attr{#1}{name}}
 \newcommand{\aScores}[1]{\attr{#1}{scores}}
-\newcommand{\aSender}[1]{\attr{#1}{sender}}
 \newcommand{\aThreshold}[1]{\attr{#1}{threshold}}
 \newcommand{\aTime}[1]{\attr{#1}{time}}
 \newcommand{\aValue}[1]{\attr{#1}{value}}
@@ -335,7 +323,6 @@
 \newcommand{\aContactTime}{\aTime{\vContact}}
 \newcommand{\aNewScoreValue}{\aValue{\vNewScore}}
 \newcommand{\aScoreKey}{\aKey{\vScore}}
-\newcommand{\aScoreSender}{\aSender{\vScore}}
 \newcommand{\aScoreTime}{\aTime{\vScore}}
 \newcommand{\aScoreValue}{\aValue{\vScore}}
 \newcommand{\aSomeObjectAttribute}{\attr{\vSomeObject}{\vSomeAttribute}}

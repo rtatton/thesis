@@ -43,7 +43,7 @@ is the set of recent risk scores of \indexed{i}{individual}. The second input to
 \begin{equation} \label{eq:contact-set}
   \vContacts = \setBuilder{(i, j, \vTime)}{i \neq j, \vReferenceTime - \vTime < \pContactExpiry}
 \end{equation}
-such that $(i, j, \vTime)$ is the \emph{most recent} contact between \twoindexed{i}{j}{individual} that occurred from time $\vTime$ until at least time $\vTime + \pMinContactDuration$, where $\pMinContactDuration \in \naturals$ is the \define{minimum contact duration}\footnote{While \citet{Ayday2021} require contact over a $\pMinContactDuration$-contiguous period of time, the Centers for Disease Control and Prevention \citeyearpar{CDC2021} account for contact over a 24-hour period.}. Naturally, risk scores and contacts have finite relevance, so \cref{eq:score-set,eq:contact-set} are constrained by the \define{risk score expiry} $\pScoreExpiry \in \naturals$ and the \define{contact expiry} $\pContactExpiry \in \naturals$, respectively. The \define{reference time} $\vReferenceTime \in \naturals$ defines the relevance of the inputs and is assumed to be the time at which \cRiskPropagation is invoked. For notational simplicity in \cRiskPropagation, let $\vSomeSet$ be a set. Then $\max \vSomeSet = 0$ if $\vSomeSet = \emptyset$.
+such that $(i, j, \vTime)$ is the \emph{most recent} contact between \twoindexed{i}{j}{individual} that occurred from time $\vTime$ until at least time $\vTime + \pMinContactDuration$, where $\pMinContactDuration \in \naturals$ is the \define{minimum contact duration}. Naturally, risk scores and contacts have finite relevance, so \cref{eq:score-set,eq:contact-set} are constrained by the \define{risk score expiry} $\pScoreExpiry \in \naturals$ and the \define{contact expiry} $\pContactExpiry \in \naturals$, respectively. The \define{reference time} $\vReferenceTime \in \naturals$ defines the relevance of the inputs and is assumed to be the time at which \cRiskPropagation is invoked. For notational simplicity in \cRiskPropagation, let $\vSomeSet$ be a set. Then $\max \vSomeSet = 0$ if $\vSomeSet = \emptyset$.
 
 \subsection{Variable Messages}
 
@@ -133,10 +133,7 @@ To detect convergence, the normed difference between the current and previous ex
 
 \section{Asynchronous Risk Propagation}\label{sec:asynchronous}
 
-While \cRiskPropagation offers proof of concept, it is not viable for real-world application. \cRiskPropagation is an \define{offline algorithm} \citep{Cormen2022}, because it requires the contact and health information of all individuals as input. As \citet{Ayday2021} note, this centralization of personal data is not privacy-preserving. \cRiskPropagation also introduces communication overhead and computational redundancy since most exposure scores are unlikely to change across frequent invocations. To mitigate this inefficiency, \citet{Ayday2020} suggest running \cRiskPropagation once or twice per day. Unfortunately, this cadence incurs substantial delay in updating individuals' exposure scores. In the midst of a pandemic, timely information is essential for individual and collective health.
-
-% TODO - Update citation about actor model 
-To address the limitations of \cRiskPropagation, \citet{Ayday2021} propose decentralizing the factor graph such that the processing entity associated with \indexed{i}{individual} maintains the state of \indexed{i}{variable \vertexName} and the neighboring factor \verticesName. Applying one-mode projection onto the variable \verticesName \citep{Zhou2007}, \cref{fig:projected} illustrates how each entity corresponds to a portion of the factor graph. More generally, \citet{Ayday2021} envision risk propagation as a decentralized communication protocol for informing individuals about their infection risk. Such a message-passing protocol naturally aligns with the \define{actor model} which describes concurrent computation as the sending and processing of messages amongst \define{actors}. Since communication is asynchronous in the actor model, risk propagation defined in this way is called \define{asynchronous risk propagation}.
+While \cRiskPropagation offers proof of concept, it is not viable for real-world application. \cRiskPropagation is an \define{offline algorithm} \citep{Cormen2022}, because it requires the contact and health information of all individuals as input. As \citet{Ayday2021} note, this centralization of personal data is not privacy-preserving. \cRiskPropagation also introduces communication overhead and computational redundancy since most exposure scores are unlikely to change across frequent invocations. To mitigate this inefficiency, \citet{Ayday2020} suggest running \cRiskPropagation once or twice per day. Unfortunately, this cadence incurs substantial delay in updating individuals' exposure scores. In the midst of a pandemic, timely information is essential for individual and collective health. To address the limitations of \cRiskPropagation, \citet{Ayday2021} propose decentralizing the factor graph such that the processing entity associated with \indexed{i}{individual} maintains the state of \indexed{i}{variable \vertexName} and the neighboring factor \verticesName. Applying one-mode projection onto the variable \verticesName \citep{Zhou2007}, \cref{fig:projected} illustrates how each entity corresponds to a portion of the factor graph. More generally, \citet{Ayday2021} envision risk propagation as a decentralized communication protocol for informing individuals about their infection risk. Such a message-passing protocol naturally aligns with the \define{actor model}, a local model of concurrent computing that defines computation as patterns of message passing amongst computational entities called \define{actors} \citep{Hewitt1973, Hewitt1977a, Hewitt1977b,Clinger1981, Agha1985, De_Koster2016}. Since communication is asynchronous in the actor model, risk propagation defined in this way is called \define{asynchronous risk propagation}.
 
 \begin{figure}[htbp]
 \centering
@@ -171,14 +168,13 @@ To address the limitations of \cRiskPropagation, \citet{Ayday2021} propose decen
 An actor in the ShareTrace actor system corresponds to an individual. The \cCreateActor operation \citep{Agha1985} initializes an actor $\vActor$ with the following attributes.
 \begin{itemize}
   \item $\aActorExposure$: the current exposure score of the individual. This attribute is either a symptom score, a risk score sent by another actor, or the null risk score (see \cNullRiskScore).
-  \item $\aActorContacts$: a \define{dictionary} (\cref{ch:data-structures}) of contacts. In the context of an actor, a contact is a \define{proxy} \citep{Gamma1995} of the actor that represents an individual with which the individual represented by this actor was physically proximal. That is, if \indexed{i}{individual} interacted with \indexed{j}{individual}, then $\aContacts{\vActor_i}$ contains a contact $\vContact$ such that $\aContactKey = \aContactName$ is a name of \indexed{j}{actor} and $\aContactTime$ is the most recent time of contact. This attribute extends the concept of \emph{actor acquaintances} \citep{Hewitt1977a, Hewitt1977b, Agha1985} to be time-varying.
+  \item $\aActorContacts$: a \define{dictionary} (see \cref{ch:data-structures}) of contacts. In the context of an actor, a contact is a \define{proxy} \citep{Gamma1995} of the actor that represents an individual with which the individual represented by this actor was physically proximal. That is, if \indexed{i}{individual} interacted with \indexed{j}{individual}, then $\aContacts{\vActor_i}$ contains a contact $\vContact$ such that $\aContactKey = \aContactName$ is a name of \indexed{j}{actor} and $\aContactTime$ is the most recent time of contact. This attribute extends the concept of \emph{actor acquaintances} \citep{Hewitt1977a, Hewitt1977b, Agha1985} to be time-varying.
   \item $\aActorScores$: a dictionary of exposure scores such that $\aScoreKey$ for an exposure score $\vScore$ is the time interval during which $\aActorExposure = \vScore$. The null risk score is returned for queries in which the dictionary does not contain a risk score with a key that intersects the given query interval. \Cref{fig:exposure} depicts a hypothetical step function that $\aActorScores$ represents.
 \end{itemize}
 
 \begin{function}[H]{\nNullRiskScore}
   \State $\aScoreValue \assign 0$
   \State $\aScoreTime \assign 0$
-  \State $\aScoreSender \assign \nil$
   \State \Return $\vScore$
 \end{function}
 
@@ -212,9 +208,6 @@ An actor in the ShareTrace actor system corresponds to an individual. The \cCrea
 \caption[Historical exposure scores of an actor]{Hypothetical history of an individual's exposure score.}
 \label{fig:exposure}
 \end{figure}
-
-% TODO - reference \Cref{sec:system-model}.
-%Note that \cCreateActor does not specify a name for the actor. This allows the actor to have multiple names and for them to be specified ``out-of-band.''
 
 The interface of an actor is primarily defined by two types of messages: contacts and risk scores. Based on \cref{sec:synchronous}, let the \define{time to live} (TTL) of a message be the remaining time of its relevance. The reference time $\vReferenceTime$ is assumed to be the current time.
 
@@ -305,9 +298,7 @@ The aforementioned refinements to \cApplyRiskScore have focused on ensuring that
   \If{$\aContactThresholdValue < \aScoreValue \AND \aContactTime + \pTimeBuffer > \aScoreTime$}
     \State $\aNewScoreValue \assign \pTransmissionRate \cdot \aScoreValue$
     \State $\cSetSendThreshold[\vContact, \vNewScore]$
-    \If{$\aContactName \notEquals \aScoreSender$}
-      \State $\aContactBuffered \assign \vNewScore$
-    \EndIf
+    \State $\aContactBuffered \assign \vNewScore$
   \EndIf
 \end{function}
 
@@ -340,7 +331,7 @@ The \cHandleContact operation concludes this section on actor behavior. Similar 
 
 \subsection{Message Reachability}\label{sec:reachability}
 
-The ShareTrace actor system is a \define{contact network}, a type of \define{temporal network} in which \verticesName represent individuals and edges indicate contact between them. The contact set defined in \cref{eq:contact-set} is the \define{contact sequence} representation of a contact network \citep{Holme2012}. Contact networks are typically used in epidemiological studies that aim to model and analyze the spreading dynamics of infection \citep{Riolo2001, Danon2011, Lokhov2014, Craft2015, Pastor-Satorras2015, Koher2019, Zino2021}. The ShareTrace actor network, however, models the spreading of infection \emph{risk}. \citet{Holme2012} note that the transmission graph proposed by \citet{Riolo2001} ``cannot handle edges where one node manages to not catch the disease.'' By framing the spreading phenomenon as continuous, rather than discrete, it is possible to model partial transmission.
+The ShareTrace actor system is a \define{contact network}, a type of \define{temporal network} in which \verticesName represent individuals and edges indicate contact between them \citep{Holme2012, Holme2015}. The contact set defined in \cref{eq:contact-set} is the \define{contact sequence} representation of a contact network \citep{Holme2012}. Contact networks are typically used in epidemiological studies that aim to model and analyze the spreading dynamics of infection \citep{Riolo2001, Danon2011, Lokhov2014, Craft2015, Pastor-Satorras2015, Koher2019, Zino2021}. The ShareTrace actor network, however, models the spreading of infection \emph{risk}. \citet{Holme2012} note that the transmission graph proposed by \citet{Riolo2001} ``cannot handle edges where one node manages to not catch the disease.'' By framing the spreading phenomenon as continuous, rather than discrete, it is possible to model partial transmission.
 
 A primitive of temporal reachability analysis is the \define{time-respecting path}: a contiguous sequence of contacts with nondecreasing time. Thus, \vertexName $\vTargetVertex$ is \define{temporally reachable} from \vertexName $\vSourceVertex$ if there exists a time-respecting path from $\vSourceVertex$ to $\vTargetVertex$ \citep{Moody2002}. The following derivatives of a time-respecting path help quantify reachability in temporal networks \citep{Holme2012}.
 \begin{itemize}

@@ -1,27 +1,24 @@
-\documentclass[12pt, oneside]{book}
+\documentclass[12pt]{report}
 
 \usepackage{thesis}
 
 \begin{document}
-\frontmatter
-\pagestyle{plain}
-%\include{title}
-%\include{approval}
-%\include{table-of-contents}
-%\include{acknowledgements}
-%\include{abstract}
 
-\mainmatter
+\include{title}
+\include{approval}
+\include{table-of-contents}
+\include{acknowledgements}
+\include{abstract}
+
 \include{introduction}
-%\include{risk-propagation}
-%\include{evaluation}
-%\include{conclusions}
+\include{risk-propagation}
+\include{evaluation}
+\include{conclusions}
 
 \appendix
-%\include{previous-designs}
-%\include{data-structures}
-%\include{pseudocode-conventions}
+\include{previous-designs}
+\include{data-structures}
+\include{pseudocode-conventions}
 
-\backmatter
 \printbibliography
 \end{document}
