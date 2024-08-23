@@ -1,6 +1,7 @@
 \ProvidesPackage{thesis}
 
 \usepackage[utf8]{inputenc}
+\usepackage[english]{babel}
 
 \usepackage[margin=1.5in]{geometry}
 
@@ -99,15 +100,21 @@
 \setcounter{tocdepth}{2}
 
 % Number sections down to subsections
-\setcounter{secnumdepth}{3}
+\setcounter{secnumdepth}{2}
 
 % Add appendices to the table of contents
 \usepackage[titletoc]{appendix}
 
  % Bibliography citations
  % https://ctan.org/pkg/biblatex
-\usepackage[backend=bibtex, natbib=true, backref=true, sortcites=true]{biblatex}
+\usepackage[
+  backend=bibtex,
+  natbib=true,
+  backref=true,
+  sortcites=true,
+]{biblatex}
 \addbibresource{references.bib}
+\DeclareFieldFormat{titlecase}{\MakeSentenceCase*{#1}}
 
 % Citations and cross-referencing
 

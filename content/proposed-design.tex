@@ -1,4 +1,4 @@
-\chapter{Risk Propagation}\label{ch:risk-propagation}
+\chapter{Proposed Design}\label{ch:proposed-design}
 
 \define{Risk propagation} is a message-passing algorithm that estimates an individual's infection risk by considering their demographics, symptoms, diagnosis, and contact with others. Formally, a \define{risk score} $\vScore_\vTime \in [0, 1]$ is a timestamped infection probability where $\vTime \in \naturals$ is the time of its computation. Thus, an individual with a high risk score is likely to test positive for the infection and poses a significant health risk to others. There are two types of risk scores: \define{symptom scores}, or prior infection probabilities, which account for an individual's demographics, symptoms, and diagnosis \citep{Briers2020, Menni2020}; and \define{exposure scores}, or posterior infection probabilities, which incorporate the risk of direct and indirect contact with others.
 
@@ -418,132 +418,144 @@ where $\pSendCoefficient \pTransmissionRate \vScore_\vTargetVertex + \pTolerance
 \label{fig:reach}
 \end{figure}
 
-\section{Application Perspectives}
+% TODO Finalize subsection and subsubsection headings
+\section{System Design}
 
-With the algorithmic foundation of ShareTrace established, it is now possible discuss the aspects of system design and implementation. To a varying extent, prior work on ShareTrace \citep[\cref{ch:previous-designs}]{Ayday2020, Ayday2021} has explored the practical considerations for deployment. This work, however, provides additional detail by contextualizing ShareTrace as an example of \define{mobile crowdsensing} (MCS), a ``sensing paradigm that empowers ordinary citizens to contribute data sensed or generated from their mobile devices'' that is aggregated ``for crowd intelligence extraction and human-centric service delivery'' \citep{Guo2015}. To offer a clear comparison with other MCS applications, this section applies the classification criteria proposed by \citet{Capponi2019}. Note, this section assumes the usage of asynchronous risk propagation (\cref{sec:asynchronous}).
+With the algorithmic foundation of ShareTrace established, it is now possible discuss the aspects of system design. To a varying extent, prior work on ShareTrace \citep[\cref{ch:previous-designs}]{Ayday2020, Ayday2021} has explored the practical considerations for deployment. This work, however, provides additional detail by contextualizing ShareTrace as an application of \define{mobile crowdsensing} (MCS), a ``sensing paradigm that empowers ordinary citizens to contribute data sensed or generated from their mobile devices'' that is aggregated ``for crowd intelligence extraction and human-centric service delivery'' \citep{Guo2015}. To offer a clear comparison with other MCS applications, this section uses the classification criteria proposed by \citet{Capponi2019}. Note, this section assumes the usage of asynchronous risk propagation (\cref{sec:asynchronous}).
 
 \subsection{Application Layer}
 
-\paragraph{Task Scheduling}
+\subsubsection{Task Scheduling}
 
+% Done
 \define{Proactive scheduling} allows users to decide when and where they contribute sensing data, while \define{reactive scheduling} requires that ``a user receives a request, and upon acceptance, accomplishes a task'' \citep{Capponi2019}. ShareTrace follows proactive scheduling where the sensing task is to detect proximal interactions with other individuals. Naturally, the scheduling of this task is at the discretion of ShareTrace users.
 
-\paragraph{Task Assignment}
+% Done
+\subsubsection{Task Assignment}
 
 \define{Centralized assignment} assumes that ``a central authority distributes tasks among users.'' Conversely, with \define{decentralized assignment}, ``each participant becomes an authority and can either perform the task or forward it to other users'' \citep{Capponi2019}. The latter aligns with ShareTrace since each user is responsible for their own interactions.
 
-\paragraph{Task Execution}
+% Done
+\subsubsection{Task Execution}
 
-With \define{single-task execution}, MCS applications assign one type of task to users, while \define{multi-task execution} assigns multiple types of tasks \citep{Capponi2019}. ShareTrace only involves the single task of sensing proximal interactions.
+With \define{single-task execution}, MCS applications assign one type of task to users, while \define{multi-task execution} assigns multiple types of tasks \citep{Capponi2019}. ShareTrace involves the single task of sensing proximal interactions to derive an individual's infection risk.
 
-\paragraph{User Recruitment}
+% TODO Cite studies that mention incentive mechanisms
+\subsubsection{User Recruitment}
 
 \define{Volunteer-based recruitment} is when citizens can ``join a sensing campaign for personal interests{\ldots}or willingness to help the community,'' while \define{incentive-based recruitment} promotes participation and offers control over the recruitment rate{\ldots}These strategies are not mutually exclusive and users can first volunteer and then be rewarded for quality execution of sensing tasks'' \citep{Capponi2019}. ShareTrace follows volunteer-based recruitment, though incentive mechanisms would be an important consideration for widespread adoption.
 
-\paragraph{User Selection}
+% Done
+\subsubsection{User Selection}
 
-\define{User-centric selection} is when ``contributions depend only on participants['] willingness to sense and report data to the central collector, which is not responsible for choosing them.'' \define{Platform-centric selection} is ``when the central authority directly decides data contributors{\ldots}Platform centric decisions are taken according to the utility of data to accomplish the targets of the campaign'' \citep{Capponi2019}. ShareTrace employs user-centric selection, because the purpose of the application is to passively sense  in-person interactions and provide individuals with knowledge of their infection risk.
+\define{User-centric selection} is when ``contributions depend only on participants['] willingness to sense and report data to the central collector, which is not responsible for choosing them.'' \define{Platform-centric selection} is ``when the central authority directly decides data contributors{\ldots}Platform centric decisions are taken according to the utility of data to accomplish the targets of the campaign'' \citep{Capponi2019}. ShareTrace employs user-centric selection, because the purpose of the application is to passively sense in-person interactions and provide individuals with knowledge of their infection risk. However, ShareTrace does not require the presence of a central collector, such as a government health authority.
 
-\paragraph{User Type}
+% Done
+\subsubsection{User Type}
 
-A \define{contributor} ``reports data to the MCS platform with no interest in the results of the sensing campaign'' and ``are typically driven by incentives or by the desire to help the scientific or civil communities.'' A \define{consumer} joins ``a service to obtain information about certain application scenario[s] and have a direct interest in the results of the sensing campaign'' \citep{Capponi2019}. ShareTrace users could be consumers or contributors but would likelier be the latter.
+A \define{contributor} ``reports data to the MCS platform with no interest in the results of the sensing campaign'' and ``are typically driven by incentives or by the desire to help the scientific or civil communities.'' A \define{consumer} joins ``a service to obtain information about certain application scenario[s] and have a direct interest in the results of the sensing campaign'' \citep{Capponi2019}. ShareTrace users could be consumers or contributors but would likelier be the former.
 
 \subsection{Data Layer}
 
 % TODO
-\paragraph{Data Storage}
+\subsubsection{Data Storage}
 
 \define{Centralized storage} involves data being ``stored and maintained in a single location, which is usually a database made available in the cloud. This approach is typically employed when significant processing or data aggregation is required.'' \define{Distributed storage} ``is typically employed for delay-tolerant applications, i.e., when users are allowed to deliver data with a delayed reporting'' \citep{Capponi2019}. 
 
-ShareTrace relies on decentralized storage
+ShareTrace relies on distributed---more specifically, decentralized---storage. Prior work \cite[\cref{ch:previous-designs}]{Ayday2020, Ayday2021} suggests using Dataswyft Personal Data Accounts (PDAs)\footnote{\url{https://dataswyft.io}}, which provide a data-oriented interface to self-sovereign identity \citep[pp. 98--99]{Preukschat2021}. However, personal data stores alone cannot provide individuals true controllership over their personal data and have historically not demonstrated successful adoption in the consumer market \citep{Narayanan2012}. This work instead recommends locally storing as much personal data as possible on an individual's mobile device, which typically offers stronger privacy and security properties than cloud-based alternatives.
 
-The ShareTrace system architecture is purposely not built on the assumption of a personal data architecture \citep{Narayanan2012}, primarily due to there historical intractability in the consumer market. It is impractical to assume that all services and applications would utilize a single data model for an individual's personal data. Moreover, local storage of personal data is inherently more secure. The argument that personal data stores allow an individual to control the usage of their personal data is simply not valid. Technology alone cannot prevent the misuse of personal data. Lastly, the usage of remote, cloud-based computation introduces unnecessary complexity.
-
-Approach 1: Secure pub-sub with IPFS
-
-Approach 2: point-to-point messaging with DIDComm
-
-The InterPlanetary FileSystem (IPFS)\footnote{\url{https://ipfs.tech}} \citep{Benet2014, Trautwein2022}
+The InterPlanetary FileSystem (IPFS)\footnote{\url{https://ipfs.tech}} \citep{Benet2014, Trautwein2022, Shi2024}
 
 \begin{itemize}
-  \item Discussion around decentralization \citep{Troncoso2017}
+  \item Discussion around decentralization \citep{Troncoso2017, Keizer2024}
   \item Secure publish-subscribe
-  \item Technologies: Trust Over IP, DIDComm\footnote{\url{https://identity.foundation/didcomm-messaging/spec}}
+  \item IPFS-based solutions: OrbitDB\footnote{\url{https://orbitdb.org}} and web3.storage\footnote{\url{https://web3.storage}}
+  \item Secure pub/sub \citep{Cui2021}
+  \item Self-sovereign identity technologies \citep{Schardong2022, Preukschat2021}
 \end{itemize}
 
-The system model is similar to that in previous work \citep{Ayday2020, Ayday2021}.
-\begin{itemize}
-  \item Each user owns a \emph{personal data store} (PDS), a form of cloud storage that empowers the user with ownership and access control over their data.
-  \item Symptom scores are computed in a user's PDS to support integrating multiple streams of personal data \citep{Ayday2020}. While local symptom-score computation \citep{Ayday2020, Ayday2021} is more privacy-preserving, it is assumed that the user's PDS is a trusted entity.
-  \item User device interactions serve as a proxy for proximal human interactions. This work does not assume a specific protocol, but does assume that the protocol can approximate the duration of contact with relative accuracy and that communication with the actors of those contacted users can be established in a privacy-preserving manner.
-  \item No geolocation data is collected \citep{Ayday2020}. As a decentralized, proximity-based solution, it is not necessary to collect user geolocation data. See \Cref{sec:contact-search} for a discussion of a geolocation-based design that was considered.
-\end{itemize}
-
-\paragraph{Data Format}
+% Done
+\subsubsection{Data Format}
 
 \define{Structured data} is standardized and readily analyzable. \define{Unstructured data}, however, requires significant processing before it can be used \citep{Capponi2019}. ShareTrace data, such as reported symptoms, biometric data, contact identifiers, and risk scores, is structured.
 
-\paragraph{Data Dimensionality}
+% Done
+\subsubsection{Data Dimensionality}
 
-\define{Single-dimension data} typically occurs when a single sensor is used, while \define{multi-dimensional data} arises with the use of multiple sensors. Prior work on ShareTrace assumes single-dimensional data: contact identifiers received via Bluetooth Low Energy (BLE). Though, the integration with biometric sensors for estimating symptom scores would classify ShareTrace as using multi-dimensional data.
+\define{Single-dimension data} typically occurs when a single sensor is used, while \define{multi-dimensional data} arises with the use of multiple sensors. Prior work on ShareTrace assumes single-dimensional data: contact identifiers. Though, the integrating biometric sensor data into the calculation of symptom scores would classify ShareTrace as using multi-dimensional data.
 
-\paragraph{Data Pre-processing}
+% TODO
+\subsubsection{Data Pre-processing}
 
 \define{Raw data output} implies that no modification is made to the sensed data. \define{Filtering and denoising} entail ``removing irrelevant and redundant data. In addition, they help to aggregate and make sense of data while reducing at the same time the volume to be stored'' \citep{Capponi2019}. ShareTrace only retains the actor URIs that correspond to valid contacts (i.e., lasting at least 15 minutes).
 
-\paragraph{Data Analytics}
+% TODO
+\subsubsection{Data Analytics}
 
 \define{Machine learning (ML) and data mining analytics} are not real-time. They ``aim to infer information, identify patterns, or predict future trends.'' On the contrary, \define{real-time analytics} consist of ``examining collected data as soon as it is produced by the contributors'' \citep{Capponi2019}. ShareTrace aligns with the former category since it aims to infer the infection risk of users.
 
-\paragraph{Data Post-processing}
+% TODO
+\subsubsection{Data Post-processing}
 
 \define{Statistical post-processing} ``aims at inferring proportions given quantitative examples of the input data. \define{Prediction post-processing} aims to determine ``future outcomes from a set of possibilities when given new input in the system'' \citep{Capponi2019}. ShareTrace applies predictive post-processing via risk propagation.
 
 \subsection{Communication Layer}
 
-\paragraph{Infrastructured Technology}
+% TODO
+\subsubsection{Infrastructured Technology}
 
 \define{Cellular} connectivity ``is typically required from sensing campaign[s] that perform real-time monitoring and require data reception as soon as it is sensed.'' \define{WLAN} ``is used mainly when sensing organizers do not specify any preferred reporting technologies or when the application domain permits to send data'' at ``a certain amount of time after the sensing process'' \citep{Capponi2019}. Infrastructured technology is also referred to as the \define{infrastructured transmission paradigm} \citep{Ma2014}. ShareTrace does not require cellular infrastructure, because it is delay-tolerant and thus only requires WLAN.
 
-\paragraph{Infrastructure-less Technology}
+% TODO
+\subsubsection{Infrastructure-less Technology}
 
-\define{Infrastructure-less technologies} ``consists of device-to-device (D2D) communications that do not require any infrastructure{\ldots}but rather allow devices in the vicinity to communicate directly.'' Technologies include \define{WiFi-Direct}, \define{LTE-Direct}, and \define{Bluetooth} \citep{Capponi2019}. Infrastructure-less technology is also called the \define{opportunistic transmission paradigm} \citep{Ma2014}. ShareTrace uses Bluetooth because of its energy efficiency and short range.
+\define{Infrastructure-less technologies} ``consists of device-to-device (D2D) communications that do not require any infrastructure{\ldots}but rather allow devices in the vicinity to communicate directly.'' Technologies include \define{WiFi-Direct}, \define{LTE-Direct}, and \define{Bluetooth} \citep{Capponi2019}. Infrastructure-less technology is also called the \define{opportunistic transmission paradigm} \citep{Ma2014}. ShareTrace uses Bluetooth Low Energy for its energy efficiency and sufficient accuracy for proximity detection.
 
-\paragraph{Upload mode}
+% TODO
+\subsubsection{Upload mode}
 
 With \define{relay uploading}, ``data is delivered as soon as collected.'' \define{Store-and-forward} ``is typically used in delay-tolerant applications when campaigns do not need to receive data in real-time'' \citep{Capponi2019}. Because ShareTrace is delay-tolerant, it uses store-and-forward uploading.
 
-\paragraph{Metholodgy}
+% TODO
+\subsubsection{Metholodgy}
 
 \define{Individualized sensing} is ``when each user accomplishes the requested task individually and without interaction with other participants.'' \define{Collaborative sensing} is when ``users communicate with each other, exchange data[,] and help themselves in accomplishing a task or delivering information to the central collector. Users are typically grouped and exchange data exploiting short-range communication technologies, such as WiFi-[D]irect or Bluetooth{\ldots}Note that systems that create maps merging data from different users are considered individual because users do not interact between each other to contribute'' \citep{Capponi2019}. The methodology of sensing is similar to the \define{sensing scale} which is typically dichotomized as \define{personal} \citep{Lane2010, Ganti2011} (i.e., individualized) and \define{community} \citep{Ganti2011} or \define{group} \citep{Lane2010} (i.e., collaborative). ShareTrace is inherently collaborative, relying on mobile devices to exchange actor URIs to estimate infection risk. Thus, collaborative sensing is used.
 
-\paragraph{Timing}
+% TODO
+\subsubsection{Timing}
 
 \define{Timing} is based on whether devices ``should sense in the same period or not.'' \define{Synchronous timing} ``includes cases in which users start and accomplish at the same time the sensing task. For synchronization purposes, participants communicate with each other.'' \define{Asynchronous timing} occurs ``when users perform sensing activity not in time synchronization with other users'' \citep{Capponi2019}. ShareTrace requires synchronous timing, because contact sensing inherently requires synchronous communication between the involved devices.
 
-\paragraph{Sensor Deployment}
+\subsection{Sensing Layer}
 
-\define{Dedicated deployment} involves the use of ``non-embedded sensing elements,'' typically for a specific task. \define{Non-dedicated deployment} utilizes sensors that ``do not require to be paired with other devices for data delivery but exploit the communication capabilities of mobile devices'' \citep{Capponi2019}. ShareTrace relies on non-dedicated deployment since it relies on Bluetooth that is ubiquitous in modern-day mobile devices.
+% Done
+\subsubsection{Sensor Deployment}
 
-\paragraph{Sensor Activity}
+\define{Dedicated deployment} involves using ``non-embedded sensing elements,'' typically for a specific task. \define{Non-dedicated deployment} utilizes sensors that ``do not require to be paired with other devices for data delivery but exploit the communication capabilities of mobile devices'' \citep{Capponi2019}. ShareTrace relies on non-dedicated deployment since it relies on Bluetooth Low Energy that is ubiquitous in modern-day mobile devices.
+
+% TODO
+\subsubsection{Sensor Activity}
 
 \define{Always-on sensors} ``are required to accomplish mobile devices['] basic functionalities, such as detection of rotation and acceleration{\ldots} Activity recognition [i.e., context awareness]{\ldots}is a very important feature that accelerometers enable.'' \define{On-demand sensors} ``need to be switched on by users or exploiting an application running in the background. Typically, they serve more complex applications than always-on sensors and consume a higher amount fo energy'' \citep{Capponi2019}. ShareTrace uses Bluetooth, which may be considered on-demand. While energy efficient, users do control when it is enabled. Ideally, ShareTrace would also use always-on sensors to enable Bluetooth with context awareness (i.e., that the user is carrying or nearby the device).
 
-\paragraph{Acquisition}
+% TODO
+\subsubsection{Acquisition}
 
 \define{Homogeneous acquisition} ``involves only one type of data and it does not change from one user to another one,'' while \define{heterogeneous acquisition} ``involves different data types usually sampled from several sensors'' \citep{Capponi2019}. ShareTrace is homogeneous, because all users sense the same data from one type of sensor.
 
-\paragraph{Sampling Frequency}
+% TODO
+\subsubsection{Sampling Frequency}
 
 \define{Continuous sensing} ``indicates tasks that are accomplished regularly and independently [of] the context of the smartphone or the user['s] activities.'' \define{Event-based sensing} is ``data collection [that] starts after a certain event has occurred. In this context, an event can be seen as an active action from a user or the central collector, but also a given context awareness'' \citep{Capponi2019}. ShareTrace sensing is continuous but would ideally be event-based to conserve device energy.
 
-\paragraph{Sensing Responsibility}
+% TODO
+\subsubsection{Sensing Responsibility}
 
 When the \define{mobile device} is responsible, ``devices or users take sampling decisions locally and independently from the central authority{\ldots}When devices take sampling decisions, it is often necessary to detect the context [of the] smartphones and wearable devices{\ldots}The objective is to maximize the utility of data collection and minimize the cost of performing unnecessary operations.'' When the \define{central collector} is responsible, they make ``decisions about sensing and communicate them to the mobile devices'' \citep{Capponi2019}. Given the human-centric nature of the ShareTrace sensing task, mobile devices are responsible.
 
-\paragraph{User involvement}
+\subsubsection{User involvement}
 
-\define{Participatory involvement} ``requires active actions from users, who are explicitly asked to perform specific tasks. They are responsible to consciously meet the application requests by deciding when, what, where, and how to perform sensing tasks.'' \define{Opportunistic involvement} means that ``users do not have direct involvement, but only declare their interest in joining a campaign and providing their sensors as a service. Upon a simple handshake mechanism between the user and the MCS platform, a MCS thread is generated on the mobile device (e.g., in the form of a mobile app), and the decisions of what, where, when, and how to perform the sensing are delegated to the corresponding thread. After having accepted the sensing process, the user is totally unconscious with no tasks to perform and data collection is fully automated{\ldots}The smartphone itself is context-aware and makes decisions to sense and store data, automatically determining when its context matches the requirements of an application. Therefore, coupling opportunistic MCS systems with context-awareness is a crucial requirement'' \citep{Capponi2019}. Earlier works on MCS refer to user involvement as the \define{sensing paradigm} \citep{Lane2010, Ganti2011, Ma2014}. ShareTrace is opportunistic, ideally with context-awareness.
+\define{Participatory involvement} ``requires active actions from users, who are explicitly asked to perform specific tasks. They are responsible to consciously meet the application requests by deciding when, what, where, and how to perform sensing tasks.'' \define{Opportunistic involvement} means that ``users do not have direct involvement, but only declare their interest in joining a campaign and providing their sensors as a service. Upon a simple handshake mechanism between the user and the MCS platform, a MCS thread is generated on the mobile device (e.g., in the form of a mobile app), and the decisions of what, where, when, and how to perform the sensing are delegated to the corresponding thread. After having accepted the sensing process, the user is totally unconscious with no tasks to perform and data collection is fully automated{\ldots}The smartphone itself is context-aware and makes decisions to sense and store data, automatically determining when its context matches the requirements of an application. Therefore, coupling opportunistic MCS systems with context-awareness is a crucial requirement'' \citep{Capponi2019}. Earlier works on MCS refer to user involvement as the \define{sensing paradigm} \citep{Lane2010, Ganti2011, Ma2014}. ShareTrace is opportunistic, ideally with context awareness.
 
 \begin{table}[htbp]
 \renewcommand{\arraystretch}{0.85}
@@ -573,7 +585,7 @@ When the \define{mobile device} is responsible, ``devices or users take sampling
 	& \multirow{6}*{User}
 		& \multirow{2}*{Recruitment}
 			& Voluntary & $\bullet$ \\
-			&&& Incentivized & \\
+			&&& Incentivized & $\circ$ \\
 		\cmidrule{3-5}
 		&& \multirow{2}*{Selection}
 			& Platform-centric & \\
@@ -596,7 +608,7 @@ When the \define{mobile device} is responsible, ``devices or users take sampling
 		\cmidrule{3-5}
 		&& \multirow{2}*{Dimension}
 			& Single dimension & $\bullet$ \\
-			&&& Multi-dimensional & \\
+			&&& Multi-dimensional & $\circ$ \\
 	\cmidrule{2-5}
 	& \multirow{6}*{Processing}
 		& \multirow{2}*{Pre-processing}
@@ -666,6 +678,6 @@ When the \define{mobile device} is responsible, ``devices or users take sampling
 			&&& Opportunistic & $\bullet$ \\
 \bottomrule
 \end{tabularx}
-\caption[Classification of ShareTrace as a mobile crowdsensing application]{Classification of ShareTrace as a mobile crowdsensing (MCS) application. This table follows the four-layered architecture of MCS applications proposed by \citet{Capponi2019}. Always ($\bullet$); with context-awareness ($\circ$).}
+\caption[Classification of ShareTrace as a mobile crowdsensing application]{Classification of ShareTrace as a mobile crowdsensing (MCS) application. This table follows the four-layered architecture of MCS applications proposed by \citet{Capponi2019}. Proposed design ($\bullet$); plausible alternative ($\circ$).}
 \label{tab:classification}
 \end{table}

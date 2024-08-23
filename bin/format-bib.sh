@@ -7,7 +7,7 @@ bibtex-tidy $1 \
 --blank-lines \
 --curly \
 --duplicates \
---encode-urls \
+--no-encode-urls \
 --modify \
 --no-align \
 --no-merge \
@@ -20,5 +20,5 @@ bibtex-tidy $1 \
 --sort=year,name \
 --space=2 \
 --strip-comments \
---strip-enclosing-braces \
+--enclosing-braces=journal,booktitle
 --v2
