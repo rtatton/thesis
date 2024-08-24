@@ -25,7 +25,7 @@ A reference implementation of \cref{sec:asynchronous} is available on GitHub\foo
   \item \class{UpdateEvent}: logged when the \class{User} updates its exposure score; contains the \class{User} identifier, the previous \class{RiskScoreMessage}, and the current \class{RiskScoreMessage}.
   \item \class{LastEvent}: logged when the \class{User} receives a \class{PostStop} Akka signal\footnote{\url{https://doc.akka.io/docs/akka/current/typed/actor-lifecycle.html\#stopping-actors}} after the \class{Monitor} has stopped; contains the \class{User} identifier and the time of logging the last event, besides \class{LastEvent}; used to detect the end time of message passing.
 \end{itemize}
-For reachability analysis, \class{RiskScoreMessage} contains the identifier of the \class{User} from which the message originated.
+For reachability analysis, \class{RiskScoreMessage} contains the identifier of the \class{User} that propagated the message and the identifier of the \class{User} that first sent the message.
 
 \class{Monitor} is an actor that is responsible for transforming the \class{ContactNetwork} into a collection of \class{User} actors and terminating when no \class{UpdateEvent} has occurred for a period of time. As with \class{User} actors, the \class{Monitor} logs several types of \class{LifecycleEvent}, the meanings of which should be self-explanatory:
 
