@@ -68,15 +68,19 @@ For evaluation, the following event handlers were implemented:
 
 \subsection{Experimental Design}
 
-The following research questions (RQs) were the focus of evaluating asynchronous risk propagation:
-\begin{enumerate}
+\newcommand{\researchQuestion}{RQ\xspace}
+\newcommand{\researchQuestions}{RQs\xspace}
+
+The following research questions (\researchQuestions) were the focus of evaluating asynchronous risk propagation:
+% TODO Confirm if custom spacing is needed once this section is done
+\begin{enumerate}[noitemsep, ref={\researchQuestion \arabic*}]
   \item How do the send coefficient and tolerance affect accuracy and efficiency? \label{rq:parameters}
   \item How do the distributions of risk scores and contact times affect runtime? \label{rq:distributions}
   \item How does the contact network topology affect runtime? \label{rq:topology}
 \end{enumerate}
-RQs \labelcref{rq:distributions} and \labelcref{rq:topology} focus on benchmarking the reference implementation. More advanced simulation-based analysis of ShareTrace with COVI-AgentSim \citep{Gupta2020} is the subject of future work.
+\labelcref{rq:distributions} and \labelcref{rq:topology} focus on benchmarking the reference implementation. More advanced simulation-based analysis of ShareTrace with COVI-AgentSim \citep{Gupta2020} is the subject of future work.
 
-While RQ \labelcref{rq:topology} explicitly evaluates the impact of contact network topology on runtime, all research questions were assessed using the same random graphs: Barabasi-Albert graphs \citep{Barabasi1999}, Erd\"{o}s-R\'{e}nyi $G_{n,m}$ graphs \citep{Erdos1959}, Watts-Strogatz graphs \citep{Watts1998}, and random regular graphs \citep{Kim2003}. These graphs were selected because they exhibit, to varying extents, aspects of real-world complex networks \citep{Newman2003}, such as contact networks; they are available in the JGraphT library; and they all are parametric, either directly or indirectly, in the size and order of the network. The latter property allowed the effects of the topology to be isolated.
+While \labelcref{rq:topology} explicitly evaluates the impact of contact network topology on runtime, all research questions were assessed using the same random graphs: Barabasi-Albert graphs \citep{Barabasi1999}, Erd\"{o}s-R\'{e}nyi $G_{n,m}$ graphs \citep{Erdos1959}, Watts-Strogatz graphs \citep{Watts1998}, and random regular graphs \citep{Kim2003}. These graphs were selected because they exhibit, to varying extents, aspects of real-world complex networks \citep{Newman2003}, such as contact networks; they are available in the JGraphT library; and they all are parametric, either directly or indirectly, in the size and order of the network. The latter property allowed the effects of the topology to be isolated.
 
 The following describes the parametrization of each type of contact network. Barabasi-Albert graphs are parametrized by the order $n$, the initial order $n_0$, and the increase in size $m_0$ upon each incremental increase in order. The latter two parameters are determined by solving \cref{eq:barabasi-albert-optimization}, where $\fracpart(x)$ is the fractional part of a real number $x$.
 \begin{argmini}{n_0, m_0}{\fracpart(m_0)}{\protect\label{eq:barabasi-albert-optimization}}{}
@@ -86,11 +90,9 @@ The following describes the parametrization of each type of contact network. Bar
 \end{argmini}
 Erd\"{o}s-R\'{e}nyi $G_{n,m}$ graphs are parametrized by the order $n$ and the size $m$. Random regular graphs are parametrized by the order $n$ and, using the degree sum formula, the degree $d = \lfloor \frac{2m}{n} \rfloor$. Lastly, Watts-Strogatz graphs \citep{Watts1998} are parametrized by the order $n$, the rewiring probability $p$ and the number of nearest neighbors $k = d + (d \bmod 2)$, which must be even.
 
+\Cref{tab:default-parameters} specifies the default parameter values and seed that were used during evaluation. \Cref{tab:experiments} specifies the configurations used to evaluate each \researchQuestion. All \researchQuestions were evaluated with a fixed user time. The following sampling process was used to generate risk scores and contact times.  Given the probability density function $f_X$ and the cumulative distribution function $F_X$ of a random variable $X$, sample a value $x \sim f_X$ and evaluate $c \cdot F_X(x)$ for some scalar $c \in \reals$. Risk scores are composite data types, so risk score values and risk score times were generated from independent probability distributions. Because risk scores are probabilities, $c = 1$ was used to scale the values. When sampling the times of risk scores and contacts, $c = \pScoreExpiry$ and $c = \pContactExpiry$ were used, respectively.
 
-
-\Cref{tab:default-parameters} specifies the default parameters that were used to evaluate all research questions.
-
-\begin{table}
+\begin{table}[htbp]
   \centering
   \begin{tabular}{ll}
     \toprule
@@ -111,30 +113,24 @@ Erd\"{o}s-R\'{e}nyi $G_{n,m}$ graphs are parametrized by the order $n$ and the s
   \label{tab:default-parameters}
 \end{table}
 
-Common:
-\begin{itemize}
-  \item Fixed user time
-  \item Sampling procedure to generate dataset values: Given the probability density function $f_X$ and the cumulative distribution function $F_X$ of a random variable $X$, sample a value $x \sim f_X$ and evaluate $F_X(x)$.
-\end{itemize}
-
-Parmeter experiments:
-\begin{itemize}
-  \item Graph parameters: $n = 10^4$, $m = 5 \cdot 10^4$
-  \item Distributions: All combinations of uniform and standard normal
-  \item Parameters:$\pSendCoefficient \in \setBuilder{0.1x}{x \in \intInterval{8}{20}}$, $\pTolerance \in \setBuilder{0.001x}{x \in \intInterval{1}{10}}$
-  \item Contact networks: 5 with distinct risk scores and contact times
-\end{itemize}
-
-Runtime baseline experiment:
-\begin{itemize}
-  \item Graph parameters: $n = 10^4$, $m = 10^5$
-  \item Distributions: All combinations of uniform and standard normal
-  \item Contact networks: 1 burn-in + 5 contact networks with distinct risk scores and contact times
-\end{itemize}
-
-Runtime experiment:
-\begin{itemize}
-  \item Graph parameters: $n \in \setBuilder{10^5x}{x \in \intInterval{1}{10}} \times m \in \setBuilder{10^6x}{x \in \intInterval{1}{10}}$
-  \item Distributions: only uniform
-  \item Contact networks: 1 burn-in + 5 contact networks with distinct risk scores and contact times
-\end{itemize}
+\begin{sidewaystable}[htbp]
+  \centering
+  \renewcommand{\arraystretch}{2}
+  \begin{tabular}{lccc}
+    \toprule
+    Attribute & \labelcref{rq:parameters} & \labelcref{rq:distributions} & \labelcref{rq:topology} \\
+    \midrule
+    Order $n$ and size $m$ & $\begin{aligned} n &= 10^4 \\ m &= 5 \cdot 10^4 \end{aligned}$ & $\begin{aligned} n &= 10^4 \\ m &= 5 \cdot 10^4 \end{aligned}$ & $\begin{matrix} n \in \setBuilder{10^5x}{x \in \intInterval{1}{10}} \\ \times \\ m \in \setBuilder{10^6x}{x \in \intInterval{1}{10}} \end{matrix}$ \\
+    \hline
+    Parameters & $\begin{matrix} \pSendCoefficient \in \setBuilder{10^{-1}x}{x \in \intInterval{8}{20}} \\ \pTolerance \in \setBuilder{10^{-3}x}{x \in \intInterval{1}{10}} \end{matrix}$ & Defaults & Defaults \\
+    \hline
+    Distributions & $\{\text{Uniform}, \text{Standard normal}\}^3$ & $\{\text{Uniform}, \text{Standard normal}\}^3$ & Uniform \\
+    \hline
+    Repetitions & 5 & 1 burn-in + 5 & 1 burn-in + 5 \\
+    \hline
+    Networks evaluated & 160 (40 per type) per parameter & 160 (40 per type) & 400 (100 per type) \\
+    \bottomrule
+  \end{tabular}
+  \caption[Experiment configurations]{Experiment configurations. See \cref{tab:default-parameters} for default parameter values. The send coefficient and tolerance were evaluated independently for \labelcref{rq:parameters}. The notation $X^k$ is used to denote the $k$-ary Cartesian power of the set $X$. A ``burn-in'' repetition was used for \labelcref{rq:distributions} and \labelcref{rq:topology} to avoid measuring the impact of Java class loading.}
+  \label{tab:experiments}
+\end{sidewaystable}
