@@ -9,7 +9,7 @@ A reference implementation of \cref{sec:asynchronous} is available on GitHub\foo
   \item To reduce runtime and increase throughput, logging is performed asynchronously with Logback\footnote{\url{https://logback.qos.ch/index.html}} and the LMAX Disruptor\footnote{\url{https://lmax-exchange.github.io/disruptor}}.
 \end{itemize}
 
-\Cref{fig:arrow-diagram} shows the dependencies among the application components. Contextualizing this implementation with prior implementations of the driver-monitor-worker (DMW) framework (see \cref{sec:dmw-framework}), \class{RiskPropagation} is the driver, \class{Monitor} is the monitor, and \class{User} is the worker. The key difference between this implementation and previous implementations of the DMW framework is that the workers are stateful, which is necessary for decentralization.
+\Cref{fig:arrow-diagram} shows the dependencies among the application components. Contextualizing this implementation with prior implementations of the driver-monitor-worker (DMW) framework (see \cref{sec:dmw-framework}), \class{RiskPropagation} is the driver, \class{Monitor} is the monitor, and \class{User} is the worker. The key difference between this implementation and previous implementations of the DMW framework is that workers are stateful, which is necessary for decentralization.
 \begin{figure}[htbp]
 \begin{equation*}
   \class{Main} \rightarrow \class{Runner} \rightarrow \class{RiskPropagation} \rightarrow \class{Monitor} \rightarrow \class{User} \rightarrow \class{Contact}
@@ -46,7 +46,7 @@ For reachability analysis, \class{RiskScoreMessage} contains the identifier of t
 
 The \class{Runner} specifies how \class{RiskPropagation} is created and invoked, usually through some combination of statically defined behavior and runtime configuration.
 
-Finally, \class{Main} is the entry point into the application. It is responsible for parsing \class{Context}, \class{Parameters}, and \class{Runner} from configuration and invoking \class{Runner} with \class{Context} and \class{Parameters} inputs. \class{Context} makes application-wide information accessible, such as the system time and user time\footnote{System time is always the wall-clock time and is included in each logged event record. User time is configurable to either be the wall-clock time or fixed at the reference time. The latter is ensures that no \class{RiskScoreMessage} and \class{ContactMessage} expires across executions of \class{RiskPropagation}.}, a pseudorandom number generator, \class{Runner} configuration, and loggers. \class{Parameters}, as the name suggests, is a collection of parameters that modify the behavior of the \class{Monitor}, \class{User}, and \class{Contact}.
+Finally, \class{Main} is the entry point into the application. It is responsible for parsing \class{Context}, \class{Parameters}, and \class{Runner} from configuration and invoking \class{Runner} with \class{Context} and \class{Parameters} inputs. \class{Context} makes application-wide information accessible, such as the system time and user time\footnote{System time is always the wall-clock time and is included in each logged event record. User time is configurable to either be the wall-clock time or fixed at the reference time. The latter ensures that no \class{RiskScoreMessage} or \class{ContactMessage} expires across executions of \class{RiskPropagation}.}, a pseudorandom number generator, \class{Runner} configuration, and loggers. \class{Parameters}, as the name suggests, is a collection of parameters that modify the behavior of the \class{Monitor}, \class{User}, and \class{Contact}.
 
 In order to analyze the logs that were generated during the execution of \class{RiskPropagation}, they are transformed into a tabular dataset as follows:
 \begin{enumerate}
@@ -61,26 +61,23 @@ For evaluation, the following event handlers were implemented:
 
 \begin{itemize}
   \item \class{Reachability}: aggregates \class{ReceiveEvent}s that involve a distinct sender and receiver to determine the influence set cardinality, source set cardinality, and message reachability of each \class{User}.
-  \item \class{Runtimes}: aggregates \class{LifecycleEvent}s and \class{LastEvent}s to determine the runtime of creating \class{User}s, sending \class{ContactMessage}s, sending \class{RiskScoreMessage}s, message passing, and the overall execution of \class{RiskPropagation}. Message passing runtime is the time elapsed from the start of sending \class{RiskScoreMessage}s until the last \class{LastEvent}.
+  \item \class{Runtimes}: aggregates \class{LifecycleEvent}s and \class{LastEvent}s to determine the runtime of creating \class{User}s, sending \class{ContactMessage}s, sending \class{RiskScoreMessage}s, message passing, and the overall execution of \class{RiskPropagation}. Message-passing runtime is the time elapsed from the start of sending \class{RiskScoreMessage}s until the last \class{LastEvent}.
   \item \class{UserEventCounts}: aggregates \class{UserEvent}s to determine the frequency of each subtype for each \class{User}.
   \item \class{UserUpdates}: aggregates \class{UpdateEvent}s to determine the new exposure score of each \class{User} and the change in value.
 \end{itemize}
 
-\subsection{Experimental Design}
+\section{Experimental Design}
 
-\newcommand{\researchQuestion}{RQ\xspace}
-\newcommand{\researchQuestions}{RQs\xspace}
-
-The following research questions (\researchQuestions) were the focus of evaluating asynchronous risk propagation:
-% TODO Confirm if custom spacing is needed once this section is done
-\begin{enumerate}[noitemsep, ref={\researchQuestion \arabic*}]
-  \item How do the send coefficient and tolerance affect accuracy and efficiency? \label{rq:parameters}
-  \item How do the distributions of risk scores and contact times affect runtime? \label{rq:distributions}
-  \item How does the contact network topology affect runtime? \label{rq:topology}
+The following experiments were used to evaluate \class{RiskPropagation}:
+% TODO Check the spacing is appropriate
+\begin{enumerate}[itemsep=-4ex, ref={Experiment \arabic*}]
+  \item How do the send coefficient and tolerance affect accuracy and efficiency? \label{item:parameters}
+  \item How do the distributions of risk scores and contact times affect runtime? \label{item:distributions}
+  \item How does the contact network topology affect runtime? \label{item:topology}
 \end{enumerate}
-\labelcref{rq:distributions} and \labelcref{rq:topology} focus on benchmarking the reference implementation. More advanced simulation-based analysis of ShareTrace with COVI-AgentSim \citep{Gupta2020} is the subject of future work.
+\labelcref{item:distributions} and \labelcref{item:topology} focus on benchmarking the reference implementation. More advanced simulation-based analysis of ShareTrace with COVI-AgentSim \citep{Gupta2020} is the subject of future work.
 
-While \labelcref{rq:topology} explicitly evaluates the impact of contact network topology on runtime, all research questions were assessed using the same random graphs: Barabasi-Albert graphs \citep{Barabasi1999}, Erd\"{o}s-R\'{e}nyi $G_{n,m}$ graphs \citep{Erdos1959}, Watts-Strogatz graphs \citep{Watts1998}, and random regular graphs \citep{Kim2003}. These graphs were selected because they exhibit, to varying extents, aspects of real-world complex networks \citep{Newman2003}, such as contact networks; they are available in the JGraphT library; and they all are parametric, either directly or indirectly, in the size and order of the network. The latter property allowed the effects of the topology to be isolated.
+While \labelcref{item:topology} explicitly evaluates the impact of contact network topology on runtime, all research questions were assessed using the same random graphs: Barabasi-Albert graphs \citep{Barabasi1999}, Erd\"{o}s-R\'{e}nyi $G_{n,m}$ graphs \citep{Erdos1959}, Watts-Strogatz graphs \citep{Watts1998}, and random regular graphs \citep{Kim2003}. These graphs were selected because they exhibit, to varying extents, aspects of real-world complex networks \citep{Newman2003}, such as contact networks; they are available in the JGraphT library; and they all are parametric, either directly or indirectly, in the size and order of the network. The latter property allowed the effects of the topology to be isolated.
 
 The following describes the parametrization of each type of contact network. Barabasi-Albert graphs are parametrized by the order $n$, the initial order $n_0$, and the increase in size $m_0$ upon each incremental increase in order. The latter two parameters are determined by solving \cref{eq:barabasi-albert-optimization}, where $\fracpart(x)$ is the fractional part of a real number $x$.
 \begin{argmini}{n_0, m_0}{\fracpart(m_0)}{\protect\label{eq:barabasi-albert-optimization}}{}
@@ -88,9 +85,9 @@ The following describes the parametrization of each type of contact network. Bar
   \addConstraint{m_0}{\in \intInterval{1}{n_0}}
   \addConstraint{m_0}{= \frac{2m - n_0 (n_0 - 1)}{2(n - n_0)}}
 \end{argmini}
-Erd\"{o}s-R\'{e}nyi $G_{n,m}$ graphs are parametrized by the order $n$ and the size $m$. Random regular graphs are parametrized by the order $n$ and, using the degree sum formula, the degree $d = \lfloor \frac{2m}{n} \rfloor$. Lastly, Watts-Strogatz graphs \citep{Watts1998} are parametrized by the order $n$, the rewiring probability $p$ and the number of nearest neighbors $k = d + (d \bmod 2)$, which must be even.
+Erd\"{o}s-R\'{e}nyi $G_{n,m}$ graphs are parametrized by the order $n$ and the size $m$. Random regular graphs are parametrized by the order $n$ and, using the degree sum formula, the degree $d = \lfloor 2m / n \rfloor$. Lastly, Watts-Strogatz graphs \citep{Watts1998} are parametrized by the order $n$, the rewiring probability $p$ and the number of nearest neighbors $k = d + (d \bmod 2)$, which must be even.
 
-\Cref{tab:default-parameters} specifies the default parameter values and seed that were used during evaluation. \Cref{tab:experiments} specifies the configurations used to evaluate each \researchQuestion. All \researchQuestions were evaluated with a fixed user time. The following sampling process was used to generate risk scores and contact times.  Given the probability density function $f_X$ and the cumulative distribution function $F_X$ of a random variable $X$, sample a value $x \sim f_X$ and evaluate $c \cdot F_X(x)$ for some scalar $c \in \reals$. Risk scores are composite data types, so risk score values and risk score times were generated from independent probability distributions. Because risk scores are probabilities, $c = 1$ was used to scale the values. When sampling the times of risk scores and contacts, $c = \pScoreExpiry$ and $c = \pContactExpiry$ were used, respectively.
+\Cref{tab:default-parameters} specifies the default parameter values and seed for pseudorandom number generation. \Cref{tab:experiments} specifies the experiment configurations. All experiments used fixed user time. The following sampling process was used to generate risk scores and contact times.  Given the probability density function $f_X$ and the cumulative distribution function $F_X$ of a random variable $X$, sample a value $x \sim f_X$ and evaluate $c \cdot F_X(x)$ for some scalar $c \in \reals$. Risk scores are composite data types, so risk score values and risk score times were sampled independently. Because risk scores are probabilities, $c = 1$ was used to scale the values. When sampling the times of risk scores and contacts, $c = \pScoreExpiry$ and $c = \pContactExpiry$ were used, respectively.
 
 \begin{table}[htbp]
   \centering
@@ -109,7 +106,7 @@ Erd\"{o}s-R\'{e}nyi $G_{n,m}$ graphs are parametrized by the order $n$ and the s
     Seed & \num{12345} \\
     \bottomrule
   \end{tabular}
-  \caption[Default parameter values for evaluation]{Default parameter values for evaluation.}
+  \caption[Default parameter values for experiments]{Default parameter values for experiments.}
   \label{tab:default-parameters}
 \end{table}
 
@@ -118,7 +115,7 @@ Erd\"{o}s-R\'{e}nyi $G_{n,m}$ graphs are parametrized by the order $n$ and the s
   \renewcommand{\arraystretch}{2}
   \begin{tabular}{lccc}
     \toprule
-    Attribute & \labelcref{rq:parameters} & \labelcref{rq:distributions} & \labelcref{rq:topology} \\
+    Aspect & \labelcref{item:parameters} & \labelcref{item:distributions} & \labelcref{item:topology} \\
     \midrule
     Order $n$ and size $m$ & $\begin{aligned} n &= 10^4 \\ m &= 5 \cdot 10^4 \end{aligned}$ & $\begin{aligned} n &= 10^4 \\ m &= 5 \cdot 10^4 \end{aligned}$ & $\begin{matrix} n \in \setBuilder{10^5x}{x \in \intInterval{1}{10}} \\ \times \\ m \in \setBuilder{10^6x}{x \in \intInterval{1}{10}} \end{matrix}$ \\
     \hline
@@ -131,6 +128,8 @@ Erd\"{o}s-R\'{e}nyi $G_{n,m}$ graphs are parametrized by the order $n$ and the s
     Networks evaluated & 160 (40 per type) per parameter & 160 (40 per type) & 400 (100 per type) \\
     \bottomrule
   \end{tabular}
-  \caption[Experiment configurations]{Experiment configurations. See \cref{tab:default-parameters} for default parameter values. The send coefficient and tolerance were evaluated independently for \labelcref{rq:parameters}. The notation $X^k$ is used to denote the $k$-ary Cartesian power of the set $X$. A ``burn-in'' repetition was used for \labelcref{rq:distributions} and \labelcref{rq:topology} to avoid measuring the impact of Java class loading.}
+  \caption[Experiment configurations]{Experiment configurations. See \cref{tab:default-parameters} for default parameter values. In \labelcref{item:parameters}, the send coefficient and tolerance were evaluated independently. The notation $X^k$ is used to denote the $k$-ary Cartesian power of the set $X$. A ``burn-in'' repetition was used for \labelcref{item:distributions} and \labelcref{item:topology} to avoid measuring the impact of Java class loading.}
   \label{tab:experiments}
 \end{sidewaystable}
+
+\section{Results}
