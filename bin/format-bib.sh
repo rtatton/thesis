@@ -8,6 +8,7 @@ bibtex-tidy $1 \
 --curly \
 --duplicates \
 --no-encode-urls \
+--no-escape \
 --modify \
 --no-align \
 --no-merge \

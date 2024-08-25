@@ -1,10 +1,6 @@
 \chapter{Introduction}
 
-\define{Contact tracing} is a non-pharmaceutical intervention that aims to halt the spread of infectious disease by identifying and quarantining individuals that have been in close physical proximity with the infected \citep{Brandt2022, PozoMartin2023}. Historically, contact tracing has been conducted manually
-
-In response to the pandemic of coronavirus disease 2019 (COVID-19) \citep{Zhu2020, Gorbalenya2020, Singh2021}, numerous approaches of \define{automatic contact tracing} (ACT) have been proposed \citep{Shubina2020, Reichert2021}.
-
-\citet{Shubina2020} provide an in-depth survey while \citet{Reichert2021} specifically focuses on techniques that utilize Bluetooth Low Energy (BLE) and provides a more current analysis of message-based approaches.
+\define{Contact tracing} is a non-pharmaceutical intervention that aims to halt the spread of infectious disease by identifying and quarantining individuals that have been physically proximal with the infected \citep{Brandt2022, PozoMartin2023}. In response to the pandemic of coronavirus disease 2019 (COVID-19) \citep{Zhu2020, Gorbalenya2020, Singh2021}, numerous approaches to \define{automatic contact tracing} (ACT) have been proposed.\citet{Shubina2020} provide an in-depth survey while \citet{Reichert2021} specifically focuses on techniques that utilize Bluetooth Low Energy (BLE) and provides a more current analysis of message-based approaches.
 
 % Define decentralized digital contact tracing and how its been used to mitigate COVID-19
 
@@ -18,17 +14,22 @@ Privacy risk of message-based approaches is that an adversary can monitor networ
 
 %A common design element across all of the aforementioned contact tracing methodologies is that they only consider direct interactions between users. While there are privacy benefits to this approach, a major limitation is that they cannot utilize information about indirect contact to more effectively reduce the spread of disease. ShareTrace addresses this limitation by constructing a factor graph and estimating infection risk via a message-passing algorithm. As such, this work labels the ShareTrace algorithm as \define{risk propagation}. The first work on ShareTrace was a white paper that focused on the motivation, design, and engineering details. Exclusive to \citet{Ayday2020} is a discussion on privacy, network roaming, protocol interoperability, and the usage of geolocation data. Furthermore, it includes detail on the system model and data flow. The second work on ShareTrace \citep{Ayday2021} formalizes the algorithmic details in a centralized setting and demonstrates its improved efficacy, compared to the framework developed by Apple and Google \cite{AppleGoogle}.
 
-% Explain ShareTrace and why contact tracing still matters (e.g., impact of COVID-19, not the last pandemic)
-% Digital contact tracing has been the focus of research since at least 2011 - see Reichert's 2021 survey on BLE approaches
-% Research is still ongoing after WHO declared an end to the pandemic
-
 % Contributions of this work
 
 Higher-order contact tracing has demonstrated increased efficacy \citep{PozoMartin2023}
 
 % ShareTrace prior work
 
-% Contributions of this work
+% Contributions/organization of this work
+
+% Proposed design
+% Evaluation
+% Conclusion
+% Previous designs appendix
+
+The remainder of this work is organized as follows. \Cref{ch:proposed-design} begins with the algorithmic foundations of ShareTrace: the risk propagation message-passing algorithm. Risk propagation is first described as a synchronous, offline algorithm, which is consistent with prior work \citep{Ayday2020, Ayday2021}. \Cref{ch:proposed-design} then provides an asynchronous formulation using the actor model, which permits a completely decentralized deployment of ShareTrace.
+
+\Cref{ch:data-structures} and \cref{ch:pseudocode-conventions} respectively describe the data structures and pseudocode conventions that are used when specifying the algorithms in \cref{ch:proposed-design} and \cref{ch:previous-designs}.
 
 %This work improves the efficiency of risk propagation and provides a concurrent, distributed, online, and non-iterative formulation using the actor model. To quantify the communication complexity of this new design, this work defines message reachability to account for the dynamics of message passing on a temporal network. 
 %
@@ -36,14 +37,8 @@ Higher-order contact tracing has demonstrated increased efficacy \citep{PozoMart
 %
 %While message passing has been studied under specific epidemiological models \citep{Karrer2010, Li2021}, our formulation allows us to contextualize risk propagation as a novel usage of a contact network that does not require such assumptions to infer the transmission of disease. As a result, we introduce a form of reachability that can uniquely characterize the dynamics of message passing on a temporal graph. Our formulation of risk propagation aligns with its distributed extension, as introduced by \citet{Ayday2021}, which has connections to the actor model of concurrent computing \citep{Baker1977, Agha1986} and the ``think-like-a-vertex'' model of graph algorithms \citep{McCune2015}.
 
+Related work \citep{Reichert2020, Cho2020, Cherini2023, Gupta2023}
 
-% Organaization of paper
+Impact/efficacy of contact tracing \citep{PozoMartin2023}
 
-% Risk propagation
-% Evaluation
-% Conclusion
-% Pseudocode conventions appendix
-% Data structures appendix
-% Previous designs appendix
-
-The remainder of this work is organized as follows.
+Public opinion / ethics / adoption \citep{Oyibo2022, Afroogh2022, Simko2022}
