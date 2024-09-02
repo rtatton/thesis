@@ -1,4 +1,4 @@
-\chapter{Conclusion}
+\chapter{Conclusion}\label{ch:conclusion}
 
 This work provided a decentralized design of risk propagation, the message-passing algorithm that powers the ShareTrace contact tracing application. Message reachability was introduced as a means of measuring the dynamics of message passing on temporal networks, such as contact networks. On a practical note, ShareTrace was contextualized as a mobile crowdsensing (MCS) application using the four-layered architecture developed by \citet{Capponi2019}. A reference implementation of asynchronous risk propagation was implemented and used to find the values of the send coefficient and tolerance that optimize for accuracy and communication efficiency. Additionally, the scalability of the reference implementation was assessed. To ensure a fair evaluation, several types of contact network topologies and data distributions were utilized.
 
@@ -6,7 +6,7 @@ The following are subject to future work:
 \begin{itemize}
   \item Incorporate differential privacy techniques that are specifically designed for ACT applications, like ShareTrace, which utilize risk scores \citep{Romijnders2024}.
   \item Extend the calculation of risk scores to account for the transmission dynamics of the disease \citep{Ferretti2020, Ferretti2024}.
-  \item Formally define the security and privacy characteristics of ShareTrace using the framework proposed by \citet{Kuhn2021}.
+  \item Formally define the security and privacy characteristics of ShareTrace, using the framework proposed by \citet{Kuhn2021} to characterize the latter.
   \item Integrate concepts from related approaches to ACT \citep{Reichert2020, Cho2020, Cherini2023, Gupta2023}.
   \item Explore the utility and feasibility of integrating decentralized technologies \citep{Benet2014, Troncoso2017, Trautwein2022, Shi2024, Keizer2024} and SSI \citep{Preukschat2021, Schardong2022} into the design of ShareTrace.
   \item Conduct a simulation-based analysis of asynchronous risk propagation with COVI-AgentSim \citep{Gupta2020}.

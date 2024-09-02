@@ -23,9 +23,6 @@ by
 
 % 150 words max
 \begin{abstract}
-
-Proximity-based contact tracing relies on mobile-device interaction to estimate the spread of disease. ShareTrace is one such approach that improves the efficacy of tracking disease spread by considering direct and indirect forms of contact. In this work, we utilize the actor model to provide an efficient and scalable formulation of ShareTrace with asynchronous, concurrent message passing on a temporal contact network. We also introduce message reachability, an extension of temporal reachability that accounts for network topology and message-passing semantics. Our evaluation on both synthetic and real-world contact networks indicates that correct parameter values optimize for algorithmic accuracy and efficiency. In addition, we demonstrate that message reachability can accurately estimate the risk a user poses to their contacts.
-
-% Our formulation of risk propagation offers scalability and efficiency and is thus a viable candidate for real-world usage to estimate the spread of infectious diseases. Moreover, message reachability provides researchers and system designers the ability to quantify both the risk of an individual and the effects parameter values have on the efficiency and accuracy of risk propagation.
+Contact tracing is a non-pharmaceutical intervention that aims to control the spread of disease by identifying and quarantining infected individuals and those with whom they came in close contact. Numerous approaches to digital contact tracing have been proposed in the context of the coronavirus disease 2019 pandemic. Decentralized digital contact tracing limits the sharing of personal data, but none of these prior works have utilized non-diagnostic information \emph{and} indirect contacts to effectively estimate infection risk. This work improves on prior efforts of ShareTrace by providing an asynchronous message-passing algorithm that permits a fully decentralized deployment. A reference implementation is provided and evaluated for accuracy, efficiency, and scalability.
 \end{abstract}
 \clearpage
