@@ -5,13 +5,17 @@
 
 \usepackage[margin=1.5in]{geometry}
 
-\newcommand{\thesisTitle}{ShareTrace: Proactive Contact Tracing with Asynchronous Message Passing}
-\newcommand{\thesisAuthor}{Ryan Tatton}
-\newcommand{\thesisInstitution}{Case WesternReserve University}
-\newcommand{\thesisDepartment}{Department of Computer and Data Sciences}
-\newcommand{\thesisDegree}{Master of Science in Computer and Information Science}
-\newcommand{\thesisDefenseDate}{TBD}
-\newcommand{\thesisGraduationDate}{January 2025}
+% Define commands that appear not to eat spaces
+\usepackage{xspace}
+
+\newcommand{\rawThesisTitle}{ShareTrace: Proactive Contact Tracing with Asynchronous Message Passing}
+\newcommand{\thesisTitle}{\rawThesisTitle\xspace}
+\newcommand{\thesisAuthor}{Ryan Tatton\xspace}
+\newcommand{\thesisInstitution}{Case Western Reserve University\xspace}
+\newcommand{\thesisDepartment}{Department of Computer and Data Sciences\xspace}
+\newcommand{\thesisDegree}{Master of Science in Computer and Information Science\xspace}
+\newcommand{\thesisDefenseDate}{TBD\xspace}
+\newcommand{\thesisGraduationDate}{January 2025\xspace}
 
 % Adjust line spacing
 \usepackage{setspace}
@@ -53,9 +57,6 @@
 
 % Provides NewDocumentCommand and NewDocumentEnvironment 
 \usepackage{xparse}
-
-% Define commands that appear not to eat spaces
-\usepackage{xspace}
 
 % Math symbols and fonts
 \usepackage{amsmath}
@@ -120,7 +121,7 @@
 % Citations and cross-referencing
 
 % pdflang and pdftitle needed for accessibility requirement
-\usepackage[pdflang=en-US, pdftitle=\thesisTitle, hidelinks]{hyperref}
+\usepackage[pdflang=en-US, pdftitle=\rawThesisTitle, hidelinks]{hyperref}
 
 % Add support for hyperlinked URLs and DOIs
 \usepackage{url}

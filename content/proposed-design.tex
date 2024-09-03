@@ -115,15 +115,10 @@ To detect convergence, the normed difference between the current and previous ex
   \While{$\| \vExposureScores{n} - \vExposureScores{n - 1} \| > \pDiff$}
     \ForEach{$\{\vVariable[i], \vFactor[ij]\} \in \vEdges$}
       \State $\vVariableMessage{i}{j}{n} \assign \vRiskScores{i}{n - 1} \setminus \setBuilder{\vFactorMessage{j}{i}{\ell}}{\ell \in \intInterval{1}{n - 1}}$
-    \EndFor
-    \ForEach{$\{\vVariable[i], \vFactor[ij]\} \in \vEdges$}
       \State $\vFactorMessage{i}{j}{n} \assign \max \setBuilder{\pTransmissionRate \vScore_\vTime}{\vScore_\vTime \in \vVariableMessage{i}{j}{n}, \vTime < \vTime_{ij} + \pTimeBuffer}$
     \EndFor
     \ForEach{$\vVariable[i] \in \vVariables$}
       \State $\vRiskScores{i}{n} \assign \topK{\setBuilder{\vFactorMessage{j}{i}{n}}{\vFactor[ij] \in \vNeighbors_i}}$
-    \EndFor
-    \ForEach{$\vVariable[i] \in \vVariables$}
-      \State $\vExposureScore{i}{n - 1} \assign \vExposureScore{i}{n}$
       \State $\vExposureScore{i}{n} \assign \max \vRiskScores{i}{n}$
     \EndFor
     \State $n \assign n + 1$
@@ -170,7 +165,7 @@ To address the limitations of \cRiskPropagation, \citet{Ayday2021} propose decen
 An actor $\vActor$ in the ShareTrace actor system corresponds to an individual and is initialized by the \cCreateActor operation \citep{Agha1985} with the following attributes.
 \begin{itemize}
   \item $\aActorExposure$: the current exposure score of the individual. This attribute is either a symptom score, a risk score sent by another actor, or the null risk score (see \cNullRiskScore).
-  \item $\aActorContacts$: a \define{dictionary} (see \cref{ch:data-structures}) of contacts. In the context of an actor, a contact is a \define{proxy} \citep{Gamma1995} of the actor that represents an individual with which the individual represented by this actor was physically proximal. That is, if \indexed{i}{individual} interacted with \indexed{j}{individual}, then $\aContacts{\vActor_i}$ contains a contact $\vContact$ such that $\aContactKey = \aContactName$ is a name of \indexed{j}{actor} and $\aContactTime$ is the most recent time of contact. This attribute extends the concept of \define{actor acquaintances} \citep{Hewitt1977a, Hewitt1977b, Agha1985} to be time-varying.
+  \item $\aActorContacts$: a \define{dictionary} (see \cref{ch:data-structures}) of contacts. A contact is a \define{proxy} \citep{Gamma1995} of the actor that represents an individual with which the individual represented by this actor was physically proximal. That is, if \indexed{i}{individual} interacted with \indexed{j}{individual}, then $\aContacts{\vActor_i}$ contains a contact $\vContact$ such that $\aContactKey = \aContactName$ is a name of \indexed{j}{actor} and $\aContactTime$ is the most recent time of contact. This attribute extends the concept of \define{actor acquaintances} \citep{Hewitt1977a, Hewitt1977b, Agha1985} to be time-varying.
   \item $\aActorScores$: a dictionary of exposure scores such that $\aScoreKey$ for an exposure score $\vScore$ is the time interval during which $\aActorExposure = \vScore$. The null risk score is returned for queries in which the dictionary does not contain a risk score with a key that intersects the given query interval. \Cref{fig:exposure} depicts a hypothetical step function that $\aActorScores$ represents.
 \end{itemize}
 
