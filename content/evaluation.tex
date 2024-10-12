@@ -71,21 +71,21 @@ For evaluation, the following event handlers were implemented:
 The following experiments were used to evaluate \class{RiskPropagation}:
 % TODO Check the spacing is appropriate
 \begin{enumerate}[itemsep=-4ex, ref={Experiment \arabic*}]
-  \item How do the send coefficient and tolerance affect accuracy and efficiency? \label{item:parameters}
   \item How do the distributions of risk scores and contact times affect runtime? \label{item:distributions}
+  \item How do the send coefficient and tolerance affect accuracy and efficiency? \label{item:parameters}
   \item How does the contact network topology affect runtime? \label{item:topology}
 \end{enumerate}
 \labelcref{item:distributions} and \labelcref{item:topology} focus on benchmarking the reference implementation. More advanced simulation-based analysis of ShareTrace with COVI-AgentSim \citep{Gupta2020} is the subject of future work.
 
-While \labelcref{item:topology} explicitly evaluates the impact of contact network topology on runtime, all research questions were assessed using the same random graphs: Barabasi-Albert graphs \citep{Barabasi1999}, Erd\"{o}s-R\'{e}nyi $G_{n,m}$ graphs \citep{Erdos1959}, Watts-Strogatz graphs \citep{Watts1998}, and random regular graphs \citep{Kim2003}. These graphs were selected because they exhibit, to varying extents, aspects of real-world complex networks \citep{Newman2003}, such as contact networks; they are available in the JGraphT library; and they all are parametric, either directly or indirectly, in the size and order of the network. The latter property allowed the effects of the topology to be isolated.
+While \labelcref{item:topology} explicitly evaluates the impact of contact network topology on runtime, all research questions were assessed using the same random graphs: Barabasi--Albert graphs \citep{Barabasi1999}, Erd\"{o}s--R\'{e}nyi $G_{n,m}$ graphs \citep{Erdos1959}, Watts--Strogatz graphs \citep{Watts1998}, and random regular graphs \citep{Kim2003}. These graphs were selected because they exhibit, to varying extents, aspects of real-world complex networks \citep{Newman2003}, such as contact networks; they are available in the JGraphT library; and they all are parametric, either directly or indirectly, in the size and order of the network. The latter property allowed the effects of the topology to be isolated.
 
-The following describes the parametrization of each type of contact network. Barabasi-Albert graphs are parametrized by the order $n$, the initial order $n_0$, and the increase in size $m_0$ upon each incremental increase in order. The latter two parameters are determined by solving \cref{eq:barabasi-albert-optimization}, where $\fracpart(x)$ is the fractional part of a real number $x$.
-\begin{argmini}{n_0, m_0}{\fracpart(m_0)}{\protect\label{eq:barabasi-albert-optimization}}{}
+The following describes the parametrization of each type of contact network. Barabasi--Albert graphs are parametrized by the order $n$, the initial order $n_0$, and the increase in size $m_0$ upon each incremental increase in order. The latter two parameters are determined by solving \cref{eq:Barabasi--Albert-optimization}, where $\fracpart(x)$ is the fractional part of a real number $x$.
+\begin{argmini}{n_0, m_0}{\fracpart(m_0)}{\protect\label{eq:Barabasi--Albert-optimization}}{}
   \addConstraint{n_0}{\in \intInterval{1}{n - 1}}
   \addConstraint{m_0}{\in \intInterval{1}{n_0}}
   \addConstraint{m_0}{= \frac{2m - n_0 (n_0 - 1)}{2(n - n_0)}}
 \end{argmini}
-Erd\"{o}s-R\'{e}nyi $G_{n,m}$ graphs are parametrized by the order $n$ and the size $m$. Random regular graphs are parametrized by the order $n$ and, using the degree sum formula, the degree $d = \lfloor 2m / n \rfloor$. Lastly, Watts-Strogatz graphs \citep{Watts1998} are parametrized by the order $n$, the rewiring probability $p$ and the number of nearest neighbors $k = d + (d \bmod 2)$, which must be even.
+Erd\"{o}s--R\'{e}nyi $G_{n,m}$ graphs are parametrized by the order $n$ and the size $m$. Random regular graphs are parametrized by the order $n$ and, using the degree sum formula, the degree $d = \lfloor 2m / n \rfloor$. Lastly, Watts--Strogatz graphs \citep{Watts1998} are parametrized by the order $n$, the rewiring probability $p$ and the number of nearest neighbors $k = d + (d \bmod 2)$, which must be even.
 
 \Cref{tab:default-parameters} specifies the default parameter values and seed for pseudorandom number generation. \Cref{tab:experiments} specifies the experiment configurations. All experiments used fixed user time. The following sampling process was used to generate risk scores and contact times.  Given the probability density function $f_X$ and the cumulative distribution function $F_X$ of a random variable $X$, sample a value $x \sim f_X$ and evaluate $c \cdot F_X(x)$ for some scalar $c \in \reals$. Risk scores are composite data types, so risk score values and risk score times were sampled independently. Because risk scores are probabilities, $c = 1$ was used to scale the values. When sampling the times of risk scores and contacts, $c = \pScoreExpiry$ and $c = \pContactExpiry$ were used, respectively.
 
@@ -133,3 +133,29 @@ Erd\"{o}s-R\'{e}nyi $G_{n,m}$ graphs are parametrized by the order $n$ and the s
 \end{sidewaystable}
 
 \section{Results}
+
+\subsection{\labelcref{item:distributions}}
+
+\labelcref{item:distributions} was completed first to determine if it was necessary to evaluate multiple data distributions for \labelcref{item:parameters} and \labelcref{item:topology}. A one-way analysis of variance (ANOVA) can determine if the mean message-passing runtimes associated with different data distributions are statistically different. However, ANOVA assumes the observations are independently sampled, normally distributed, and homoscedastic within groups.
+
+The message-passing runtimes were indeed independently sampled. The Shapiro--Wilk test for normality \cite{Shapiro1965} produces a test statistic of \num{0.672} ($p=\num{2e-17}$). Because $p < \num{0.05}$, there is evidence to reject the null hypothesis that the message-passing runtimes are normally distributed.
+%The $p$ values specified in \cref{tab:runtime-normality} for network-specific runtimes also indicate that the runtimes are not normally distributed.
+The Fligner--Killeen test \cite{Fligner1976} for homoscedasticity produces a test statistic of \num{2.256} ($p = \num{0.944}$). Given $p > \num{0.05}$, the test does not provide evidence to reject the null hypothesis that the groups have equal variance. Because the independence and homoscedasticity assumptions hold, the nonparametric Kruskal--Wallis test \cite{Kruskal1952} can be used instead of a one-way ANOVA.
+
+The Kruskal--Wallis test results in a test statistic of \num{7.030} ($p=\num{0.426}$). With $p > \num{0.05}$, there is not evidence to reject the null hypothesis that the median message-passing runtimes are statistically different across data distributions. Note, this experiment assumes this statistical significance holds across contact networks of various orders and sizes.
+
+%\begin{table}[htbp]
+%\centering
+%\begin{tabular}{lSS}
+%  \toprule
+%  Network type & {Test statistic} & {$p$ value} \\
+%  \midrule
+%  Barabasi--Albert & 0.646 & 1e-8 \\
+%  Erd\"{o}s--R\'{e}nyi & 0.472 & 8e-11 \\
+%  Random regular & 0.583 & 2e-9 \\
+%  Watts--Strogatz & 0.437 & 3e-11 \\
+%  \bottomrule
+%\end{tabular}
+%\caption[Runtime normality]{Runtime normality.}
+%\label{tab:runtime-normality}
+%\end{table}
