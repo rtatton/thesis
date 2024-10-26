@@ -36,11 +36,11 @@ Thus, $\pr{\vVariable[i]}[\vTime] = \vScore_\vTime$ is a risk score of \indexed{
 \section{Synchronous Risk Propagation}\label{sec:synchronous}
 
 \citet{Ayday2021} first proposed risk propagation as a synchronous, iterative message-passing algorithm that uses the factor graph to compute exposure scores. The first input to \cRiskPropagation is the set family $\vScores$, where
-\begin{equation} \label{eq:score-set}
+\begin{equation}\label{eq:score-set}
   \vScores_i =\setBuilder{\vScore_t}{\vReferenceTime - \vTime < \pScoreExpiry} \in \vScores
 \end{equation}
 is the set of recent risk scores of \indexed{i}{individual}. The second input to \cRiskPropagation is the contact set
-\begin{equation} \label{eq:contact-set}
+\begin{equation}\label{eq:contact-set}
   \vContacts = \setBuilder{(i, j, \vTime)}{i \neq j, \vReferenceTime - \vTime < \pContactExpiry}
 \end{equation}
 such that $(i, j, \vTime)$ is the \emph{most recent} contact between \twoindexed{i}{j}{individual} that occurred from time $\vTime$ until at least time $\vTime + \pMinContactDuration$, where $\pMinContactDuration \in \naturals$ is the \define{minimum contact duration}. Naturally, risk scores and contacts have finite relevance, so \cref{eq:score-set,eq:contact-set} are constrained by the \define{risk score expiry} $\pScoreExpiry \in \naturals$ and the \define{contact expiry} $\pContactExpiry \in \naturals$, respectively. The \define{reference time} $\vReferenceTime \in \naturals$ defines the relevance of the inputs and is assumed to be the time at which \cRiskPropagation is invoked. For notational simplicity in \cRiskPropagation, let $\vSomeSet$ be a set. Then $\max \vSomeSet = 0$ if $\vSomeSet = \emptyset$.
@@ -241,7 +241,7 @@ For the moment, assume that \cApplyRiskScore is the online equivalent of computi
 
 \begin{function}[H]{\nApplyRiskScore}[\vActor, \vContact, \vScore]
   \If{$\aContactTime + \pTimeBuffer > \aScoreTime$}
-    \State $\aNewScoreValue \assign \pTransmissionRate \cdot \aScoreValue$ \label{step:scale-by-transmission-rate}
+    \State $\aNewScoreValue \assign \pTransmissionRate \cdot \aScoreValue$\label{step:scale-by-transmission-rate}
     \State $\cSend[\aContactName, \vNewScore]$
   \EndIf
 \end{function}
@@ -268,8 +268,8 @@ The \cApplyRiskScore operation that incorporates the concept of a send threshold
 The \cSetSendThreshold operation defines \emph{how} the send threshold is updated, but not \emph{when} it should be updated; the \cUpdateSendThreshold operation encapsulates the latter. The second predicate on Line \ref{step:should-update-threshold} stems from the fact that the send threshold is a risk score and thus subject to expiry. The first predicate, however, is more subtle and will be revisited shortly. The \cMaximumOlderThan operation is the same as \cMaximum, with the constraint that the key of the risk score intersects the interval $(-\infty, \aContactTime + \pTimeBuffer)$. Thus, the returned risk score is always relevant to the contact. Consistent with \cApplyRiskScore, the risk score retrieved from $\aActorScores$ is scaled by the transmission rate and set as the new send threshold.
 
 \begin{function}{\nUpdateSendThreshold}[\vActor, \vContact]
-  \If{$\aContactThresholdValue > 0 \AND \cRiskScoreTtl[\aContactThreshold] \leq 0$} \label{step:should-update-threshold}
-    \State $\vScore \assign \cMaximumOlderThan[\aActorScores, \aContactTime + \pTimeBuffer]$ \label{step:get-max-older-than}
+  \If{$\aContactThresholdValue > 0 \AND \cRiskScoreTtl[\aContactThreshold] \leq 0$}\label{step:should-update-threshold}
+    \State $\vScore \assign \cMaximumOlderThan[\aActorScores, \aContactTime + \pTimeBuffer]$\label{step:get-max-older-than}
     \State $\aNewScoreValue \assign \pTransmissionRate \cdot \aScoreValue$
     \State $\cSetSendThreshold[\vContact, \vNewScore]$
   \EndIf
@@ -447,7 +447,6 @@ A \define{contributor} ``reports data to the MCS platform with no interest in th
 
 \subsection{Data Layer}
 
-% TODO Integrate contact tracing papers that discuss privacy as public concern
 \subsubsection{Data Storage}
 
 \define{Centralized storage} involves data being ``stored and maintained in a single location, which is usually a database made available in the cloud. This approach is typically employed when significant processing or data aggregation is required.'' \define{Distributed storage} ``is typically employed for delay-tolerant applications, i.e., when users are allowed to deliver data with a delayed reporting'' \citep{Capponi2019}. 
