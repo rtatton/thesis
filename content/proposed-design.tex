@@ -248,10 +248,10 @@ For the moment, assume that \cApplyRiskScore is the online equivalent of computi
 
 The problem with \cApplyRiskScore is that it causes risk scores to propagate \textit{ad infinitum}. Unlike \cRiskPropagation, a global convergence test is not available to terminate message passing, so it is necessary to define a local condition that determines if a risk score should be sent to another actor. Practically, ``self-terminating'' message-passing is necessary for asynchronous risk propagation to be scalable and cost-efficient.
 
-The intent of sending a risk score to an actor is to update its exposure score. According to \cHandleRiskScore, it is only necessary to send an actor risk scores with values that exceed its current exposure score. Thus, an actor can associate a \define{send threshold} with a contact such that the target actor only receives risk scores that exceed the threshold. To permit a trade-off between accuracy and efficiency, let the \define{send coefficient} $\pSendCoefficient \in \reals$ and \define{tolerance} $\pTolerance \in \reals$ be scaling factors that are applied to a risk score upon setting the send threshold.
+The intent of sending a risk score to an actor is to update its exposure score. According to \cHandleRiskScore, it is only necessary to send an actor risk scores with values that exceed its current exposure score. Thus, an actor can associate a \define{send threshold} with a contact such that the target actor only receives risk scores that exceed the threshold. To permit a trade-off between accuracy and efficiency, let the \define{send coefficient} $\pSendCoefficient \in \reals$ be a scaling factor that is applied to a risk score upon setting the send threshold.
 
 \begin{function}{\nSetSendThreshold}[\vContact, \vScore]
-  \State $\aNewScoreValue \assign \pSendCoefficient \cdot \aScoreValue + \pTolerance$
+  \State $\aNewScoreValue \assign \pSendCoefficient \cdot \aScoreValue$
   \State $\aContactThreshold \assign \vNewScore$
 \end{function}
 
@@ -368,7 +368,7 @@ where $\vMessages$ is the set of messages associated with the \verticesName $\vV
 
 Let $\vPath$ be the set of contact edges along the shortest path from actor $\vSourceVertex$ to actor $\vTargetVertex$ such that the actors are enumerated $1, \ldots, \card{\vPath}$. Let $(\vScore_\vSourceVertex, \vTime_\vSourceVertex)$ be a symptom score of actor $\vSourceVertex$. Let $\vScore_{ij}$ be the value of the risk score that is associated with the send threshold of \indexed{i}{actor} for \indexed{j}{actor}. Finally, let $\vTime_{ij}$ be the most recent contact time between the \twoindexed{i}{j}{individual}. Then message reachability for asynchronous risk propagation is defined as
 \begin{equation}\label{eq:message-reachability}
-  \vReachability(\vSourceVertex, \vTargetVertex) = \sum_{(i, j) \in \vPath} [\pTransmissionRate^i \vScore_\vSourceVertex > \pSendCoefficient \pTransmissionRate \vScore_{ij} + \pTolerance] \cdot [\vTime_\vSourceVertex < \vTime_{ij} + \pTimeBuffer],
+  \vReachability(\vSourceVertex, \vTargetVertex) = \sum_{(i, j) \in \vPath} [\pTransmissionRate^i \vScore_\vSourceVertex > \pSendCoefficient \pTransmissionRate \vScore_{ij}] \cdot [\vTime_\vSourceVertex < \vTime_{ij} + \pTimeBuffer],
 \end{equation}
 where $[\cdot]$ is the Iverson bracket\footnote{The \define{Iverson bracket} $[x]$ is the indicator function of the set values for which $x$ is true.}.
 
@@ -377,10 +377,10 @@ By relaxing the temporal constraint in \cref{eq:message-reachability}, an upper 
   \vEstimatedReachability(\vSourceVertex, \vTargetVertex) \leq \begin{cases} 
       0 & \text{if $\vScore_\vSourceVertex = 0$} \\
       \card{\vPath} & \text{if $\vScore_\vTargetVertex = 0$} \\
-      \log_\pTransmissionRate \dfrac{\pSendCoefficient \pTransmissionRate \vScore_\vTargetVertex + \pTolerance}{\vScore_\vSourceVertex} & \text{otherwise,}
+      \log_\pTransmissionRate \dfrac{\pSendCoefficient \pTransmissionRate \vScore_\vTargetVertex}{\vScore_\vSourceVertex} & \text{otherwise,}
     \end{cases}
 \end{equation}
-where $\pSendCoefficient \pTransmissionRate \vScore_\vTargetVertex + \pTolerance$ is the send threshold of the actor that precedes actor $\vTargetVertex$ along the path $\vPath$. Assuming a transmission rate of $\pTransmissionRate = 0.8$, a send coefficient of $\pSendCoefficient = 1$, and a tolerance of $\pTolerance = 0$, \cref{fig:reach} visualizes \cref{eq:estimated-message-reachability}.
+where $\pSendCoefficient \pTransmissionRate \vScore_\vTargetVertex$ is the send threshold of the actor that precedes actor $\vTargetVertex$ along the path $\vPath$. Assuming a transmission rate of $\pTransmissionRate = 0.8$ and a send coefficient of $\pSendCoefficient = 1$, \cref{fig:reach} visualizes \cref{eq:estimated-message-reachability}.
 
 \begin{figure}[htbp]
 \centering

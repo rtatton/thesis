@@ -70,7 +70,7 @@ For evaluation, the following event handlers were implemented:
 
 The following experiments were used to evaluate \class{RiskPropagation}.
 \begin{enumerate}[ref={Experiment \arabic*}]
-  \item How do the send coefficient and tolerance affect accuracy and efficiency?\label{item:parameters}
+  \item How does the send coefficient affect accuracy and efficiency?\label{item:parameters}
   \item Do the distributions of risk scores and contact times affect runtime?\label{item:distributions}
   \item How does the contact network topology affect runtime?\label{item:topology}
 \end{enumerate}
@@ -97,7 +97,6 @@ Erd\"{o}s-R\'{e}nyi graphs are parametrized by the order $n$ and the size $m$. R
     \midrule
     Transmission rate, $\pTransmissionRate$ & \num{0.8}\\
     Send coefficient, $\pSendCoefficient$ & \num{1}\\
-    Tolerance, $\pTolerance$ & \num{0}\\
     Time buffer, $\pTimeBuffer$ & \qty{2}{days}\\
     Risk score expiry, $\pScoreExpiry$ & \qty{14}{days}\\
     Contact expiry, $\pContactExpiry$ & \qty{14}{days}\\
@@ -118,17 +117,13 @@ Erd\"{o}s-R\'{e}nyi graphs are parametrized by the order $n$ and the size $m$. R
     Aspect & \labelcref{item:parameters} & \labelcref{item:distributions} & \labelcref{item:topology} \\
     \midrule
     Order $n$ and size $m$ & $\begin{aligned} n &= 10^4 \\ m &= 5 \cdot 10^4 \end{aligned}$ & $\begin{aligned} n &= 10^4 \\ m &= 5 \cdot 10^4 \end{aligned}$ & $\begin{matrix} n \in \setBuilder{10^5x}{x \in \intInterval{1}{10}} \\ \times \\ m \in \setBuilder{10^6x}{x \in \intInterval{1}{10}} \end{matrix}$ \\
-    \hline
-    Parameters & $\begin{matrix} \pSendCoefficient \in \setBuilder{10^{-1}x}{x \in \intInterval{8}{20}} \\ \pTolerance \in \setBuilder{10^{-3}x}{x \in \intInterval{1}{10}} \end{matrix}$ & Defaults & Defaults \\
-    \hline
+    Parameters & $\pSendCoefficient \in \setBuilder{10^{-1}x}{x \in \intInterval{8}{20}}$ & Defaults & Defaults \\
     Distributions & $\{\text{Uniform}, \text{Standard normal}\}^3$ & $\{\text{Uniform}, \text{Standard normal}\}^3$ & Uniform \\
-    \hline
     Repetitions & 5 & 1 burn-in + 5 & 1 burn-in + 5 \\
-    \hline
     Networks evaluated & 160 (40 per type) per parameter & 160 (40 per type) & 400 (100 per type) \\
     \bottomrule
   \end{tabular}
-  \caption[Experiment configurations]{Experiment configurations. See \cref{tab:default-parameters} for default parameter values. In \labelcref{item:parameters}, the send coefficient and tolerance were evaluated independently. The notation $X^k$ is used to denote the $k$-ary Cartesian power of the set $X$. A ``burn-in'' repetition was used for \labelcref{item:distributions} and \labelcref{item:topology} to avoid measuring the impact of Java class loading.}
+  \caption[Experiment configurations]{Experiment configurations. See \cref{tab:default-parameters} for default parameter values. The notation $X^k$ is used to denote the $k$-ary Cartesian power of the set $X$. A ``burn-in'' repetition was used for \labelcref{item:distributions} and \labelcref{item:topology} to avoid measuring the impact of Java class loading.}
   \label{tab:experiments}
 \end{sidewaystable}
 
