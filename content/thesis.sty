@@ -15,7 +15,7 @@
 \newcommand{\thesisDepartment}{Department of Computer and Data Sciences\xspace}
 \newcommand{\thesisDegree}{Master of Science in Computer and Information Science\xspace}
 \newcommand{\thesisDefenseDate}{TBD\xspace}
-\newcommand{\thesisGraduationDate}{January 2025\xspace}
+\newcommand{\thesisGraduationDate}{May 2025\xspace}
 
 % Adjust line spacing
 \usepackage{setspace}
@@ -109,13 +109,8 @@
 
  % Bibliography citations
  % https://ctan.org/pkg/biblatex
-\usepackage[
-  backend=bibtex,
-  natbib=true,
-  backref=true,
-  sortcites=true,
-]{biblatex}
-\addbibresource{references.bib}
+\usepackage[backend=bibtex, natbib=true, backref=true, sortcites=true]{biblatex}
+\addbibresource{thesis.bib}
 \DeclareFieldFormat{titlecase}{\MakeSentenceCase*{#1}}
 
 % Citations and cross-referencing
