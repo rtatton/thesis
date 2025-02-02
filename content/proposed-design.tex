@@ -338,43 +338,36 @@ A primitive of temporal reachability analysis is the \define{time-respecting pat
 \end{itemize}
 Generally, a message-passing algorithm specifies constraints that determine when and what messages are sent between \verticesName. Even if operating on a temporal network, those constraints may be more or less strict than requiring temporal reachability. As a dynamic process, message passing on a time-varying network requires a broader definition of reachability that accounts for network topology \emph{and} message-passing semantics \citep{Barrat2013}.
 
-Formally, the \define{reachability} of a message $\vMessage$ from \vertexName $\vSourceVertex$ to \vertexName $\vTargetVertex$ is the number of edges along the shortest path $\vPath$ that satisfy the message-passing constraints,
+Formally, let $\vReachability(\vPath, \vMessage)$ be the number of edges along the path $\vPath$ from \vertexName $\vSourceVertex$ to \vertexName $\vTargetVertex$ that satisfy the message-passing constraints for the message $\vMessage$,
 \begin{equation*}
-  \vReachability(\vSourceVertex, \vTargetVertex) = \sum_{(i, j) \in \vPath} f(\vSourceVertex, i, j, \vTargetVertex),
+  \vReachability(\vPath, \vMessage) = \sum_{(i, j) \in \vPath} f(\vMessage; \vSourceVertex, i, j, \vTargetVertex)
 \end{equation*}
 where
 \begin{equation*}
-  f(\vSourceVertex, i, j, \vTargetVertex) = 
+  f(\vMessage; \vSourceVertex, i, j, \vTargetVertex) = 
     \begin{cases}
       1 & \text{if all constraints are satisfied} \\ 
       0 & \text{otherwise.}
     \end{cases}
 \end{equation*}
-
-\VertexName $\vTargetVertex$ is \define{reachable} from \vertexName $\vSourceVertex$ for the message $\vMessage$ if there exists a shortest path $\vPath$ such that $\vReachability(\vSourceVertex, \vTargetVertex) = \card{\vPath}$. The \define{reachability} of a message $\vMessage$ from \vertexName $\vSourceVertex$ is
-\begin{equation}\label{eq:vreach}
-  \vReachability(\vSourceVertex) = \max_{\vTargetVertex \in \vVertices} \, \vReachability(\vSourceVertex, \vTargetVertex).
-\end{equation}
-
-Measures of temporal reachability can be extended to message reachability,
+Then \vertexName $\vTargetVertex$ is \define{message-reachable} from \vertexName $\vSourceVertex$ for the message $\vMessage$ if there exists a path $\vPath$ such that $\vReachability(\vPath, \vMessage) = \card{\vPath}$. The \define{message reachability} of a message $\vMessage$ from \vertexName $\vSourceVertex$ is the length of the longest path from $\vSourceVertex$ to some message-reachable \vertexName $\vTargetVertex$. Measures of temporal reachability can be extended to message reachability,
 \begin{align*}
-  \vInfluenceSet(\vSourceVertex) &= \setBuilder{\vTargetVertex \in \vVertices}{\vReachability(\vSourceVertex, \vTargetVertex) = \card{\vPath}} \\[5pt]
-  \vSourceSet(\vTargetVertex) &= \setBuilder{\vSourceVertex \in \vVertices}{\vReachability(\vSourceVertex, \vTargetVertex) = \card{\vPath}} \\[5pt]
-  \vReachabilityRatio(\vGraph, \vMessages) &= \sum_{\vTargetVertex \in \vVertices, \,\vMessage \in \vMessages} \card{\vInfluenceSet(\vTargetVertex)} \cdot \card{\vVertices}^{-1},
+  \vInfluenceSet(\vSourceVertex, \vMessage) &= \setBuilder{\vTargetVertex \in \vVertices}{\exists \vPath[\vReachability(\vPath, \vMessage) = \card{\vPath}]} \\[5pt]
+  \vSourceSet(\vTargetVertex, \vMessage) &= \setBuilder{\vSourceVertex \in \vVertices}{\exists \vPath[\vReachability(\vPath, \vMessage) = \card{\vPath}]} \\[5pt]
+  \vReachabilityRatio(\vGraph, \vMessages) &= \sum_{\vTargetVertex \in \vVertices, \,\vMessage \in \vMessages} \card{\vInfluenceSet(\vTargetVertex, \vMessage)} \cdot \card{\vVertices}^{-1}.
 \end{align*}
-where $\vMessages$ is the set of messages associated with the \verticesName $\vVertices$.
 
 \subsubsection*{Asynchronous Risk Propagation}
 
-Let $\vPath$ be the set of contact edges along the shortest path from actor $\vSourceVertex$ to actor $\vTargetVertex$ such that the actors are enumerated $1, \ldots, \card{\vPath}$. Let $(\vScore_\vSourceVertex, \vTime_\vSourceVertex)$ be a symptom score of actor $\vSourceVertex$. Let $\vScore_{ij}$ be the value of the risk score that is associated with the send threshold of \indexed{i}{actor} for \indexed{j}{actor}. Finally, let $\vTime_{ij}$ be the most recent contact time between the \twoindexed{i}{j}{individual}. Then message reachability for asynchronous risk propagation is defined as
+Let $\vPath$ be the set of contact edges along the path from actor $\vSourceVertex$ to actor $\vTargetVertex$ such that the actors are enumerated $1, \ldots, \card{\vPath}$. Let $\vMessage = (\vScore_\vSourceVertex, \vTime_\vSourceVertex)$ be a symptom score of actor $\vSourceVertex$. Let $\vScore_{ij}$ be the value of the risk score that is associated with the send threshold of \indexed{i}{actor} for \indexed{j}{actor}. Finally, let $\vTime_{ij}$ be the most recent contact time between the \twoindexed{i}{j}{individual}. Then message reachability for asynchronous risk propagation is defined as
 \begin{equation}\label{eq:message-reachability}
-  \vReachability(\vSourceVertex, \vTargetVertex) = \sum_{(i, j) \in \vPath} [\pTransmissionRate^i \vScore_\vSourceVertex > \pSendCoefficient \pTransmissionRate \vScore_{ij}] \cdot [\vTime_\vSourceVertex < \vTime_{ij} + \pTimeBuffer],
+  \vReachability(\vPath, \vMessage) = \sum_{(i, j) \in \vPath} [\pTransmissionRate^i \vScore_\vSourceVertex > \pSendCoefficient \pTransmissionRate \vScore_{ij}] \cdot [\vTime_\vSourceVertex < \vTime_{ij} + \pTimeBuffer],
 \end{equation}
 where $[\cdot]$ is the Iverson bracket\footnote{The \define{Iverson bracket} $[x]$ is the indicator function of the set values for which $x$ is true.}.
 
 By relaxing the temporal constraint in \cref{eq:message-reachability}, an upper bound on the reachability of a symptom score can be defined. Reversing the inequality of the first term in \cref{eq:message-reachability} and solving for $i$,
 \begin{equation}\label{eq:estimated-message-reachability}
-  \vEstimatedReachability(\vSourceVertex, \vTargetVertex) \leq \begin{cases} 
+  \vEstimatedReachability(\vPath) \leq \begin{cases} 
       0 & \text{if $\vScore_\vSourceVertex = 0$} \\
       \card{\vPath} & \text{if $\vScore_\vTargetVertex = 0$} \\
       \log_\pTransmissionRate \dfrac{\pSendCoefficient \pTransmissionRate \vScore_\vTargetVertex}{\vScore_\vSourceVertex} & \text{otherwise,}

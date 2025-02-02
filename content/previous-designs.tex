@@ -6,7 +6,7 @@ Before working on ShareTrace, I did not have experience developing distributed a
 
 The first iteration of risk propagation\footnote{\url{https://github.com/cwru-xlab/sharetrace-giraph}} utilized Apache Giraph\footnote{\url{https://giraph.apache.org}}, an open-source version of the iterative graph-processing library, Pregel \citep{Malewicz2010}, which is based on the bulk synchronous parallel model of distributed computing \citep{Valiant1990}. Giraph follows the \define{``think like a vertex'' paradigm} in which the algorithm is specified in terms of the local information available to a graph \vertexName \citep{McCune2015}.
 
-Risk propagation was implemented as defined by \citet{Ayday2020,Ayday2021}, using the factor graph representation of the contact network. Moreover, the implementation assumed the use of Dataswyft Personal Data Accounts (PDAs)\footnote{\url{https://www.dataswyft.io}}. However, because the Exposure Notification API developed by Apple\footnote{\url{https://covid19.apple.com/contacttracing}} and Google\footnote{\url{https://www.google.com/covid19/exposurenotifications}} does not permit remotely persisting ephemeral identifiers, the implementation assumed that an individual's geolocation data would be analyzed to generate the factor \verticesName in the factor graph (\cref{sec:contact-search}). \Cref{fig:aws-architecture} describes the high-level architecture. Callouts 1, 2, and 4 were implemented using a fan-out design in which a \define{ventilator} Lambda function divides the work amongst \define{worker} Lambda functions.
+Risk propagation was implemented as defined by \citet{Ayday2020,Ayday2021}, using the factor graph representation of the contact network. Moreover, the implementation assumed the use of Dataswyft Personal Data Accounts (PDAs)\footnote{\url{https://www.dataswyft.io}}. However, because the Exposure Notification API developed by Apple\footnote{\url{https://covid19.apple.com/contacttracing}} and Google\footnote{\url{https://www.google.com/covid19/exposurenotifications}} does not permit remotely persisting ephemeral identifiers, the implementation assumed that an individual's geolocation data would be analyzed to generate the factor \verticesName in the factor graph (see \cref{sec:contact-search}). \Cref{fig:aws-architecture} describes the high-level architecture. Callouts 1, 2, and 4 were implemented using a fan-out design in which a \define{ventilator} Lambda function divides the work amongst \define{worker} Lambda functions.
 
 \begin{figure}[htbp]
 \centering
@@ -100,7 +100,7 @@ Compared to asynchronous risk propagation (\cref{sec:asynchronous}), actor behav
 \end{enumerate}
 As such, message reachability differs from \cref{eq:message-reachability}:
 \begin{equation}\label{eq:initial-message-reachability}
-  \vReachability(\vSourceVertex, \vTargetVertex) = \sum_{(i, j) \in \vPath} [\pTransmissionRate^i \dot{\vScore}_\vSourceVertex \geq \pSendCoefficient \pTransmissionRate \dot{\vScore}_i] \cdot [\dot{\vTime}_\vSourceVertex \leq \dot{\vTime}_i] \cdot [\dot{\vTime}_\vSourceVertex < \vTime_{ij} + \pTimeBuffer],
+  \vReachability(\vPath, \vMessage) = \sum_{(i, j) \in \vPath} [\pTransmissionRate^i \dot{\vScore}_\vSourceVertex \geq \pSendCoefficient \pTransmissionRate \dot{\vScore}_i] \cdot [\dot{\vTime}_\vSourceVertex \leq \dot{\vTime}_i] \cdot [\dot{\vTime}_\vSourceVertex < \vTime_{ij} + \pTimeBuffer],
 \end{equation}
 
 \subsection{Experiment Design}
@@ -111,7 +111,7 @@ The following experiments were performed using the implementation of risk propag
   \item \emph{Message reachability}. How accurately does \cref{eq:estimated-message-reachability} estimate \cref{eq:initial-message-reachability}?
   \item \emph{Scalability}. How does the runtime of risk propagation relate to the size of the contact network?
 \end{itemize}
-\Cref{tab:experiments} summarizes the types of contact networks used for the experiments.
+\Cref{tab:appendix-experiments} summarizes the types of contact networks used for the experiments.
 
 \begin{table}[htbp]
 \centering
@@ -124,7 +124,7 @@ The following experiments were performed using the implementation of risk propag
   \bottomrule
 \end{tabular}
 \caption[Experiments by contact network type]{Experiments by contact network type.}
-\label{tab:experiments}
+\label{tab:appendix-experiments}
 \end{table}
 
 The Case Western Reserve University high-performance computing cluster was utilized. For efficiency and message reachability experiments, \num{4} CPUs and \qty{8}{GB} memory were used. For scalability experiments, \numrange{8}{12} CPUs and \qtyrange{16}{64}{GB} memory were used. All experiments were run on a single cluster node.
@@ -236,7 +236,7 @@ To determine accuracy, the maximum number of updates for a given transmission ra
 
 Let the \define{actual/estimated message reachability ratio} be defined as
 \begin{equation*}
-  \text{A/E MRR} = \frac{\vReachability(\vVertex)}{\vEstimatedReachability(\vVertex)}.
+  \text{A/E MRR} = \frac{\vReachability(\vPath)}{\vEstimatedReachability(\vPath)}.
 \end{equation*}
 
 Overall, \cref{eq:estimated-message-reachability} is a good estimator of \cref{eq:initial-message-reachability}. For synthetic networks, \cref{eq:estimated-message-reachability} underestimated \cref{eq:initial-message-reachability} with A/E MRR $(\num{0.71}, \num{0.84}, \num{0.98})$. For $\pTransmissionRate = \num{0.8}$ and $\pSendCoefficient = \num{0.6}$, the A/E MRR was $(\num{0.52}, \num{0.77}, \num{1.12})$ and $(\num{0.79}, \num{0.84}, \num{0.93})$, respectively. \Cref{tab:reachability} provides mean values of the A/E MRR for synthetic and real-world contact networks. \Cref{fig:ratio} indicates that moderate send coefficients tend toward more stable A/E MRRs. The A/E MRR tends to have an inverse relationship with the transmission rate.
