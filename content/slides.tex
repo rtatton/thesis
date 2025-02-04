@@ -25,7 +25,7 @@
 \begin{frame}{Introduction: Limitations of Other Approaches}
   \begin{itemize}
     \item No DCT approach exists that incorporates both non-diagnostic information and indirect contacts to estimate infection risk.
-    \item Account for indirect contact can substantially improve the efficacy of DCT \citep{PozoMartin2023}.
+    \item Accounting for indirect contact can substantially improve the efficacy of DCT \citep{PozoMartin2023}.
     \item \citet{Cherini2023} propose exchanging pseudonyms of indirect contacts, but restrict themselves to diagnostic testing.
     \item \citet{Gupta2023} incorporate non-diagnostic information, but do not account for indirect contact.
   \end{itemize}
@@ -34,16 +34,26 @@
 \begin{frame}{Introduction: ShareTrace}
   \begin{itemize}
     \item Accounts for both non-diagnostic information and indirect contact to estimate infection risk.
-    \item First proposed by \citet{Ayday2020, Ayday2021} as part of a collaboration with Dataswyft.
-    \item \citet{Ayday2021} 
+    \item Developed in collaboration with Dataswyft \citep{Ayday2020}. 
+    \item \citet{Ayday2021} designed ShareTrace to use proximity tracing for contact discovery.
+      \begin{itemize}
+        \item In practice, this was infeasible, because Apple and Google's Exposure Notification API did not permit the user's ephemeral identifiers to be stored remotely in a Dataswyft Personal Data Store.
+      \end{itemize}
   \end{itemize}
 \end{frame}
 \end{section}
 
 \begin{section}{Proposed Design}
 
-\begin{frame}{Proposed Design}
-  
+\begin{frame}{Proposed Design: Definitions}
+  \begin{itemize}
+    \item Risk propagation
+    \item Risk score
+      \begin{itemize}
+        \item Symptom score
+        \item Exposure score
+      \end{itemize}
+  \end{itemize}
 \end{frame}
 
 \end{section}

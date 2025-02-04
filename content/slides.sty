@@ -1,63 +1,31 @@
 \ProvidesPackage{slides}
 
-\usepackage[utf8]{inputenc}
-\usepackage[english]{babel}
+\usepackage{core}
 
 % Title page
-\title{ShareTrace: Proactive Contact Tracing with Asynchronous Message Passing}
-\author{Ryan Tatton}
-\institute{Case Western Reserve University}
-\date{7 February 2025}
+\title{\rawThesisTitle}
+\author{\thesisAuthor}
+\institute{\thesisInstitution}
+\date{\thesisDefenseDate}
 
-% Remove all navigation symbols
+% Remove all navigation symbols, except page numbers
 \setbeamertemplate{navigation symbols}{}
-
-% SI unit formatting
-% https://ctan.org/pkg/siunitx
-\usepackage[
-  use-xspace,
-  uncertainty-mode=separate,
-  range-units=single,
-  exponent-product=\cdot,
-  range-phrase=--
-]{siunitx}
+\setbeamertemplate{footline}[frame number]
 
  % Bibliography citations
-  
  % https://ctan.org/pkg/biblatex
 \usepackage[backend=biber, natbib=true, sortcites=true]{biblatex}
-
 \addbibresource{thesis.bib}
-
 \DeclareFieldFormat{titlecase}{\MakeSentenceCase*{#1}}
 
 % Set the font size of bibliography entries.
 \AtBeginBibliography{\scriptsize}
 
-% Add support for hyperlinked URLs and DOIs
-\usepackage{url}
-\usepackage{doi}
-
-% Tables and figures
-
-\usepackage{subcaption}
-\captionsetup{labelfont=bf, font=tiny}
-
-\usepackage{booktabs}
-
-% Used to make itemize and enumerate environments multi-column
-% https://www.ctan.org/pkg/multicol 
-\usepackage{multicol}
-
-\graphicspath{{assets/}}
-
-% If using Texifier, use LuaLaTex and disable 'Hide intermediate files'.
-\usepackage{pgfplots}
+% Unified cross-referencing for figures, tables, and equations
+\usepackage[nameinlink, capitalize, noabbrev]{cleveref}
+\newcommand{\crefconjunction}{\textendash}
+\Crefname{equation}{Equation}{Equations}
+\crefname{equation}{}{}
 
 \newcommand{\squareFigHeight}{0.7\textheight}
 \newcommand{\wideFigWidth}{\textwidth}
-
-% Algorithms and pseudocode
-
-% Parameters
-\newcommand{\pSendCoefficient}{\gamma}

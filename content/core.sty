@@ -1,0 +1,349 @@
+\ProvidesPackage{core}
+
+\usepackage[utf8]{inputenc}
+\usepackage[english]{babel}
+
+% Define commands that appear not to eat spaces
+\usepackage{xspace}
+
+\newcommand{\rawThesisTitle}{ShareTrace: Proactive Contact Tracing with Asynchronous Message Passing}
+\newcommand{\thesisTitle}{\rawThesisTitle\xspace}
+\newcommand{\thesisAuthor}{Ryan Tatton\xspace}
+\newcommand{\thesisInstitution}{Case Western Reserve University\xspace}
+\newcommand{\thesisDepartment}{Department of Computer and Data Sciences\xspace}
+\newcommand{\thesisDegree}{Master of Science in Computer and Information Science\xspace}
+\newcommand{\thesisDefenseDate}{7 February 2025\xspace}
+\newcommand{\thesisGraduationDate}{May 2025\xspace}
+
+% Hyphenation
+\usepackage[htt]{hyphenat}
+\hyphenation{Risk-Propagation}
+\hyphenation{Actor-System}
+\hyphenation{Contact-Network}
+\hyphenation{Run-Message}
+\hyphenation{Risk-Score-Message}
+\hyphenation{Contact-Message}
+\hyphenation{User-Updated-Message}
+\hyphenation{Post-Stop}
+\hyphenation{User-Event}
+\hyphenation{Last-Event}
+\hyphenation{Receive-Event}
+\hyphenation{Update-Event}
+\hyphenation{Lifecycle-Event}
+\hyphenation{Create-Users-Start}
+\hyphenation{Create-Users-End}
+\hyphenation{Send-Risk-Scores-Start}
+\hyphenation{Send-Risk-Scores-End}
+\hyphenation{Send-Contacts-Start}
+\hyphenation{Send-Contacts-End}
+\hyphenation{Risk-Propagation-Start}
+\hyphenation{Risk-Propagation-End}
+\hyphenation{Event-Handler}
+
+% Provides NewDocumentCommand and NewDocumentEnvironment 
+\usepackage{xparse}
+
+% Math symbols and fonts
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsfonts}
+
+% Formatting optimization problems
+% See documentation for notes on usage with cleveref: https://ctan.org/pkg/optidef
+\usepackage{optidef}
+
+% Circled numbers
+\usepackage{pifont}
+
+% SI unit formatting
+% https://ctan.org/pkg/siunitx
+\usepackage[
+  use-xspace,
+  uncertainty-mode=separate,
+  range-units=single,
+  exponent-product=\cdot,
+  range-phrase=--
+]{siunitx}
+
+% Use to define key terms in-text
+\newcommand{\define}[1]{\emph{#1}}
+
+% Tables and figures
+
+\usepackage{booktabs}
+
+% https://tex.stackexchange.com/a/97506
+\usepackage{adjustbox}
+
+\usepackage{tabularx}
+
+\usepackage{subcaption}
+\captionsetup{labelfont=bf}
+
+\usepackage{tikz}
+\graphicspath{{assets/}}
+\usetikzlibrary{bayesnet, plotmarks, calc, angles, quotes, arrows}
+
+% If using Texifier, use LuaLaTex and disable 'Hide intermediate files'.
+\usepackage{pgfplots}
+
+% Algorithms and pseudocode
+
+\newcommand{\vertexName}{vertex\xspace}
+\newcommand{\VertexName}{Vertex\xspace}
+\newcommand{\verticesName}{vertices\xspace}
+
+\newcommand{\indexed}[2]{the $#1$-th #2}
+\newcommand{\Indexed}[2]{The $#1$-th #2}
+\newcommand{\twoindexed}[3]{the $#1$-th and $#2$-th #3}
+\newcommand{\Twoindexed}[3]{The $#1$-th and $#2$-th #3}
+
+\usepackage[plain, boxed]{algorithm}
+
+% Provides good formatting and \Call command
+\usepackage[noend]{algpseudocode}
+
+%  Allow \Call to be nested
+\MakeRobust{\Call}
+
+\let\Algorithm\algorithm
+\renewcommand\algorithm[1][]{\Algorithm[#1]\setstretch{1.5}}
+
+% Remove "do" from for loop and "then" from if-else statements.
+\newbox\fixbox
+\renewcommand{\algorithmicdo}{\setbox\fixbox\hbox{\ {} }\hskip-\wd\fixbox}
+\renewcommand{\algorithmicthen}{\setbox\fixbox\hbox{\ {} }\hskip-\wd\fixbox}
+
+% For-each loop construct
+\algnewcommand\algorithmicforeach{\textbf{for each}}
+\algdef{S}[FOR]{ForEach}[1]{\algorithmicforeach\ #1\ \algorithmicdo}
+
+% Boolean operators
+\algnewcommand{\OR}{\textbf{ or }}
+\algnewcommand{\AND}{\textbf{ and }}
+
+% Pseudocode variable
+\algnewcommand{\var}{\mathit}
+
+% Pseudocode object attribute
+
+% Assignment and equality
+\newcommand{\assign}{\leftarrow}
+\newcommand{\equals}{=}
+\newcommand{\notEquals}{\neq}
+
+% Constants
+\newcommand{\nil}{\textsc{nil}}
+
+% Usage:
+%   \begin{function}[position]{title}[args]
+%     ...
+%   \end{function}
+\newcommand{\Title}[2]{\item[$\Call{#1}{#2}$]}
+\NewDocumentEnvironment{function}{O{ht!} m O{}}{
+  \begin{algorithm}[#1]
+    \label{#1}
+    \capstart
+    \captionlistentry{\Call{#2}{}}
+    \begin{algorithmic}[1]
+      \Title{#2}{#3}
+}{
+    \end{algorithmic}
+  \end{algorithm}
+}
+
+\newcommand{\class}[1]{\texttt{#1}}
+
+% Variables
+\newcommand{\vActor}{a}
+\newcommand{\vAngle}{\theta}
+\newcommand{\vContact}{c}
+\newcommand{\vGraph}{G}
+\newcommand{\vLatitude}{\phi}
+\newcommand{\vLocation}{\ell}
+\newcommand{\vLongitude}{\lambda}
+\newcommand{\vMessage}{m}
+\newcommand{\vRadius}{r}
+\newcommand{\vReachabilityRatio}{\rho}
+\newcommand{\vReachability}{\varphi}
+\newcommand{\vReferenceTime}{\tau}
+\newcommand{\vScore}{s}
+\newcommand{\vSomeElement}{x}
+\newcommand{\vTime}{t}
+\newcommand{\vExposureScore}[2]{r_{#1}^{(#2)}}
+\newcommand{\vExposureScores}[1]{\mathbf{r}^{(#1)}}
+
+\newcommand{\vSomeObject}{\var{o}}
+\newcommand{\vSomeAttribute}{\var{a}}
+
+\newcommand{\vKey}{k}
+
+\newcommand{\vVertex}{v}
+\newcommand{\vSourceVertex}{u}
+\newcommand{\vTargetVertex}{v}
+
+\NewDocumentCommand{\vVariable}{o}{\IfValueTF{#1}{x_{#1}}{x}}
+\NewDocumentCommand{\vFactor}{o}{\IfValueTF{#1}{f_{#1}}{f}}
+\newcommand{\vVariableMessage}[3]{\mu_{#1#2}^{(#3)}}
+\newcommand{\vFactorMessage}[3]{\lambda_{#1#2}^{(#3)}}
+
+\newcommand{\vNewScore}{\vScore'}
+\newcommand{\vEstimatedReachability}{\hat{\vReachability}}
+
+\newcommand{\topK}[1]{\text{top } k \text{ of } #1}
+
+% Sets
+\newcommand{\vSet}[1]{#1}
+
+\newcommand{\vContacts}{\vSet{C}}
+\newcommand{\vEdges}{\vSet{E}}
+\newcommand{\vFactorMessages}{\varLambda}
+\newcommand{\vFactors}{\vSet{F}}
+\newcommand{\vGraphs}{\vSet{G}}
+\newcommand{\vInfluenceSet}{\vSet{I}}
+\newcommand{\vLocations}{\vSet{L}}
+\newcommand{\vMessages}{\vSet{M}}
+\newcommand{\vNeighbors}{\vSet{N}}
+\newcommand{\vPath}{\vSet{P}}
+\newcommand{\vScores}{\vSet{S}}
+\newcommand{\vSomeSet}{\vSet{X}}
+\newcommand{\vSourceSet}{\vSet{S}}
+\newcommand{\vVariables}{\vSet{X}}
+\newcommand{\vVertices}{\vSet{V}}
+\newcommand{\vRiskScores}[2]{\vSet{R}_{#1}^{(#2)}}
+
+% Parameters
+\newcommand{\pExpiry}{T}
+\newcommand{\pMinContactDuration}{\delta}
+\newcommand{\pNumberOfSubgraphs}{n}
+\newcommand{\pProximity}{\epsilon}
+\newcommand{\pRateConstant}{\lambda}
+\newcommand{\pSendCoefficient}{\gamma}
+\newcommand{\pTimeBuffer}{\beta}
+\newcommand{\pTransmissionRate}{\alpha}
+\newcommand{\pDiff}{\epsilon}
+
+\newcommand{\pContactExpiry}{\pExpiry_\vContact}
+\newcommand{\pScoreExpiry}{\pExpiry_\vScore}
+
+% Attributes
+\algnewcommand{\attr}[2]{#1.\var{#2}}
+
+\newcommand{\aBuffered}[1]{\attr{#1}{buffered}}
+\newcommand{\aContacts}[1]{\attr{#1}{contacts}}
+\newcommand{\aExposure}[1]{\attr{#1}{exposure}}
+\newcommand{\aKey}[1]{\attr{#1}{key}}
+\newcommand{\aName}[1]{\attr{#1}{name}}
+\newcommand{\aScores}[1]{\attr{#1}{scores}}
+\newcommand{\aThreshold}[1]{\attr{#1}{threshold}}
+\newcommand{\aTime}[1]{\attr{#1}{time}}
+\newcommand{\aValue}[1]{\attr{#1}{value}}
+
+\newcommand{\aActorContacts}{\aContacts{\vActor}}
+\newcommand{\aActorExposureValue}{\aValue{\aExposure{\vActor}}}
+\newcommand{\aActorExposure}{\aExposure{\vActor}}
+\newcommand{\aActorName}{\aName{\vActor}}
+\newcommand{\aActorScores}{\aScores{\vActor}}
+\newcommand{\aContactBuffered}{\aBuffered{\vContact}}
+\newcommand{\aContactKey}{\aKey{\vContact}}
+\newcommand{\aContactName}{\aName{\vContact}}
+\newcommand{\aContactThresholdValue}{\aValue{\aContactThreshold}}
+\newcommand{\aContactThreshold}{\aThreshold{\vContact}}
+\newcommand{\aContactTime}{\aTime{\vContact}}
+\newcommand{\aNewScoreValue}{\aValue{\vNewScore}}
+\newcommand{\aScoreKey}{\aKey{\vScore}}
+\newcommand{\aScoreTime}{\aTime{\vScore}}
+\newcommand{\aScoreValue}{\aValue{\vScore}}
+\newcommand{\aSomeObjectAttribute}{\attr{\vSomeObject}{\vSomeAttribute}}
+\newcommand{\aSomeElementKey}{\aKey{\vSomeElement}}
+
+% Function names
+\newcommand{\nApplyRiskScore}{Apply-Risk-Score}
+\newcommand{\nComputeMessage}{Compute-Message}
+\newcommand{\nContactTtl}{Contact-Ttl}
+\newcommand{\nCreateActor}{Create-Actor}
+\newcommand{\nCreateFactorGraph}{Factor-Graph}
+\newcommand{\nCreateContactNetwork}{Contact-Network}
+\newcommand{\nCreate}{Create}
+\newcommand{\nDelete}{Delete}
+\newcommand{\nHandleContact}{Handle-Contact}
+\newcommand{\nHandleFlushTimeout}{Handle-Flush-Timeout}
+\newcommand{\nHandleRiskScore}{Handle-Risk-Score}
+\newcommand{\nInsert}{Insert}
+\newcommand{\nMaximumOlderThan}{Maximum-Older-Than}
+\newcommand{\nMaximum}{Maximum}
+\newcommand{\nMerge}{Merge}
+\newcommand{\nMinimum}{Minimum}
+\newcommand{\nNullRiskScore}{Null-Risk-Score}
+\newcommand{\nPredicate}{Predicate}
+\newcommand{\nReceive}{Receive}
+\newcommand{\nRiskPropagationActor}{Risk-Propagation-Actor}
+\newcommand{\nRiskPropagationMain}{Risk-Propagation-Main}
+\newcommand{\nRiskPropagation}{Risk-Propagation}
+\newcommand{\nRiskScoreTtl}{Risk-Score-Ttl}
+\newcommand{\nSearch}{Search}
+\newcommand{\nSend}{Send}
+\newcommand{\nSetSendThreshold}{Set-Send-Threshold}
+\newcommand{\nUpdateExposureScore}{Update-Exposure-Score}
+\newcommand{\nUpdateSendThreshold}{Update-Send-Threshold}
+
+% Function calls
+\newcommand{\cApplyRiskScore}[1][]{\Call{\nApplyRiskScore}{#1}\xspace}
+\newcommand{\cBecome}[1][]{\Call{\nBecome}{#1}\xspace}
+\newcommand{\cComputeMessage}[1][]{\Call{\nComputeMessage}{#1}\xspace}
+\newcommand{\cContactTtl}[1][]{\Call{\nContactTtl}{#1}\xspace}
+\newcommand{\cCreateActor}[1][]{\Call{\nCreateActor}{#1}\xspace}
+\newcommand{\cCreateFactorGraph}[1][]{\Call{\nCreateFactorGraph}{#1}\xspace}
+\newcommand{\cCreateContactNetwork}[1][]{\Call{\nCreateContactNetwork}{#1}\xspace}
+\newcommand{\cCreate}[1][]{\Call{\nCreate}{#1}\xspace}
+\newcommand{\cDelete}[1][]{\Call{\nDelete}{#1}\xspace}
+\newcommand{\cHandleContact}[1][]{\Call{\nHandleContact}{#1}\xspace}
+\newcommand{\cHandleFlushTimeout}[1][]{\Call{\nHandleFlushTimeout}{#1}\xspace}
+\newcommand{\cHandleRiskScore}[1][]{\Call{\nHandleRiskScore}{#1}\xspace}
+\newcommand{\cInsert}[1][]{\Call{\nInsert}{#1}\xspace}
+\newcommand{\cMaximumOlderThan}[1][]{\Call{\nMaximumOlderThan}{#1}\xspace}
+\newcommand{\cMaximum}[1][]{\Call{\nMaximum}{#1}\xspace}
+\newcommand{\cMerge}[1][]{\Call{\nMerge}{#1}\xspace}
+\newcommand{\cMinimum}[1][]{\Call{\nMinimum}{#1}\xspace}
+\newcommand{\cNullRiskScore}[1][]{\Call{\nNullRiskScore}{#1}\xspace}
+\newcommand{\cPredicate}[1][]{\Call{\nPredicate}{#1}\xspace}
+\newcommand{\cReceive}[1][]{\Call{\nReceive}{#1}\xspace}
+\newcommand{\cRiskPropagationActor}[1][]{\Call{\nRiskPropagationActor}{#1}\xspace}
+\newcommand{\cRiskPropagationMain}[1][]{\Call{\nRiskPropagationMain}{#1}\xspace}
+\newcommand{\cRiskPropagation}[1][]{\Call{\nRiskPropagation}{#1}\xspace}
+\newcommand{\cRiskScoreTtl}[1][]{\Call{\nRiskScoreTtl}{#1}\xspace}
+\newcommand{\cSearch}[1][]{\Call{\nSearch}{#1}\xspace}
+\newcommand{\cSend}[1][]{\Call{\nSend}{#1}\xspace}
+\newcommand{\cSetSendThreshold}[1][]{\Call{\nSetSendThreshold}{#1}\xspace}
+\newcommand{\cUpdateExposureScore}[1][]{\Call{\nUpdateExposureScore}{#1}\xspace}
+\newcommand{\cUpdateSendThreshold}[1][]{\Call{\nUpdateSendThreshold}{#1}\xspace}
+
+% Standard number sets
+\newcommand{\naturals}{\mathbb{N}}
+\newcommand{\reals}{\mathbb{R}} 
+
+% Probability theory
+\newcommand{\distribution}[1]{#1}
+
+\newcommand{\uniformDistribution}{\distribution{U}}
+
+\NewDocumentCommand{\pr}{mo}{\IfValueTF{#2}{p_{#2}(#1)}{p(#1)}}
+\newcommand{\eventSpace}{\Omega}
+\newcommand{\event}{\omega}
+
+% Math functions
+\DeclareMathOperator{\argmax}{\arg\max}
+\DeclareMathOperator{\hav}{hav}
+\DeclareMathOperator{\vers}{vers}
+\DeclareMathOperator{\fracpart}{frac}
+\newcommand{\dist}{d}
+\newcommand{\bigO}[1]{O(#1)}
+\newcommand{\card}[1]{\left\vert #1 \right\vert}
+
+% Proper bracket formatting
+\usepackage{braket}
+\newcommand{\setBuilder}[2]{\set{ #1 | #2}}
+\newcommand{\SetBuilder}[2]{\Set{ #1 | #2}}
+
+% https://tex.stackexchange.com/a/304667
+\newcommand{\intInterval}[2]{[#1 \mathinner{\ldotp \ldotp} #2]}
