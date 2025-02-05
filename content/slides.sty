@@ -14,6 +14,19 @@
 
 \usefonttheme[onlymath]{serif}
 
+% Usage:
+%   \begin{function}[position]{title}[args][spacing]
+%     ...
+%   \end{function}
+\RenewDocumentEnvironment{function}{O{ht!} m O{}O{1.4}}{
+    \begin{spacing}{#4}
+    \begin{algorithmic}[1]
+      \item[$\Call{#2}{#3}$]
+}{
+    \end{algorithmic}
+    \end{spacing}
+}
+
 \captionsetup{labelfont=bf, font=tiny}
 
 \newcommand{\squareFigHeight}{0.7\textheight}

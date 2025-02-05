@@ -142,14 +142,13 @@
 %   \begin{function}[position]{title}[args]
 %     ...
 %   \end{function}
-\newcommand{\Title}[2]{\item[$\Call{#1}{#2}$]}
 \NewDocumentEnvironment{function}{O{ht!} m O{}}{
   \begin{algorithm}[#1]
     \label{#1}
     \capstart
     \captionlistentry{\Call{#2}{}}
     \begin{algorithmic}[1]
-      \Title{#2}{#3}
+      \item[$\Call{#2}{#3}$]
 }{
     \end{algorithmic}
   \end{algorithm}
