@@ -56,6 +56,24 @@
   \end{itemize}
 \end{frame}
 
+\begin{frame}{Synchronous Risk Propagation}
+\begin{spacing}{1.4}
+\begin{algorithmic}[1]
+    \item[$\Call{\nRiskPropagation}{\vScores, \vContacts}$]
+    \State $\vRiskScores{i}{n - 1} \assign \topK{\vScores_i}$
+    \State $\vExposureScore{i}{n - 1} \assign \max \vRiskScores{i}{n - 1}$
+    \State $\vExposureScore{i}{n} \assign \infty$
+    \While{$\| \vExposureScores{n} - \vExposureScores{n - 1} \| > \pDiff$}
+      \State $\vVariableMessage{i}{j}{n} \assign \vRiskScores{i}{n - 1} \setminus \setBuilder{\vFactorMessage{j}{i}{\ell}}{\ell \in \intInterval{1}{n - 1}}$
+      \State $\vFactorMessage{i}{j}{n} \assign \max \setBuilder{\pTransmissionRate \vScore_\vTime}{\vScore_\vTime \in \vVariableMessage{i}{j}{n}, \vTime < \vTime_{ij} + \pTimeBuffer}$
+      \State $\vRiskScores{i}{n} \assign \topK{\setBuilder{\vFactorMessage{j}{i}{n}}{\vFactor[ij] \in \vNeighbors_i}}$
+      \State $\vExposureScore{i}{n} \assign \max \vRiskScores{i}{n}$
+    \EndWhile
+    \State \Return $\vExposureScores{n}$
+  \end{algorithmic}
+\end{spacing}
+\end{frame}
+
 \end{section}
 
 \begin{section}{Evaluation}
