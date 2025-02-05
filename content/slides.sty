@@ -14,6 +14,17 @@
 
 \usefonttheme[onlymath]{serif}
 
+\captionsetup{labelfont=bf, font=tiny}
+
+\newcommand{\squareFigHeight}{0.7\textheight}
+\newcommand{\wideFigWidth}{\textwidth}
+
+% Unified cross-referencing for figures, tables, and equations
+\usepackage[nameinlink, capitalize, noabbrev]{cleveref}
+\newcommand{\crefconjunction}{\textendash}
+\Crefname{equation}{Equation}{Equations}
+\crefname{equation}{}{}
+
  % Bibliography citations
  % https://ctan.org/pkg/biblatex
 \usepackage[backend=biber, natbib=true, sortcites=true]{biblatex}
@@ -22,12 +33,3 @@
 
 % Set the font size of bibliography entries.
 \AtBeginBibliography{\scriptsize}
-
-% Unified cross-referencing for figures, tables, and equations
-\usepackage[nameinlink, capitalize, noabbrev]{cleveref}
-\newcommand{\crefconjunction}{\textendash}
-\Crefname{equation}{Equation}{Equations}
-\crefname{equation}{}{}
-
-\newcommand{\squareFigHeight}{0.7\textheight}
-\newcommand{\wideFigWidth}{\textwidth}

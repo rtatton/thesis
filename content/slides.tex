@@ -60,14 +60,22 @@
 \begin{spacing}{1.4}
 \begin{algorithmic}[1]
     \item[$\Call{\nRiskPropagation}{\vScores, \vContacts}$]
-    \State $\vRiskScores{i}{n - 1} \assign \topK{\vScores_i}$
+    \State{$\vRiskScores{i}{n - 1} \assign \topK{\vScores_i}$}
+    \pause
     \State $\vExposureScore{i}{n - 1} \assign \max \vRiskScores{i}{n - 1}$
+    \pause
     \State $\vExposureScore{i}{n} \assign \infty$
+    \pause
     \While{$\| \vExposureScores{n} - \vExposureScores{n - 1} \| > \pDiff$}
+    \pause
       \State $\vVariableMessage{i}{j}{n} \assign \vRiskScores{i}{n - 1} \setminus \setBuilder{\vFactorMessage{j}{i}{\ell}}{\ell \in \intInterval{1}{n - 1}}$
+      \pause
       \State $\vFactorMessage{i}{j}{n} \assign \max \setBuilder{\pTransmissionRate \vScore_\vTime}{\vScore_\vTime \in \vVariableMessage{i}{j}{n}, \vTime < \vTime_{ij} + \pTimeBuffer}$
+      \pause
       \State $\vRiskScores{i}{n} \assign \topK{\setBuilder{\vFactorMessage{j}{i}{n}}{\vFactor[ij] \in \vNeighbors_i}}$
+      \pause
       \State $\vExposureScore{i}{n} \assign \max \vRiskScores{i}{n}$
+      \pause
     \EndWhile
     \State \Return $\vExposureScores{n}$
   \end{algorithmic}
@@ -144,8 +152,11 @@
 \begin{frame}{Conclusion: Future Work}
   \begin{itemize}
     \item Incorporate differential privacy techniques that are designed for DCT applications that utilize risk scores \citep{Romijnders2024}.
+    \pause
     \item Formally define the security and privacy characteristics of ShareTrace, using the framework proposed by \citet{Kuhn2021} to characterize the latter.
+    \pause
     \item Conduct a simulation-based analysis of asynchronous risk propagation with COVI-AgentSim \citep{Gupta2020}.
+    \pause
     \item Explore the utility and feasibility of integrating decentralized technologies \citep{Benet2014, Troncoso2017, Trautwein2022, Shi2024, Keizer2024} and self-soverign identity \citep{Preukschat2021, Schardong2022} into the system design.
   \end{itemize}
 \end{frame}
