@@ -13,6 +13,7 @@
 \begin{frame}{Digital Contact Tracing}
 \begin{itemize}
   \item \define{Contact tracing}: a non-pharmaceutical intervention that aims to halt the spread of infectious disease by identifying and quarantining individuals that have been physically proximal with the infected \citep{PozoMartin2023}.
+  \pause
   \item \define{Digital contact tracing} (DCT): automates manual contact tracing by estimating physical interactions and notifying individuals of their infection risk \citep{Reichert2021}.
 \end{itemize}
 \end{frame}
@@ -21,7 +22,7 @@
 \begin{figure}
   \centering
   \includegraphics[width=0.8\textwidth]{contact-discovery}
-  \caption[Proximity tracing]{Proximity tracing. An approach to digital contact tracing that uses device-to-device communication to approximate in-person interaction \cite{Reichert2021}}
+  \caption[Proximity tracing]{Proximity tracing. An approach to digital contact tracing that uses device-to-device communication to approximate in-person interaction \cite{Reichert2021}. While multiple protocols for proximity detection exist, Bluetooth Low Energy (BLE) is typically used because of its relative accuracy, energy efficiency, and broad support in mobile devices \citep{Shubina2020, Reichert2021}.}
 \end{figure}
 \end{frame}
 
@@ -49,12 +50,17 @@
 \end{figure}
 \end{frame}
 
-\begin{frame}{Limitations of Other Approaches}
+\begin{frame}{Limitations and Considerations}
 \begin{itemize}
-  \item No DCT approach exists that incorporates both non-diagnostic information and indirect contacts to estimate infection risk.
-  \item Accounting for indirect contact can substantially improve the efficacy of DCT \citep{PozoMartin2023}.
+  \item None incorporate both non-diagnostic information and indirect contacts to estimate infection risk.
+  \pause
   \item \citet{Cherini2023} propose exchanging pseudonyms of indirect contacts, but restrict themselves to diagnostic testing.
+  \pause
   \item \citet{Gupta2023} incorporate non-diagnostic information, but do not account for indirect contact.
+  \pause
+  \item Accounting for indirect contact can substantially improve efficacy of DCT \citep{PozoMartin2023}.
+  \pause
+  \item Privacy and security are paramount to adoption \citep{Oyibo2022, Afroogh2022}, key determinants of epidemic control \citep{PozoMartin2023}.
 \end{itemize}
 \end{frame}
 
