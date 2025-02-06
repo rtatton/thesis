@@ -10,19 +10,46 @@
 
 \begin{section}{Introduction}
 
-\begin{frame}{Introduction: Types of Contact Tracing}
+\begin{frame}{Digital Contact Tracing}
 \begin{itemize}
-  \item Digital contact tracing (DCT)
-  \item Proximity tracing
-  \item Decentralized DCT
-    \begin{itemize}
-      \item Broadcast model
-      \item Message-oriented model
-    \end{itemize}
+  \item \define{Contact tracing}: a non-pharmaceutical intervention that aims to halt the spread of infectious disease by identifying and quarantining individuals that have been physically proximal with the infected \citep{PozoMartin2023}.
+  \item \define{Digital contact tracing} (DCT): automates manual contact tracing by estimating physical interactions and notifying individuals of their infection risk \citep{Reichert2021}.
 \end{itemize}
 \end{frame}
 
-\begin{frame}{Introduction: Limitations of Other Approaches}
+\begin{frame}{Digital Contact Tracing: Proximity Tracing}
+\begin{figure}
+  \centering
+  \includegraphics[width=0.8\textwidth]{contact-discovery}
+  \caption[Proximity tracing]{Proximity tracing. An approach to digital contact tracing that uses device-to-device communication to approximate in-person interaction \cite{Reichert2021}}
+\end{figure}
+\end{frame}
+
+\begin{frame}{Digital Contact Tracing: Centralized Model}
+\begin{figure}
+  \centering
+  \includegraphics[width=0.7\textwidth]{centralized-model}
+  \caption[Centralized model]{Centralized model. A centralized entity is able to deanonymize an individual's pseudonyms in order to notify their contacts of infection risk \cite{Reichert2021}.}
+\end{figure}
+\end{frame}
+
+\begin{frame}{Digital Contact Tracing: Broadcast Model}
+\begin{figure}
+  \centering
+  \includegraphics[width=0.8\textwidth]{broadcast-model}
+  \caption[Broadcast model]{Broadcast model. A form of decentralized digital contact tracing in which an infected individual uploads their pseudonyms to a central service that allows others to determine if they possess any of the pseudonyms belonging to that individual \cite{Reichert2021}.}
+\end{figure}
+\end{frame}
+
+\begin{frame}{Digital Contact Tracing: Message-oriented Model}
+\begin{figure}
+  \centering
+  \includegraphics[width=\textwidth]{messaging-model}
+  \caption[Message-oriented model]{Message-oriented model. A form of decentralized digital contact tracing in which individuals exchange public keys to encrypt messages that are delivered to their contacts' postboxes \cite{Reichert2021}.}
+\end{figure}
+\end{frame}
+
+\begin{frame}{Limitations of Other Approaches}
 \begin{itemize}
   \item No DCT approach exists that incorporates both non-diagnostic information and indirect contacts to estimate infection risk.
   \item Accounting for indirect contact can substantially improve the efficacy of DCT \citep{PozoMartin2023}.
@@ -31,7 +58,7 @@
 \end{itemize}
 \end{frame}
 
-\begin{frame}{Introduction: ShareTrace}
+\begin{frame}{ShareTrace}
 \begin{itemize}
   \item Accounts for both non-diagnostic information and indirect contact to estimate infection risk.
   \item Developed in collaboration with Dataswyft \citep{Ayday2020}. 
@@ -42,21 +69,11 @@
 \end{itemize}
 \end{frame}
 
-\begin{frame}{Introduction: Prior Designs and Implementations}
-\begin{itemize}
-  \item  ``Thinking like a vertex'' with Apache Giraph
-  \item Factor subgraph actors
-  \item Driver-monitor-worker framework
-  \item Projected subgraph actors \citep{Tatton2022b}
-  \item Contact search
-\end{itemize}
-\end{frame}
-
 \end{section}
 
 \begin{section}{Proposed Design}
 
-\begin{frame}{Proposed Design: Definitions}
+\begin{frame}{Risk Propagation: Definitions}
 \begin{itemize}
   \item \define{Risk score}, $\vScore_\vTime \in [0, 1]$: a timestamped infection probability where $\vTime \in \naturals$ is the time of its computation
   \item \define{Symptom score}: prior infection probability; accounts for an individual's demographics, symptoms, and diagnosis \citep{Briers2020, Menni2020}
@@ -64,7 +81,7 @@
 \end{itemize}
 \end{frame}
 
-\begin{frame}{Synchronous Risk Propagation}
+\begin{frame}{Synchronous Risk Propagation: Pseudocode}
 \begin{function}{\nRiskPropagation}[\vScores, \vContacts]
   \State{$\vRiskScores{i}{n - 1} \assign \topK{\vScores_i}$}
   \pause
@@ -87,7 +104,23 @@
 \end{function}
 \end{frame}
 
-\begin{frame}{Asynchronous Risk Propagation}
+\begin{frame}{Synchronous Risk Propagation: Limitations}
+\begin{itemize}
+  \item Centralized aggregation of personal data
+  \pause
+  \item Delayed updates to exposure risk
+  \pause
+  \item Redundant communication and computation
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Challenges with Decentralization}
+\begin{itemize}
+  \item 
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Asynchronous Risk Propagation: Pseudocode}
 \begin{function}{\nCreateActor}
   \State $\aActorContacts \assign \emptyset$
   \State $\aActorScores \assign \emptyset$
@@ -231,13 +264,15 @@
 
 \begin{section}{Evaluation}
 
-\begin{frame}[allowframebreaks]{Experiment 1: Accuracy}
+\begin{frame}{Experiment 1: Accuracy}
 \begin{figure}
   \centering
   \includegraphics[height=\squareFigHeight]{accuracy-percentiles}
   \caption[Cumulative accuracy distributions]{Cumulative accuracy distributions.}
 \end{figure}
+\end{frame}
 
+\begin{frame}{Experiment 1: Accuracy}
 \begin{figure}
   \centering
   \includegraphics[width=\wideFigWidth]{accuracy-proportions}
@@ -251,21 +286,25 @@
   \includegraphics[height=\squareFigHeight]{relative-receives}
   \caption[Message-passing efficiency]{Message-passing efficiency. The send coefficient $\pSendCoefficient = 1$ was used as a baseline for message-passing efficiency since it was found to be the maximum send coefficient that achieves perfect accuracy.}
 \end{figure}
+\end{frame}
 
+%\begin{frame}{Experiment 1: Efficiency}
 %\begin{figure}
 %  \centering
 %  \includegraphics[height=\squareFigHeight]{message-reachability}
 %  \caption[Message reachability cumulative distributions]{Message reachability cumulative distributions.}
 %\end{figure}
-\end{frame}
+%\end{frame}
 
-\begin{frame}[allowframebreaks]{Experiment 1: Exploration}
+\begin{frame}{Experiment 1: Exploration}
 \begin{figure}
   \centering
   \includegraphics[height=\squareFigHeight]{network-degree-distributions}
   \caption[Contact network degree distributions]{Contact network degree distributions. All vertices in random regular contact networks had a degree of 20, so the distribution was omitted to provide more visual space for the distributions of other contact networks.}
 \end{figure}
+\end{frame}
 
+\begin{frame}{Experiment 1: Exploration}
 \begin{figure}
   \centering
   \includegraphics[height=\squareFigHeight]{correlation}
@@ -276,13 +315,15 @@
 \begin{frame}{Experiment 2: Benchmarking Hypothesis Testing}
 \end{frame}
 
-\begin{frame}[allowframebreaks]{Experiment 3: Benchmarking}
+\begin{frame}{Experiment 3: Benchmarking}
 \begin{figure}
   \centering
   \includegraphics[width=\wideFigWidth]{runtimes}
   \caption[Message-passing runtimes]{Message-passing runtimes.}
 \end{figure}
+\end{frame}
 
+\begin{frame}{Experiment 3: Benchmarking}
 \begin{figure}
   \centering
   \includegraphics[height=\squareFigHeight]{runtime-regression}
@@ -306,12 +347,21 @@
 \end{itemize}
 \end{frame}
 
-
 \end{section}
 
 % A section is automatically created for references.
 \begin{frame}[allowframebreaks]{References}
   \printbibliography
 \end{frame}
+
+%\begin{frame}{Prior Designs and Implementations}
+%\begin{itemize}
+%  \item  ``Thinking like a vertex'' with Apache Giraph
+%  \item Factor subgraph actors
+%  \item Driver-monitor-worker framework
+%  \item Projected subgraph actors \citep{Tatton2022b}
+%  \item Contact search
+%\end{itemize}
+%\end{frame}
 
 \end{document}
