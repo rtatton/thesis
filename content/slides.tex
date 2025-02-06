@@ -66,14 +66,30 @@
 
 \begin{frame}{ShareTrace}
 \begin{itemize}
+  \item Developed in collaboration with Dataswyft during the COVID-19 pandemic \citep{Ayday2020}.
+  \pause
   \item Accounts for both non-diagnostic information and indirect contact to estimate infection risk.
-  \item Developed in collaboration with Dataswyft \citep{Ayday2020}. 
-  \item \citet{Ayday2021} designed ShareTrace to use proximity tracing for contact discovery.
-    \begin{itemize}
-      \item In practice, this was infeasible, because Apple and Google's Exposure Notification API did not permit the user's ephemeral identifiers to be stored remotely in a Dataswyft Personal Data Store.
-    \end{itemize}
+  \pause
+  \item \citet{Ayday2021} describe a centralized/offline message-passing algorithm (``risk propagation'').
 \end{itemize}
 \end{frame}
+
+\begin{frame}{Contributions}
+\begin{itemize}
+  \item Asynchronous formulation of risk propagation using the actor model that permits a decentralized deployment.
+  \pause
+  \item \define{Message reachability}: a generalization of temporal reachability that accounts for message-passing semantics on temporal networks (not covered).
+  \pause
+  \item Classification of ShareTrace as a \define{mobile crowdsensing} application (not covered).
+  \pause
+  \item Impact of parameter tuning on accuracy and efficiency.
+  \pause
+  \item Exploratory data analysis.
+  \pause
+  \item Reference implementation benchmarking.
+\end{itemize}
+\end{frame}
+
 
 \end{section}
 
@@ -84,6 +100,58 @@
   \item \define{Risk score}, $\vScore_\vTime \in [0, 1]$: a timestamped infection probability where $\vTime \in \naturals$ is the time of its computation
   \item \define{Symptom score}: prior infection probability; accounts for an individual's demographics, symptoms, and diagnosis \citep{Briers2020, Menni2020}
   \item \define{Exposure score}: posterior infection probability; accounts for direct and indirect contact with others
+  \item An individual's exposure score is derived by marginalizing over the joint infection probability distribution.
+    \begin{itemize}
+      \item Naively computing this marginalization scales exponentially with the number of variables (i.e., individuals).
+    \end{itemize}
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Risk Propagation: Definitions}
+\begin{itemize}
+  \item \define{Factor graph}: $\vGraph = (\vVariables, \vFactors, \vEdges)$.
+  \item \define{Variable \vertexName} $\vVariable: \eventSpace \rightarrow \{0, 1\} $: a random variable that represents the infection status of an individual, where
+    \begin{equation*}
+      \vVariable(\event) =
+        \begin{cases}
+          0 & \text{if } \event = \var{healthy} \\
+          1 & \text{if } \event = \var{infected}.
+        \end{cases}
+    \end{equation*}
+    \item \define{Factor \vertexName} $\vFactor: \vVariables \times \vVariables \rightarrow [0, 1]$: the transmission of infection risk between two individuals.
+\end{itemize}
+
+\begin{figure}
+\centering
+\begin{tikzpicture}[ampersand replacement=\&]
+  \matrix[row sep=1.5em, column sep=0.75em] {
+    \& \factor[minimum size=1em] {f12} {above:$\vFactor[12]$} {} {}; \&\&
+    \factor[minimum size=1em] {f23} {above:$\vFactor[23]$} {} {}; \& \\
+    \node[latent, minimum size=2em] (v1) {$\vVariable[1]$}; \&\&
+    \node[latent, minimum size=2em] (v2) {$\vVariable[2]$}; \&\&
+    \node[latent, minimum size=2em] (v3) {$\vVariable[3]$}; \\
+  };
+  \edge[-] {v1} {f12};
+  \edge[-] {v2} {f12};
+  \edge[-] {v2} {f23};
+  \edge[-] {v3} {f23};
+\end{tikzpicture}
+\end{figure}
+\end{frame}
+
+\begin{frame}{Synchronous Risk Propagation: Definitions}
+\begin{itemize}
+  \item \define{Set of recent risk scores of \indexed{i}{individual}}:
+    \begin{equation*}
+      \vScores_i =\setBuilder{\vScore_t}{\vReferenceTime - \vTime < \pScoreExpiry} \in \vScores
+    \end{equation*}
+    \item \define{Contact set}:
+      \begin{equation*}
+        \vContacts = \setBuilder{(i, j, \vTime)}{i \neq j, \vReferenceTime - \vTime < \pContactExpiry}
+      \end{equation*}
+      $(i, j, \vTime)$ is the \emph{most recent} contact between $i$ and $j$.
+      \item \define{Reference time} $\vReferenceTime \in \naturals$: defines relevance of inputs.
+      \item Risk scores and contacts have finite relevance: $\pScoreExpiry, \pContactExpiry \in \naturals$.
 \end{itemize}
 \end{frame}
 
@@ -129,7 +197,9 @@
 \begin{frame}{Asynchronous Risk Propagation: Pseudocode}
 \begin{function}{\nCreateActor}
   \State $\aActorContacts \assign \emptyset$
+  \pause
   \State $\aActorScores \assign \emptyset$
+  \pause
   \State $\aActorExposure \assign \cNullRiskScore$
   \State \Return $\vActor$
 \end{function}
@@ -140,7 +210,7 @@
 \end{function}
 \end{frame}
 
-\begin{frame}{Asynchronous Risk Propagation}
+\begin{frame}{Asynchronous Risk Propagation: Pseudocode}
 \begin{function}{\nRiskScoreTtl}[\vScore]
   \State \Return $\pScoreExpiry - (\vReferenceTime - \aScoreTime)$
 \end{function}
@@ -149,7 +219,7 @@
 \end{function}
 \end{frame}
 
-\begin{frame}{Asynchronous Risk Propagation}
+\begin{frame}{Asynchronous Risk Propagation: Pseudocode}
 \begin{function}{\nHandleRiskScore}[\vActor, \vScore]
   \If{$\cRiskScoreTtl[\vScore] > 0$}
     \pause
@@ -166,7 +236,7 @@
 \end{function}
 \end{frame}
 
-\begin{frame}{Asynchronous Risk Propagation}
+\begin{frame}{Asynchronous Risk Propagation: Pseudocode}
 \begin{function}{\nUpdateExposureScore}[\vActor, \vScore]
   \If{$\aActorExposureValue < \aScoreValue$}
     \pause
@@ -179,7 +249,7 @@
 \end{function}
 \end{frame}
 
-\begin{frame}{Asynchronous Risk Propagation}
+\begin{frame}{Asynchronous Risk Propagation: Pseudocode}
 \begin{function}{\nApplyRiskScore}[\vActor, \vContact, \vScore]
   \If{$\aContactTime + \pTimeBuffer > \aScoreTime$}
     \pause
@@ -190,7 +260,7 @@
 \end{function}
 \end{frame}
 
-\begin{frame}{Asynchronous Risk Propagation}
+\begin{frame}{Asynchronous Risk Propagation: Pseudocode}
 \begin{function}{\nSetSendThreshold}[\vContact, \vScore]
   \State $\aNewScoreValue \assign \pSendCoefficient \cdot \aScoreValue$
   \pause
@@ -198,7 +268,7 @@
 \end{function}
 \end{frame}
 
-\begin{frame}{Asynchronous Risk Propagation}
+\begin{frame}{Asynchronous Risk Propagation: Pseudocode}
 \begin{function}{\nUpdateSendThreshold}[\vActor, \vContact]
   \If{$\aContactThresholdValue > 0$}
     \pause
@@ -214,7 +284,7 @@
 \end{function}
 \end{frame}
 
-\begin{frame}{Asynchronous Risk Propagation}
+\begin{frame}{Asynchronous Risk Propagation: Pseudocode}
 \begin{function}{\nApplyRiskScore}[\vActor, \vContact, \vScore]
   \State $\cUpdateSendThreshold[\vActor, \vContact]$
   \pause
@@ -229,7 +299,7 @@
 \end{function}
 \end{frame}
 
-\begin{frame}{Asynchronous Risk Propagation}
+\begin{frame}{Asynchronous Risk Propagation: Pseudocode}
 \begin{function}{\nHandleFlushTimeout}[\vActor]
   \ForEach{$\vContact \in \aActorContacts$}
     \pause
@@ -247,7 +317,7 @@
 \end{function}
 \end{frame}
 
-\begin{frame}{Asynchronous Risk Propagation}
+\begin{frame}{Asynchronous Risk Propagation: Pseudocode}
 \begin{function}{\nHandleContact}[\vActor, \vContact]
   \If{$\cContactTtl[\vContact] > 0$}
     \pause
