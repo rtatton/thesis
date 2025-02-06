@@ -110,6 +110,7 @@
 \begin{frame}{Risk Propagation: Definitions}
 \begin{itemize}
   \item \define{Factor graph}: $\vGraph = (\vVariables, \vFactors, \vEdges)$.
+  \pause
   \item \define{Variable \vertexName} $\vVariable: \eventSpace \rightarrow \{0, 1\} $: a random variable that represents the infection status of an individual, where
     \begin{equation*}
       \vVariable(\event) =
@@ -118,6 +119,7 @@
           1 & \text{if } \event = \var{infected}.
         \end{cases}
     \end{equation*}
+    \pause
     \item \define{Factor \vertexName} $\vFactor: \vVariables \times \vVariables \rightarrow [0, 1]$: the transmission of infection risk between two individuals.
 \end{itemize}
 
@@ -145,12 +147,15 @@
     \begin{equation*}
       \vScores_i =\setBuilder{\vScore_t}{\vReferenceTime - \vTime < \pScoreExpiry} \in \vScores
     \end{equation*}
+    \pause
     \item \define{Contact set}:
       \begin{equation*}
         \vContacts = \setBuilder{(i, j, \vTime)}{i \neq j, \vReferenceTime - \vTime < \pContactExpiry}
       \end{equation*}
       $(i, j, \vTime)$ is the \emph{most recent} contact between $i$ and $j$.
+      \pause
       \item \define{Reference time} $\vReferenceTime \in \naturals$: defines relevance of inputs.
+      \pause
       \item Risk scores and contacts have finite relevance: $\pScoreExpiry, \pContactExpiry \in \naturals$.
 \end{itemize}
 \end{frame}
@@ -180,26 +185,30 @@
 
 \begin{frame}{Synchronous Risk Propagation: Limitations}
 \begin{itemize}
-  \item Centralized aggregation of personal data
+  \item Centralized aggregation of personal data (e.g., PHI, contacts).
   \pause
-  \item Delayed updates to exposure risk
+  \item Delayed updates to exposure risk.
   \pause
-  \item Redundant communication and computation
+  \item Redundant communication and computation.
 \end{itemize}
 \end{frame}
 
-\begin{frame}{Challenges with Decentralization}
+\begin{frame}{Asynchronous Risk Propagation: Assumptions}
 \begin{itemize}
-  \item 
+  \item Actor model \citep{Hewitt1973, Hewitt1977a, Hewitt1977b, Agha1985}.
+  \pause
+  \item Arbitrary communication delays between actors.
+  \pause
+  \item Personal data and contact pseudonyms are all stored locally.
+  \pause
+  \item Messaging system may be centralized or decentralized.
 \end{itemize}
 \end{frame}
 
 \begin{frame}{Asynchronous Risk Propagation: Pseudocode}
 \begin{function}{\nCreateActor}
   \State $\aActorContacts \assign \emptyset$
-  \pause
   \State $\aActorScores \assign \emptyset$
-  \pause
   \State $\aActorExposure \assign \cNullRiskScore$
   \State \Return $\vActor$
 \end{function}
@@ -415,11 +424,11 @@
 \begin{itemize}
   \item Incorporate differential privacy techniques that are designed for DCT applications that utilize risk scores \citep{Romijnders2024}.
   \pause
-  \item Formally define the security and privacy characteristics of ShareTrace, using the framework proposed by \citet{Kuhn2021} to characterize the latter.
+  \item Formally define the security and privacy characteristics of ShareTrace, using the framework proposed by \citet{Kuhn2021}.
   \pause
   \item Conduct a simulation-based analysis of asynchronous risk propagation with COVI-AgentSim \citep{Gupta2020}.
   \pause
-  \item Explore the utility and feasibility of integrating decentralized technologies \citep{Benet2014, Troncoso2017, Trautwein2022, Shi2024, Keizer2024} and self-soverign identity \citep{Preukschat2021, Schardong2022} into the system design.
+  \item Explore the utility and feasibility of integrating decentralized technologies \citep{Troncoso2017, Trautwein2022, Shi2024, Keizer2024} and self-sovereign identity \citep{Preukschat2021} into the system design.
 \end{itemize}
 \end{frame}
 
