@@ -56,7 +56,7 @@
 \end{itemize}
 \end{frame}
 
-\begin{frame}{ShareTrace}
+\begin{frame}{ShareTrace: Prior Work}
 \begin{itemize}
   \item Developed in collaboration with Dataswyft during the COVID-19 pandemic \citep{Ayday2020}
   \pause
@@ -110,9 +110,9 @@
 \begin{itemize}
   \item Risk scores and contacts are received by the actor as messages
   \pause
-  \item Actor maintains exposure score history using an interval tree and contacts using a hash map
+  \item Actor maintains exposure score history using an interval tree and contact history using a hash map
   \pause
-  \item Data structures allow for delay between contact time, symptom reporting calculation, and message processing
+  \item Data structures allow for delay between contact time and sending/receiving of messages
   \pause
   \item Ensure finite message propagation and avoid uninformative risk score messages by associating a \define{send threshold} for each contact
   \pause
@@ -127,8 +127,11 @@
 \begin{frame}{Evaluation}
 \begin{itemize}
   \item Reference implementation using Akka-based actor model
+  \pause
   \item Random graphs: Barabasi-Albert \citep{Barabasi1999}, Erd\H{o}s-R\'{e}nyi \citep{Erdos1959}, Watts-Strogatz \citep{Watts1998}, and random regular \citep{Kim2003}
+  \pause
   \item How does the send coefficient affect accuracy and efficiency?
+  \pause
   \item How does the size of the contact network affect runtime?
 
 \end{itemize}
