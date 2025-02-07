@@ -22,7 +22,7 @@
 \begin{figure}
   \centering
   \includegraphics[width=0.8\textwidth]{contact-discovery}
-  \caption[Proximity tracing]{Proximity tracing. An approach to digital contact tracing that uses device-to-device communication to approximate in-person interaction \cite{Reichert2021}. While multiple protocols for proximity detection exist, Bluetooth Low Energy (BLE) is typically used because of its relative accuracy, energy efficiency, and broad support in mobile devices \citep{Shubina2020, Reichert2021}.}
+  \caption[Proximity tracing]{An approach to digital contact tracing that uses device-to-device communication to approximate in-person interaction \cite{Reichert2021}. While multiple protocols for proximity detection exist, Bluetooth Low Energy (BLE) is typically used because of its relative accuracy, energy efficiency, and broad support in mobile devices \citep{Shubina2020, Reichert2021}.}
 \end{figure}
 \end{frame}
 
@@ -30,7 +30,7 @@
 \begin{figure}
   \centering
   \includegraphics[width=0.8\textwidth]{broadcast-model}
-  \caption[Broadcast model]{Broadcast model. A form of decentralized digital contact tracing in which an infected individual uploads their pseudonyms to a central service that allows others to determine if they possess any of the pseudonyms belonging to that individual \cite{Reichert2021}.}
+  \caption[Broadcast model]{A form of decentralized digital contact tracing in which an infected individual uploads their pseudonyms to a service that allows others to determine if they possess any of the pseudonyms belonging to that individual \cite{Reichert2021}.}
 \end{figure}
 \end{frame}
 
@@ -38,7 +38,7 @@
 \begin{figure}
   \centering
   \includegraphics[width=\textwidth]{messaging-model}
-  \caption[Message-oriented model]{Message-oriented model. A form of decentralized digital contact tracing in which individuals exchange public keys to encrypt messages that are delivered to their contacts' postboxes \cite{Reichert2021}.}
+  \caption[Message-oriented model]{A form of decentralized digital contact tracing in which individuals exchange public keys to encrypt messages that are delivered to their contacts' postboxes \cite{Reichert2021}.}
 \end{figure}
 \end{frame}
 
@@ -63,6 +63,7 @@
   \item Accounts for both non-diagnostic information and indirect contact to estimate infection risk
   \pause
   \item \citet{Ayday2021} describe a centralized/offline message-passing algorithm (``risk propagation'')
+    \pause
     \begin{itemize}
       \item Centralized aggregation of personal data (e.g., PHI, contacts)
       \pause
@@ -79,7 +80,7 @@
   \pause
   \item \define{Message reachability}: a generalization of temporal reachability that accounts for message-passing semantics on temporal networks
   \pause
-  \item Classification of ShareTrace as a \define{mobile crowdsensing} application
+  \item Classification of ShareTrace as mobile crowdsensing
   \pause
   \item Impact of parameter tuning on accuracy and efficiency
   \pause
@@ -123,19 +124,50 @@
 
 \begin{section}{Evaluation}
 
-\begin{frame}{Results: Aggregate Accuracy}
+\begin{frame}{Evaluation}
+\begin{itemize}
+  \item Reference implementation using Akka-based actor model
+  \item Random graphs: Barabasi-Albert \citep{Barabasi1999}, Erd\H{o}s-R\'{e}nyi \citep{Erdos1959}, Watts-Strogatz \citep{Watts1998}, and random regular \citep{Kim2003}
+  \item How does the send coefficient affect accuracy and efficiency?
+  \item How does the size of the contact network affect runtime?
+
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Experiment configurations}
+\begin{table}
+  \centering
+  \small
+  \renewcommand{\arraystretch}{2}
+  \begin{tabular}{lcc}
+    \toprule
+    Aspect & Optimization & Benchmark \\
+    \midrule
+    Order $n$ & \qty{5}{K} & \qty{10}{K} -- \qty{100}{K} \\
+    Size $m$ & \qty{50}{K} & \qty{1}{M} -- \qty{10}{M} \\
+    Parameters & $\pSendCoefficient = \text{0.8 -- 2.0}$ & Defaults \\
+    Distributions & $\{\text{Uniform}, \text{Normal}\}^3$ & Uniform \\
+    Repetitions & 5 & 1 burn-in + 5 \\
+    Networks & 160 (40 per type) per parameter & \num{2000} (500 per type) \\
+    \bottomrule
+  \end{tabular}
+  \caption[Experiment configurations]{The notation $X^k$ is used to denote the $k$-ary Cartesian power of the set $X$. A ``burn-in'' repetition was used for Experiment 2 and Experiment 3 to avoid measuring the impact of Java class loading.}
+\end{table}
+\end{frame}
+
+\begin{frame}{Results: Internetwork Accuracy}
 \begin{figure}
   \centering
   \includegraphics[height=\squareFigHeight]{accuracy-percentiles}
-  \caption[Cumulative accuracy distributions]{Cumulative accuracy distributions.}
+  \caption[Cumulative accuracy distributions]{Internetwork accuracy distributions.}
 \end{figure}
 \end{frame}
 
-\begin{frame}{Results: Network Accuracy}
+\begin{frame}{Results: Intranetwork Accuracy}
 \begin{figure}
   \centering
   \includegraphics[width=\wideFigWidth]{accuracy-proportions}
-  \caption[Send coefficient optimality distributions]{Send coefficient optimality distributions. The dashed line inside each violin marks the median. The upper and lower dotted lines inside each violin mark the upper and lower quartiles, respectively.}
+  \caption[Intranetwork accuracy distributions]{The dashed line inside each violin marks the median. The upper and lower dotted lines inside each violin mark the upper and lower quartiles, respectively.}
 \end{figure}
 \end{frame}
 
@@ -143,7 +175,7 @@
 \begin{figure}
   \centering
   \includegraphics[height=\squareFigHeight]{relative-receives}
-  \caption[Message-passing efficiency]{Message-passing efficiency. The send coefficient $\pSendCoefficient = 1$ was used as a baseline for message-passing efficiency since it was found to be the maximum send coefficient that achieves perfect accuracy.}
+  \caption[Message-passing efficiency]{The send coefficient $\pSendCoefficient = 1$ was used as a baseline for message-passing efficiency since it was found to be the maximum send coefficient that achieves perfect accuracy.}
 \end{figure}
 \end{frame}
 
@@ -151,11 +183,11 @@
 \begin{figure}
   \centering
   \includegraphics[height=\squareFigHeight]{correlation}
-  \caption[Correlation matrix of dataset attributes]{Correlation matrix of dataset attributes. Each cell is the Spearman rank partial correlation coefficient \citep{Spearman1904}, controlling for the effect of the send coefficient. All coefficients are significant ($p < 0.01$), adjusting for multiple comparisons via the Holm–Bonferroni method \citep{Holm1979}.}
+  \caption[Correlation matrix of dataset attributes]{Each cell is the Spearman rank partial correlation coefficient \citep{Spearman1904}, controlling for the effect of the send coefficient. All coefficients are significant ($p < 0.01$), adjusting for multiple comparisons via the Holm–Bonferroni method \citep{Holm1979}.}
 \end{figure}
 \end{frame}
 
-\begin{frame}{Results: Benchmarking}
+\begin{frame}{Results: Message-passing Runtime Regression}
 \begin{figure}
   \centering
   \includegraphics[width=\wideFigWidth]{runtimes}
@@ -163,11 +195,11 @@
 \end{figure}
 \end{frame}
 
-\begin{frame}{Experiment 3: Benchmarking}
+\begin{frame}{Results: Message-passing Runtime Regression}
 \begin{figure}
   \centering
   \includegraphics[height=\squareFigHeight]{runtime-regression}
-  \caption[Message-passing runtimes with regression lines]{Message-passing runtimes with regression lines.}
+  \caption[Message-passing runtimes with regression lines]{Message-passing runtimes with quantile regression lines.}
 \end{figure}
 \end{frame}
 
@@ -206,7 +238,7 @@
 \begin{figure}
   \centering
   \includegraphics[width=0.7\textwidth]{centralized-model}
-  \caption[Centralized model]{Centralized model. A centralized entity is able to deanonymize an individual's pseudonyms in order to notify their contacts of infection risk \cite{Reichert2021}.}
+  \caption[Centralized model]{A centralized entity is able to deanonymize an individual's pseudonyms in order to notify their contacts of infection risk \cite{Reichert2021}.}
 \end{figure}
 \end{frame}
 
@@ -472,7 +504,7 @@
 \begin{figure}
   \centering
   \includegraphics[height=\squareFigHeight]{network-degree-distributions}
-  \caption[Contact network degree distributions]{Contact network degree distributions. All vertices in random regular contact networks had a degree of 20, so the distribution was omitted to provide more visual space for the distributions of other contact networks.}
+  \caption[Contact network degree distributions]{All vertices in random regular contact networks had a degree of 20, so the distribution was omitted to provide more visual space for the distributions of other contact networks.}
 \end{figure}
 \end{frame}
 
