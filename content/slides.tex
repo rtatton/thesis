@@ -12,9 +12,9 @@
 
 \begin{frame}{Digital Contact Tracing}
 \begin{itemize}
-  \item \define{Contact tracing}: a non-pharmaceutical intervention that aims to halt the spread of infectious disease by identifying and quarantining individuals that have been physically proximal with the infected \citep{PozoMartin2023}.
+  \item \define{Contact tracing}: a non-pharmaceutical intervention that aims to halt the spread of infectious disease by identifying and quarantining individuals that have been physically proximal with the infected \citep{PozoMartin2023}
   \pause
-  \item \define{Digital contact tracing} (DCT): automates manual contact tracing by estimating physical interactions and notifying individuals of their infection risk \citep{Reichert2021}.
+  \item \define{Digital contact tracing} (DCT): automates manual contact tracing by estimating physical interactions and notifying individuals of their infection risk \citep{Reichert2021}
 \end{itemize}
 \end{frame}
 
@@ -23,14 +23,6 @@
   \centering
   \includegraphics[width=0.8\textwidth]{contact-discovery}
   \caption[Proximity tracing]{Proximity tracing. An approach to digital contact tracing that uses device-to-device communication to approximate in-person interaction \cite{Reichert2021}. While multiple protocols for proximity detection exist, Bluetooth Low Energy (BLE) is typically used because of its relative accuracy, energy efficiency, and broad support in mobile devices \citep{Shubina2020, Reichert2021}.}
-\end{figure}
-\end{frame}
-
-\begin{frame}{Digital Contact Tracing: Centralized Model}
-\begin{figure}
-  \centering
-  \includegraphics[width=0.7\textwidth]{centralized-model}
-  \caption[Centralized model]{Centralized model. A centralized entity is able to deanonymize an individual's pseudonyms in order to notify their contacts of infection risk \cite{Reichert2021}.}
 \end{figure}
 \end{frame}
 
@@ -52,75 +44,198 @@
 
 \begin{frame}{Limitations and Considerations}
 \begin{itemize}
-  \item None incorporate both non-diagnostic information and indirect contacts to estimate infection risk.
+  \item None incorporate both non-diagnostic information and indirect contacts to estimate infection risk
   \pause
-  \item \citet{Cherini2023} propose exchanging pseudonyms of indirect contacts, but restrict themselves to diagnostic testing.
+  \item \citet{Cherini2023} propose exchanging pseudonyms of indirect contacts, but restrict themselves to diagnostic testing
   \pause
-  \item \citet{Gupta2023} incorporate non-diagnostic information, but do not account for indirect contact.
+  \item \citet{Gupta2023} incorporate non-diagnostic information, but do not account for indirect contact
   \pause
-  \item Accounting for indirect contact can substantially improve efficacy of DCT \citep{PozoMartin2023}.
+  \item Accounting for indirect contact can substantially improve efficacy of DCT \citep{PozoMartin2023}
   \pause
-  \item Privacy and security are paramount to adoption \citep{Oyibo2022, Afroogh2022}, key determinants of epidemic control \citep{PozoMartin2023}.
+  \item Privacy and security are paramount to adoption \citep{Oyibo2022, Afroogh2022}, key determinants of epidemic control \citep{PozoMartin2023}
 \end{itemize}
 \end{frame}
 
 \begin{frame}{ShareTrace}
 \begin{itemize}
-  \item Developed in collaboration with Dataswyft during the COVID-19 pandemic \citep{Ayday2020}.
+  \item Developed in collaboration with Dataswyft during the COVID-19 pandemic \citep{Ayday2020}
   \pause
-  \item Accounts for both non-diagnostic information and indirect contact to estimate infection risk.
+  \item Accounts for both non-diagnostic information and indirect contact to estimate infection risk
   \pause
-  \item \citet{Ayday2021} describe a centralized/offline message-passing algorithm (``risk propagation'').
+  \item \citet{Ayday2021} describe a centralized/offline message-passing algorithm (``risk propagation'')
+    \begin{itemize}
+      \item Centralized aggregation of personal data (e.g., PHI, contacts)
+      \pause
+      \item Delayed updates to exposure risk
+      \pause
+      \item Redundant communication and computation
+    \end{itemize}
 \end{itemize}
 \end{frame}
 
 \begin{frame}{Contributions}
 \begin{itemize}
-  \item Asynchronous formulation of risk propagation using the actor model that permits a decentralized deployment.
+  \item Asynchronous formulation of risk propagation using the actor model, which permits a decentralized deployment
   \pause
-  \item \define{Message reachability}: a generalization of temporal reachability that accounts for message-passing semantics on temporal networks (not covered).
+  \item \define{Message reachability}: a generalization of temporal reachability that accounts for message-passing semantics on temporal networks
   \pause
-  \item Classification of ShareTrace as a \define{mobile crowdsensing} application (not covered).
+  \item Classification of ShareTrace as a \define{mobile crowdsensing} application
   \pause
-  \item Impact of parameter tuning on accuracy and efficiency.
+  \item Impact of parameter tuning on accuracy and efficiency
   \pause
-  \item Exploratory data analysis.
+  \item Exploratory data analysis
   \pause
-  \item Reference implementation benchmarking.
+  \item Reference implementation benchmarking
 \end{itemize}
 \end{frame}
-
 
 \end{section}
 
 \begin{section}{Proposed Design}
+
+\begin{frame}{Asynchronous Risk Propagation: Assumptions}
+\begin{itemize}
+  \item Actor model \citep{Hewitt1973, Hewitt1977a, Hewitt1977b, Agha1985}
+  \pause
+  \item Arbitrary communication delays between actors
+  \pause
+  \item Personal data and contact pseudonyms are all stored locally
+  \pause
+  \item Messaging system may be centralized or decentralized
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Asynchronous Risk Propagation: Idea}
+\begin{itemize}
+  \item Risk scores and contacts are received by the actor as messages
+  \pause
+  \item Actor maintains exposure score history using an interval tree and contacts using a hash map
+  \pause
+  \item Data structures allow for delay between contact time, symptom reporting calculation, and message processing
+  \pause
+  \item Ensure finite message propagation and avoid uninformative risk score messages by associating a \define{send threshold} for each contact
+  \pause
+  \item \define{Send coefficient $\pSendCoefficient$} parametrizes the trade-off between accuracy and efficiency
+\end{itemize}
+\end{frame}
+
+\end{section}
+
+\begin{section}{Evaluation}
+
+\begin{frame}{Results: Aggregate Accuracy}
+\begin{figure}
+  \centering
+  \includegraphics[height=\squareFigHeight]{accuracy-percentiles}
+  \caption[Cumulative accuracy distributions]{Cumulative accuracy distributions.}
+\end{figure}
+\end{frame}
+
+\begin{frame}{Results: Network Accuracy}
+\begin{figure}
+  \centering
+  \includegraphics[width=\wideFigWidth]{accuracy-proportions}
+  \caption[Send coefficient optimality distributions]{Send coefficient optimality distributions. The dashed line inside each violin marks the median. The upper and lower dotted lines inside each violin mark the upper and lower quartiles, respectively.}
+\end{figure}
+\end{frame}
+
+\begin{frame}{Results: Message-passing Efficiency}
+\begin{figure}
+  \centering
+  \includegraphics[height=\squareFigHeight]{relative-receives}
+  \caption[Message-passing efficiency]{Message-passing efficiency. The send coefficient $\pSendCoefficient = 1$ was used as a baseline for message-passing efficiency since it was found to be the maximum send coefficient that achieves perfect accuracy.}
+\end{figure}
+\end{frame}
+
+\begin{frame}{Results: Correlation Coefficients}
+\begin{figure}
+  \centering
+  \includegraphics[height=\squareFigHeight]{correlation}
+  \caption[Correlation matrix of dataset attributes]{Correlation matrix of dataset attributes. Each cell is the Spearman rank partial correlation coefficient \citep{Spearman1904}, controlling for the effect of the send coefficient. All coefficients are significant ($p < 0.01$), adjusting for multiple comparisons via the Holm–Bonferroni method \citep{Holm1979}.}
+\end{figure}
+\end{frame}
+
+\begin{frame}{Results: Benchmarking}
+\begin{figure}
+  \centering
+  \includegraphics[width=\wideFigWidth]{runtimes}
+  \caption[Message-passing runtimes]{Message-passing runtimes.}
+\end{figure}
+\end{frame}
+
+\begin{frame}{Experiment 3: Benchmarking}
+\begin{figure}
+  \centering
+  \includegraphics[height=\squareFigHeight]{runtime-regression}
+  \caption[Message-passing runtimes with regression lines]{Message-passing runtimes with regression lines.}
+\end{figure}
+\end{frame}
+
+\end{section}
+
+\begin{section}{Conclusion}
+
+\begin{frame}{Conclusion: Future Work}
+\begin{itemize}
+  \item Incorporate differential privacy techniques that are designed for DCT applications that utilize risk scores \citep{Romijnders2024}
+  \pause
+  \item Formally define the security and privacy characteristics of ShareTrace, using the framework proposed by \citet{Kuhn2021}
+  \pause
+  \item Conduct a simulation-based analysis of asynchronous risk propagation with COVI-AgentSim \citep{Gupta2020}
+  \pause
+  \item Explore the utility and feasibility of integrating decentralized technologies \citep{Troncoso2017, Trautwein2022, Shi2024, Keizer2024} and self-sovereign identity \citep{Preukschat2021} into the system design
+\end{itemize}
+\end{frame}
+
+\begin{frame}[c]{ }
+  \centering
+  \Huge
+  Thank you
+\end{frame}
+
+\end{section}
+
+% A section is automatically created for references.
+\begin{frame}[allowframebreaks]{References}
+  \printbibliography
+\end{frame}
+
+\appendix
+
+\begin{frame}{Digital Contact Tracing: Centralized Model}
+\begin{figure}
+  \centering
+  \includegraphics[width=0.7\textwidth]{centralized-model}
+  \caption[Centralized model]{Centralized model. A centralized entity is able to deanonymize an individual's pseudonyms in order to notify their contacts of infection risk \cite{Reichert2021}.}
+\end{figure}
+\end{frame}
 
 \begin{frame}{Risk Propagation: Definitions}
 \begin{itemize}
   \item \define{Risk score}, $\vScore_\vTime \in [0, 1]$: a timestamped infection probability where $\vTime \in \naturals$ is the time of its computation
   \item \define{Symptom score}: prior infection probability; accounts for an individual's demographics, symptoms, and diagnosis \citep{Briers2020, Menni2020}
   \item \define{Exposure score}: posterior infection probability; accounts for direct and indirect contact with others
-  \item An individual's exposure score is derived by marginalizing over the joint infection probability distribution.
+  \item An individual's exposure score is derived by marginalizing over the joint infection probability distribution
     \begin{itemize}
-      \item Naively computing this marginalization scales exponentially with the number of variables (i.e., individuals).
+      \item Naively computing this marginalization scales exponentially with the number of variables (i.e., individuals)
     \end{itemize}
 \end{itemize}
 \end{frame}
 
 \begin{frame}{Risk Propagation: Definitions}
 \begin{itemize}
-  \item \define{Factor graph}: $\vGraph = (\vVariables, \vFactors, \vEdges)$.
-  \pause
+  \item \define{Factor graph}: $\vGraph = (\vVariables, \vFactors, \vEdges)$
+%  \pause
   \item \define{Variable \vertexName} $\vVariable: \eventSpace \rightarrow \{0, 1\} $: a random variable that represents the infection status of an individual, where
     \begin{equation*}
       \vVariable(\event) =
         \begin{cases}
           0 & \text{if } \event = \var{healthy} \\
-          1 & \text{if } \event = \var{infected}.
+          1 & \text{if } \event = \var{infected}
         \end{cases}
     \end{equation*}
-    \pause
-    \item \define{Factor \vertexName} $\vFactor: \vVariables \times \vVariables \rightarrow [0, 1]$: the transmission of infection risk between two individuals.
+%    \pause
+    \item \define{Factor \vertexName} $\vFactor: \vVariables \times \vVariables \rightarrow [0, 1]$: the transmission of infection risk between two individuals
 \end{itemize}
 
 \begin{figure}
@@ -147,37 +262,37 @@
     \begin{equation*}
       \vScores_i =\setBuilder{\vScore_t}{\vReferenceTime - \vTime < \pScoreExpiry} \in \vScores
     \end{equation*}
-    \pause
+%    \pause
     \item \define{Contact set}:
       \begin{equation*}
         \vContacts = \setBuilder{(i, j, \vTime)}{i \neq j, \vReferenceTime - \vTime < \pContactExpiry}
       \end{equation*}
-      $(i, j, \vTime)$ is the \emph{most recent} contact between $i$ and $j$.
-      \pause
-      \item \define{Reference time} $\vReferenceTime \in \naturals$: defines relevance of inputs.
-      \pause
-      \item Risk scores and contacts have finite relevance: $\pScoreExpiry, \pContactExpiry \in \naturals$.
+      $(i, j, \vTime)$ is the \emph{most recent} contact between $i$ and $j$
+%      \pause
+      \item \define{Reference time} $\vReferenceTime \in \naturals$: defines relevance of inputs
+%      \pause
+      \item Risk scores and contacts have finite relevance: $\pScoreExpiry, \pContactExpiry \in \naturals$
 \end{itemize}
 \end{frame}
 
 \begin{frame}{Synchronous Risk Propagation: Pseudocode}
 \begin{function}{\nRiskPropagation}[\vScores, \vContacts]
   \State{$\vRiskScores{i}{n - 1} \assign \topK{\vScores_i}$}
-  \pause
+%  \pause
   \State $\vExposureScore{i}{n - 1} \assign \max \vRiskScores{i}{n - 1}$
-  \pause
+%  \pause
   \State $\vExposureScore{i}{n} \assign \infty$
-  \pause
+%  \pause
   \While{$\| \vExposureScores{n} - \vExposureScores{n - 1} \| > \pDiff$}
-  \pause
+%  \pause
     \State $\vVariableMessage{i}{j}{n} \assign \vRiskScores{i}{n - 1} \setminus \setBuilder{\vFactorMessage{j}{i}{\ell}}{\ell \in \intInterval{1}{n - 1}}$
-    \pause
+%    \pause
     \State $\vFactorMessage{i}{j}{n} \assign \max \setBuilder{\pTransmissionRate \vScore_\vTime}{\vScore_\vTime \in \vVariableMessage{i}{j}{n}, \vTime < \vTime_{ij} + \pTimeBuffer}$
-    \pause
+%    \pause
     \State $\vRiskScores{i}{n} \assign \topK{\setBuilder{\vFactorMessage{j}{i}{n}}{\vFactor[ij] \in \vNeighbors_i}}$
-    \pause
+%    \pause
     \State $\vExposureScore{i}{n} \assign \max \vRiskScores{i}{n}$
-    \pause
+%    \pause
   \EndWhile
   \State \Return $\vExposureScores{n}$
 \end{function}
@@ -185,23 +300,23 @@
 
 \begin{frame}{Synchronous Risk Propagation: Limitations}
 \begin{itemize}
-  \item Centralized aggregation of personal data (e.g., PHI, contacts).
-  \pause
-  \item Delayed updates to exposure risk.
-  \pause
-  \item Redundant communication and computation.
+  \item Centralized aggregation of personal data (e.g., PHI, contacts)
+%  \pause
+  \item Delayed updates to exposure risk
+%  \pause
+  \item Redundant communication and computation
 \end{itemize}
 \end{frame}
 
 \begin{frame}{Asynchronous Risk Propagation: Assumptions}
 \begin{itemize}
-  \item Actor model \citep{Hewitt1973, Hewitt1977a, Hewitt1977b, Agha1985}.
-  \pause
-  \item Arbitrary communication delays between actors.
-  \pause
-  \item Personal data and contact pseudonyms are all stored locally.
-  \pause
-  \item Messaging system may be centralized or decentralized.
+  \item Actor model \citep{Hewitt1973, Hewitt1977a, Hewitt1977b, Agha1985}
+%  \pause
+  \item Arbitrary communication delays between actors
+%  \pause
+  \item Personal data and contact pseudonyms are all stored locally
+%  \pause
+  \item Messaging system may be centralized or decentralized
 \end{itemize}
 \end{frame}
 
@@ -231,13 +346,13 @@
 \begin{frame}{Asynchronous Risk Propagation: Pseudocode}
 \begin{function}{\nHandleRiskScore}[\vActor, \vScore]
   \If{$\cRiskScoreTtl[\vScore] > 0$}
-    \pause
+%    \pause
     \State $\aScoreKey \assign [\aScoreTime, \aScoreTime + \pScoreExpiry)$
-    \pause
+%    \pause
     \State $\cMerge[\aActorScores, \vScore]$
-    \pause
+%    \pause
     \State $\cUpdateExposureScore[\vActor, \vScore]$
-    \pause
+%    \pause
     \ForEach{$\vContact \in \aActorContacts$}
       \State $\cApplyRiskScore[\vActor, \vContact, \vScore]$
     \EndFor
@@ -248,11 +363,11 @@
 \begin{frame}{Asynchronous Risk Propagation: Pseudocode}
 \begin{function}{\nUpdateExposureScore}[\vActor, \vScore]
   \If{$\aActorExposureValue < \aScoreValue$}
-    \pause
+%    \pause
     \State $\aActorExposure \assign \vScore$
-  \pause
+%  \pause
   \ElsIf{$\cRiskScoreTtl[\aActorExposure] \leq 0$}
-    \pause
+%    \pause
     \State $\aActorExposure \assign \cMaximum[\aActorScores]$
   \EndIf
 \end{function}
@@ -261,9 +376,9 @@
 \begin{frame}{Asynchronous Risk Propagation: Pseudocode}
 \begin{function}{\nApplyRiskScore}[\vActor, \vContact, \vScore]
   \If{$\aContactTime + \pTimeBuffer > \aScoreTime$}
-    \pause
+%    \pause
     \State $\aNewScoreValue \assign \pTransmissionRate \cdot \aScoreValue$
-    \pause
+%    \pause
     \State $\cSend[\aContactName, \vNewScore]$
   \EndIf
 \end{function}
@@ -272,7 +387,7 @@
 \begin{frame}{Asynchronous Risk Propagation: Pseudocode}
 \begin{function}{\nSetSendThreshold}[\vContact, \vScore]
   \State $\aNewScoreValue \assign \pSendCoefficient \cdot \aScoreValue$
-  \pause
+%  \pause
   \State $\aContactThreshold \assign \vNewScore$
 \end{function}
 \end{frame}
@@ -280,13 +395,13 @@
 \begin{frame}{Asynchronous Risk Propagation: Pseudocode}
 \begin{function}{\nUpdateSendThreshold}[\vActor, \vContact]
   \If{$\aContactThresholdValue > 0$}
-    \pause
+%    \pause
     \If{$\cRiskScoreTtl[\aContactThreshold] \leq 0$}
-      \pause
+%      \pause
       \State $\vScore \assign \cMaximumOlderThan[\aActorScores, \aContactTime + \pTimeBuffer]$
-        \pause
+%        \pause
       \State $\aNewScoreValue \assign \pTransmissionRate \cdot \aScoreValue$
-        \pause
+%        \pause
       \State $\cSetSendThreshold[\vContact, \vNewScore]$
     \EndIf
   \EndIf
@@ -296,13 +411,13 @@
 \begin{frame}{Asynchronous Risk Propagation: Pseudocode}
 \begin{function}{\nApplyRiskScore}[\vActor, \vContact, \vScore]
   \State $\cUpdateSendThreshold[\vActor, \vContact]$
-  \pause
+%  \pause
   \If{$\aContactThresholdValue < \aScoreValue \AND \aContactTime + \pTimeBuffer > \aScoreTime$}
-    \pause
+%    \pause
     \State $\aNewScoreValue \assign \pTransmissionRate \cdot \aScoreValue$
-    \pause
+%    \pause
     \State $\cSetSendThreshold[\vContact, \vNewScore]$
-    \pause
+%    \pause
     \State $\aContactBuffered \assign \vNewScore$
   \EndIf
 \end{function}
@@ -311,14 +426,14 @@
 \begin{frame}{Asynchronous Risk Propagation: Pseudocode}
 \begin{function}{\nHandleFlushTimeout}[\vActor]
   \ForEach{$\vContact \in \aActorContacts$}
-    \pause
+%    \pause
     \If{$\aContactBuffered \notEquals \nil$}
-      \pause
+%      \pause
       \State $\cSend[\aContactName, \aContactBuffered]$
-      \pause
+%      \pause
       \State $\aContactBuffered \assign \nil$
     \EndIf
-    \pause
+%    \pause
     \If{$\cContactTtl[\vContact] \leq 0$}
       \State $\cDelete[\aActorContacts, \vContact]$
     \EndIf
@@ -329,59 +444,31 @@
 \begin{frame}{Asynchronous Risk Propagation: Pseudocode}
 \begin{function}{\nHandleContact}[\vActor, \vContact]
   \If{$\cContactTtl[\vContact] > 0$}
-    \pause
+%    \pause
     \State $\aContactThreshold \assign \cNullRiskScore$
-    \pause
+%    \pause
     \State $\aContactBuffered \assign \nil$
-    \pause
+%    \pause
     \State $\aContactKey \assign \aContactName$
-    \pause
+%    \pause
     \State $\cMerge[\aActorContacts, \vContact]$
-    \pause
+%    \pause
     \State $\vScore \assign \cMaximumOlderThan[\aActorScores, \aContactTime + \pTimeBuffer]$
-    \pause
+%    \pause
     \State $\cApplyRiskScore[\vActor, \vContact, \vScore]$
   \EndIf
 \end{function}
 \end{frame}
 
-\end{section}
-
-\begin{section}{Evaluation}
-
-\begin{frame}{Experiment 1: Accuracy}
+\begin{frame}{Results: Message Reachability}
 \begin{figure}
   \centering
-  \includegraphics[height=\squareFigHeight]{accuracy-percentiles}
-  \caption[Cumulative accuracy distributions]{Cumulative accuracy distributions.}
+  \includegraphics[height=\squareFigHeight]{message-reachability}
+  \caption[Message reachability cumulative distributions]{Message reachability cumulative distributions.}
 \end{figure}
 \end{frame}
 
-\begin{frame}{Experiment 1: Accuracy}
-\begin{figure}
-  \centering
-  \includegraphics[width=\wideFigWidth]{accuracy-proportions}
-  \caption[Send coefficient optimality distributions]{Send coefficient optimality distributions. The dashed line inside each violin marks the median. The upper and lower dotted lines inside each violin mark the upper and lower quartiles, respectively.}
-\end{figure}
-\end{frame}
-
-\begin{frame}{Experiment 1: Efficiency}
-\begin{figure}
-  \centering
-  \includegraphics[height=\squareFigHeight]{relative-receives}
-  \caption[Message-passing efficiency]{Message-passing efficiency. The send coefficient $\pSendCoefficient = 1$ was used as a baseline for message-passing efficiency since it was found to be the maximum send coefficient that achieves perfect accuracy.}
-\end{figure}
-\end{frame}
-
-%\begin{frame}{Experiment 1: Efficiency}
-%\begin{figure}
-%  \centering
-%  \includegraphics[height=\squareFigHeight]{message-reachability}
-%  \caption[Message reachability cumulative distributions]{Message reachability cumulative distributions.}
-%\end{figure}
-%\end{frame}
-
-\begin{frame}{Experiment 1: Exploration}
+\begin{frame}{Results: Network Degree Distributions}
 \begin{figure}
   \centering
   \includegraphics[height=\squareFigHeight]{network-degree-distributions}
@@ -389,64 +476,17 @@
 \end{figure}
 \end{frame}
 
-\begin{frame}{Experiment 1: Exploration}
-\begin{figure}
-  \centering
-  \includegraphics[height=\squareFigHeight]{correlation}
-  \caption[Correlation matrix of dataset attributes]{Correlation matrix of dataset attributes. Each cell is the Spearman rank partial correlation coefficient \citep{Spearman1904}, controlling for the effect of the send coefficient. All coefficients are significant ($p < 0.01$), adjusting for multiple comparisons via the Holm–Bonferroni method \citep{Holm1979}.}
-\end{figure}
-\end{frame}
+%\begin{frame}{Results: Benchmarking Hypothesis Testing}
+%\end{frame}
 
-\begin{frame}{Experiment 2: Benchmarking Hypothesis Testing}
-\end{frame}
-
-\begin{frame}{Experiment 3: Benchmarking}
-\begin{figure}
-  \centering
-  \includegraphics[width=\wideFigWidth]{runtimes}
-  \caption[Message-passing runtimes]{Message-passing runtimes.}
-\end{figure}
-\end{frame}
-
-\begin{frame}{Experiment 3: Benchmarking}
-\begin{figure}
-  \centering
-  \includegraphics[height=\squareFigHeight]{runtime-regression}
-  \caption[Message-passing runtimes with regression lines]{Message-passing runtimes with regression lines.}
-\end{figure}
-\end{frame}
-
-\end{section}
-
-\begin{section}{Conclusion}
-
-\begin{frame}{Conclusion: Future Work}
+\begin{frame}{Prior Designs and Implementations}
 \begin{itemize}
-  \item Incorporate differential privacy techniques that are designed for DCT applications that utilize risk scores \citep{Romijnders2024}.
-  \pause
-  \item Formally define the security and privacy characteristics of ShareTrace, using the framework proposed by \citet{Kuhn2021}.
-  \pause
-  \item Conduct a simulation-based analysis of asynchronous risk propagation with COVI-AgentSim \citep{Gupta2020}.
-  \pause
-  \item Explore the utility and feasibility of integrating decentralized technologies \citep{Troncoso2017, Trautwein2022, Shi2024, Keizer2024} and self-sovereign identity \citep{Preukschat2021} into the system design.
+  \item  ``Thinking like a vertex'' with Apache Giraph
+  \item Factor subgraph actors
+  \item Driver-monitor-worker framework
+  \item Projected subgraph actors \citep{Tatton2022b}
+  \item Contact search
 \end{itemize}
 \end{frame}
-
-\end{section}
-
-% A section is automatically created for references.
-\begin{frame}[allowframebreaks]{References}
-  \printbibliography
-\end{frame}
-
-%\begin{frame}{Prior Designs and Implementations}
-%\begin{itemize}
-%  \item  ``Thinking like a vertex'' with Apache Giraph
-%  \item Factor subgraph actors
-%  \item Driver-monitor-worker framework
-%  \item Projected subgraph actors \citep{Tatton2022b}
-%  \item Contact search
-%\end{itemize}
-%\end{frame}
 
 \end{document}

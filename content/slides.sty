@@ -5,7 +5,10 @@
 % Title page
 \title{\rawThesisTitle}
 \author{\thesisAuthor}
-\institute{\thesisInstitution}
+\institute{
+  \thesisDepartment\\
+  \thesisInstitution
+}
 \date{\thesisDefenseDate}
 
 % Remove all navigation symbols, except page numbers
@@ -45,6 +48,8 @@
 \usepackage[backend=biber, natbib=true, sortcites=true]{biblatex}
 \addbibresource{thesis.bib}
 \DeclareFieldFormat{titlecase}{\MakeSentenceCase*{#1}}
+
+\usepackage{appendixnumberbeamer}
 
 % Set the font size of bibliography entries.
 \AtBeginBibliography{\scriptsize}
