@@ -18,33 +18,11 @@
 \newcommand{\thesisDefenseDate}{7 February 2025\xspace}
 \newcommand{\thesisGraduationDate}{May 2025\xspace}
 
-% Hyphenation
-\usepackage[htt]{hyphenat}
-\hyphenation{Risk-Propagation}
-\hyphenation{Actor-System}
-\hyphenation{Contact-Network}
-\hyphenation{Run-Message}
-\hyphenation{Risk-Score-Message}
-\hyphenation{Contact-Message}
-\hyphenation{User-Updated-Message}
-\hyphenation{Post-Stop}
-\hyphenation{User-Event}
-\hyphenation{Last-Event}
-\hyphenation{Receive-Event}
-\hyphenation{Update-Event}
-\hyphenation{Lifecycle-Event}
-\hyphenation{Create-Users-Start}
-\hyphenation{Create-Users-End}
-\hyphenation{Send-Risk-Scores-Start}
-\hyphenation{Send-Risk-Scores-End}
-\hyphenation{Send-Contacts-Start}
-\hyphenation{Send-Contacts-End}
-\hyphenation{Risk-Propagation-Start}
-\hyphenation{Risk-Propagation-End}
-\hyphenation{Event-Handler}
-
 % Provides NewDocumentCommand and NewDocumentEnvironment 
 \usepackage{xparse}
+
+% Hyphenation
+\usepackage[htt]{hyphenat}
 
 % Math symbols and fonts
 \usepackage{amsmath}
@@ -158,13 +136,13 @@
 
 % Variables
 \newcommand{\vActor}{a}
+\newcommand{\vMessage}{m}
 \newcommand{\vAngle}{\theta}
 \newcommand{\vContact}{c}
 \newcommand{\vGraph}{G}
 \newcommand{\vLatitude}{\phi}
 \newcommand{\vLocation}{\ell}
 \newcommand{\vLongitude}{\lambda}
-\newcommand{\vMessage}{m}
 \newcommand{\vRadius}{r}
 \newcommand{\vReachabilityRatio}{\rho}
 \newcommand{\vReachability}{\varphi}
@@ -175,8 +153,8 @@
 \newcommand{\vExposureScore}[2]{r_{#1}^{(#2)}}
 \newcommand{\vExposureScores}[1]{\mathbf{r}^{(#1)}}
 
-\newcommand{\vSomeObject}{\var{o}}
-\newcommand{\vSomeAttribute}{\var{a}}
+\newcommand{\vSomeObject}{o}
+\newcommand{\vSomeAttribute}{a}
 
 \newcommand{\vKey}{k}
 
@@ -189,6 +167,10 @@
 \newcommand{\vVariableMessage}[3]{\mu_{#1#2}^{(#3)}}
 \newcommand{\vFactorMessage}[3]{\lambda_{#1#2}^{(#3)}}
 
+\newcommand{\vExistingContact}{\vContact'}
+\newcommand{\vMaxScore}{\vScore^*}
+\newcommand{\aMaxScoreValue}{\aValue{\vMaxScore}}
+\newcommand{\aMaxScoreTime}{\aTime{\vMaxScore}}
 \newcommand{\vNewScore}{\vScore'}
 \newcommand{\vEstimatedReachability}{\hat{\vReachability}}
 
@@ -252,6 +234,7 @@
 \newcommand{\aContactThresholdValue}{\aValue{\aContactThreshold}}
 \newcommand{\aContactThreshold}{\aThreshold{\vContact}}
 \newcommand{\aContactTime}{\aTime{\vContact}}
+\newcommand{\aExistingContactTime}{\aTime{\vExistingContact}}
 \newcommand{\aNewScoreValue}{\aValue{\vNewScore}}
 \newcommand{\aScoreKey}{\aKey{\vScore}}
 \newcommand{\aScoreTime}{\aTime{\vScore}}
@@ -261,24 +244,20 @@
 
 % Function names
 \newcommand{\nApplyRiskScore}{Apply-Risk-Score}
-\newcommand{\nComputeMessage}{Compute-Message}
 \newcommand{\nContactTtl}{Contact-Ttl}
 \newcommand{\nCreateActor}{Create-Actor}
-\newcommand{\nCreateFactorGraph}{Factor-Graph}
 \newcommand{\nCreateContactNetwork}{Contact-Network}
+\newcommand{\nCreateFactorGraph}{Factor-Graph}
 \newcommand{\nCreate}{Create}
 \newcommand{\nDelete}{Delete}
 \newcommand{\nHandleContact}{Handle-Contact}
 \newcommand{\nHandleFlushTimeout}{Handle-Flush-Timeout}
 \newcommand{\nHandleRiskScore}{Handle-Risk-Score}
 \newcommand{\nInsert}{Insert}
-\newcommand{\nMaximumOlderThan}{Maximum-Older-Than}
-\newcommand{\nMaximum}{Maximum}
-\newcommand{\nMerge}{Merge}
-\newcommand{\nMinimum}{Minimum}
+\newcommand{\nMaxRiskScore}{Max-Risk-Score}
+\newcommand{\nMergeContact}{Merge-Contact}
 \newcommand{\nNullRiskScore}{Null-Risk-Score}
 \newcommand{\nPredicate}{Predicate}
-\newcommand{\nReceive}{Receive}
 \newcommand{\nRiskPropagationActor}{Risk-Propagation-Actor}
 \newcommand{\nRiskPropagationMain}{Risk-Propagation-Main}
 \newcommand{\nRiskPropagation}{Risk-Propagation}
@@ -289,10 +268,49 @@
 \newcommand{\nUpdateExposureScore}{Update-Exposure-Score}
 \newcommand{\nUpdateSendThreshold}{Update-Send-Threshold}
 
+\hyphenation{\nApplyRiskScore}
+\hyphenation{\nContactTtl}
+\hyphenation{\nCreateActor}
+\hyphenation{\nCreateContactNetwork}
+\hyphenation{\nCreateFactorGraph}
+\hyphenation{\nHandleContact}
+\hyphenation{\nHandleFlushTimeout}
+\hyphenation{\nHandleRiskScore}
+\hyphenation{\nMaxRiskScore}
+\hyphenation{\nMergeContact}
+\hyphenation{\nNullRiskScore}
+\hyphenation{\nRiskPropagationActor}
+\hyphenation{\nRiskPropagationMain}
+\hyphenation{\nRiskPropagation}
+\hyphenation{\nRiskScoreTtl}
+\hyphenation{\nSetSendThreshold}
+\hyphenation{\nUpdateExposureScore}
+\hyphenation{\nUpdateSendThreshold}
+
+\hyphenation{Actor-System}
+\hyphenation{Contact-Message}
+\hyphenation{Contact-Network}
+\hyphenation{Create-Users-End}
+\hyphenation{Create-Users-Start}
+\hyphenation{Event-Handler}
+\hyphenation{Last-Event}
+\hyphenation{Lifecycle-Event}
+\hyphenation{Post-Stop}
+\hyphenation{Receive-Event}
+\hyphenation{Risk-Propagation-End}
+\hyphenation{Risk-Propagation-Start}
+\hyphenation{Risk-Score-Message}
+\hyphenation{Run-Message}
+\hyphenation{Send-Contacts-End}
+\hyphenation{Send-Contacts-Start}
+\hyphenation{Send-Risk-Scores-End}
+\hyphenation{Send-Risk-Scores-Start}
+\hyphenation{Update-Event}
+\hyphenation{User-Event}
+\hyphenation{User-Updated-Message}
+
 % Function calls
 \newcommand{\cApplyRiskScore}[1][]{\Call{\nApplyRiskScore}{#1}\xspace}
-\newcommand{\cBecome}[1][]{\Call{\nBecome}{#1}\xspace}
-\newcommand{\cComputeMessage}[1][]{\Call{\nComputeMessage}{#1}\xspace}
 \newcommand{\cContactTtl}[1][]{\Call{\nContactTtl}{#1}\xspace}
 \newcommand{\cCreateActor}[1][]{\Call{\nCreateActor}{#1}\xspace}
 \newcommand{\cCreateFactorGraph}[1][]{\Call{\nCreateFactorGraph}{#1}\xspace}
@@ -303,13 +321,10 @@
 \newcommand{\cHandleFlushTimeout}[1][]{\Call{\nHandleFlushTimeout}{#1}\xspace}
 \newcommand{\cHandleRiskScore}[1][]{\Call{\nHandleRiskScore}{#1}\xspace}
 \newcommand{\cInsert}[1][]{\Call{\nInsert}{#1}\xspace}
-\newcommand{\cMaximumOlderThan}[1][]{\Call{\nMaximumOlderThan}{#1}\xspace}
-\newcommand{\cMaximum}[1][]{\Call{\nMaximum}{#1}\xspace}
-\newcommand{\cMerge}[1][]{\Call{\nMerge}{#1}\xspace}
-\newcommand{\cMinimum}[1][]{\Call{\nMinimum}{#1}\xspace}
+\newcommand{\cMaxRiskScore}[1][]{\Call{\nMaxRiskScore}{#1}\xspace}
+\newcommand{\cMergeContact}[1][]{\Call{\nMergeContact}{#1}\xspace}
 \newcommand{\cNullRiskScore}[1][]{\Call{\nNullRiskScore}{#1}\xspace}
 \newcommand{\cPredicate}[1][]{\Call{\nPredicate}{#1}\xspace}
-\newcommand{\cReceive}[1][]{\Call{\nReceive}{#1}\xspace}
 \newcommand{\cRiskPropagationActor}[1][]{\Call{\nRiskPropagationActor}{#1}\xspace}
 \newcommand{\cRiskPropagationMain}[1][]{\Call{\nRiskPropagationMain}{#1}\xspace}
 \newcommand{\cRiskPropagation}[1][]{\Call{\nRiskPropagation}{#1}\xspace}
@@ -341,6 +356,12 @@
 \newcommand{\dist}{d}
 \newcommand{\bigO}[1]{O(#1)}
 \newcommand{\card}[1]{\left\vert #1 \right\vert}
+
+% Abbreviations for network types
+\DeclareMathOperator{\ba}{BA}
+\DeclareMathOperator{\er}{ER}
+\DeclareMathOperator{\rr}{RR}
+\DeclareMathOperator{\wg}{WG}
 
 % Proper bracket formatting
 \usepackage{braket}

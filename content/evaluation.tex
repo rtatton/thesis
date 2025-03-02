@@ -69,7 +69,7 @@ The following experiments were used to evaluate \class{RiskPropagation}.
 
 \labelcref{item:parameters} was completed first to determine suitable parameter values for the remaining experiments. \labelcref{item:distributions} was conducted before \labelcref{item:topology} to determine the necessity of evaluating all combinations of data distributions. That is, if the type of data distribution was found to have a statistically nonsignificant effect on the runtime of \class{RiskPropagation}, then the complexity of \labelcref{item:topology} could be meaningfully reduced. \labelcref{item:topology} was conducted to determine if a simple model could be used in practice to estimate the message-passing runtime of \class{RiskPropagation}. While \labelcref{item:distributions} and \labelcref{item:topology} focus on benchmarking the reference implementation, more advanced simulation-based analysis of ShareTrace with COVI-AgentSim \citep{Gupta2020} is the subject of future work.
 
-All experiments utilized the same random graphs: Barabasi-Albert graphs \citep{Barabasi1999}, Erd\H{o}s-R\'{e}nyi $G_{n,m}$ graphs \citep{Erdos1959}, Watts-Strogatz graphs \citep{Watts1998}, and random regular graphs \citep{Kim2003}. These graphs were selected because they exhibit, to varying extents, aspects of real-world complex networks \citep{Newman2003}, such as contact networks; they are available in the JGraphT library; and they all are parametric, either directly or indirectly, in the size and order of the network. The last property allowed the effects of the topology to be isolated.
+All experiments utilized the same random graphs: Barabasi-Albert graphs \citep{Barabasi1999}, Erd\H{o}s-R\'{e}nyi $G_{n,m}$ graphs \citep{Erdos1959}, Watts-Strogatz graphs \citep{Watts1998}, and random regular graphs \citep{Kim2003}. These graphs were selected because they are available in the JGraphT library and are parametric, either directly or indirectly, in the size and order of the network. The latter property allowed the effects of the topology to be isolated. While Barabasi-Albert graphs, Erd\H{o}s-R\'{e}nyi $G_{n,m}$ graphs, Watts-Strogatz graphs exhibit aspects of real-world contact networks \citep{Newman2003}, random regular graphs do not.
 
 The following describes the parametrization of each type of contact network. Barabasi-Albert graphs are parametrized by the order $n$, the initial order $n_0$, and the increase in size $m_0$ upon each incremental increase in order. The latter two parameters are determined by solving \cref{eq:Barabasi-Albert-optimization}, where $\fracpart(x)$ is the fractional part of a real number $x$.
 \begin{argmini}{n_0, m_0}{\fracpart(m_0)}{\protect\label{eq:Barabasi-Albert-optimization}}{}
@@ -100,6 +100,61 @@ Erd\H{o}s-R\'{e}nyi graphs are parametrized by the order $n$ and the size $m$. R
   \caption[Default parameter values for experiments]{Default parameter values for experiments.}
   \label{tab:default-parameters}
 \end{table}
+
+\begin{table}[htbp]
+  \centering
+%  \renewcommand{\arraystretch}{2}
+  \begin{tabular}{lc}
+    \toprule
+    Network type & Parameters \\
+    \midrule
+    Barabasi-Albert & $\begin{aligned} n &= \num{5000} \\ n_0 &= \num{21} \\ m_0 &= \num{10} \end{aligned}$\\
+    \midrule
+    Erd\H{o}s-R\'{e}nyi & $\begin{aligned} n &= \num{5000} \\ m &= \num{50000} \end{aligned}$\\
+    \midrule
+    Random regular & $\begin{aligned} n &= \num{5000} \\ d &= 20 \end{aligned}$\\
+    \midrule
+    Watts-Strogatz & $\begin{aligned} n &= \num{5000} \\ p &= \num{0.2} \\ k &= \num{20} \end{aligned}$\\
+    \bottomrule
+  \end{tabular}
+  \caption[]{Experiment 1}
+  \label{tab:network-parameters}
+\end{table}
+
+\begin{table}[htbp]
+  \centering
+%  \renewcommand{\arraystretch}{2}
+  \begin{tabular}{lc}
+    \toprule
+    Network type & Parameters \\
+    \midrule
+    Barabasi-Albert & $\begin{aligned} n &= \num{10000} \\ n_0 &= \num{21} \\ m_0 &= \num{10} \end{aligned}$\\
+    \midrule
+    Erd\H{o}s-R\'{e}nyi & $\begin{aligned} n &= \num{10000} \\ m &= \num{100000} \end{aligned}$\\
+    \midrule
+    Random regular & $\begin{aligned} n &= \num{10000} \\ d &= 20 \end{aligned}$\\
+    \midrule
+    Watts-Strogatz & $\begin{aligned} n &= \num{10000} \\ p &= \num{0.2} \\ k &= \num{20} \end{aligned}$\\
+    \bottomrule
+  \end{tabular}
+  \caption[]{Experiment 2}
+  \label{tab:network-parameters}
+\end{table}
+
+%\begin{table}[htbp]
+%  \centering
+%  \scriptsize
+%  \begin{tabular}{lccccccccc}
+%    \toprule
+%    Order (thousands) & \multicolumn{9}{c}{Size (millions)} \\
+%    \cmidrule(lr){1} \cmidrule(lr){2-10}
+%    & $1$ & $2$ & $3$ & $4$ & $5$ & $6$ & $7$ & $8$ & $9$ & $10$ \\
+%    $10$ & $BA(n, m)$ & $BA(n, m)$ & $BA(n, m)$ & $BA(n, m)$ & $BA(n, m)$ & $BA(n, m)$ & $BA(n, m)$ & $BA(n, m)$ & $BA(n, m)$\\
+%    \bottomrule
+%  \end{tabular}
+%  \caption[]{Experiment 3}
+%  \label{tab:network-parameters}
+%\end{table}
 
 \begin{sidewaystable}[htbp]
   \centering

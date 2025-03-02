@@ -1,11 +1,14 @@
 \chapter{Data Structures}\label{ch:data-structures}
 
-Let a \define{dynamic set} $\vSomeSet$ be a mutable collection of distinct elements. Let $\vSomeElement$ be a pointer to an element in $\vSomeSet$ such that $\aSomeElementKey$ uniquely identifies the element in $\vSomeSet$. Let a \define{dictionary} be a dynamic set that supports insertion, deletion, and membership querying \citep{Cormen2022}.
-%
+A \define{dynamic set} $\vSomeSet$ is a mutable collection of distinct elements such that $\vSomeElement$ is a pointer to an element in $\vSomeSet$ and $\aSomeElementKey$ uniquely identifies it. A dynamic set $\vSomeSet$ supports the following operations \citep{Cormen2022}.
 \begin{itemize}
   \item $\cInsert[\vSomeSet, \vSomeElement]$ adds the element pointed to by $\vSomeElement$ to $\vSomeSet$.
   \item $\cDelete[\vSomeSet, \vSomeElement]$ removes the element pointed to by $\vSomeElement$ from $\vSomeSet$.
-  \item $\cSearch[\vSomeSet, \vKey]$ returns a pointer $\vSomeElement$ to an element in the set $\vSomeSet$ such that $\aSomeElementKey \equals \vKey$; or $\nil$, if no such element exists in $\vSomeSet$.
-  \item $\cMerge[\vSomeSet, \vSomeElement]$ adds the element pointed to by $\vSomeElement$, if no such element exists in $\vSomeSet$; otherwise, the result of applying a function to the element pointed to by $\vSomeElement$ and the existing element is added to $\vSomeSet$.
-  \item $\cMaximum[\vSomeSet]$ returns a pointer $\vSomeElement$ to the maximum element of the totally ordered set $\vSomeSet$; or $\nil$ if $\vSomeSet$ is empty.
+  \item $\cSearch[\vSomeSet, \vKey]$ returns a pointer $\vSomeElement$ to an element in $\vSomeSet$ such that $\aSomeElementKey \equals \vKey$; or $\nil$, if no such element exists in $\vSomeSet$.
+\end{itemize}
+
+A \define{dynamic multiset} $\vSomeSet$ is a dynamic set that allows multiple elements to have the same key \citep{Cormen2022}. The definitions of \cDelete and \cSearch differ as follows.
+\begin{itemize}
+  \item $\cDelete[\vSomeSet, \vSomeElement]$ removes the elements pointed to by $\vSomeElement$ from $\vSomeSet$. Elements in $\vSomeSet$ with the key $\aSomeElementKey$ that are \emph{not} pointed to by $\vSomeElement$ are retained.
+  \item $\cSearch[\vSomeSet, \vKey]$ returns a collection of pointers to the elements in $\vSomeSet$ such that $\aSomeElementKey \equals \vKey$, or $\nil$, if no such elements exists in $\vSomeSet$.
 \end{itemize}

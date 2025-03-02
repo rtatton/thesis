@@ -12,7 +12,7 @@ Let $\vGraph = (\vVariables, \vFactors, \vEdges)$ be a \define{factor graph} whe
       1 & \text{if } \event = \var{infected}.
     \end{cases}
 \end{equation*}
-Thus, $\pr{\vVariable[i]}[\vTime] = \vScore_\vTime$ is a risk score of \indexed{i}{individual}. A \define{factor \vertexName} $\vFactor: \vVariables \times \vVariables \rightarrow [0, 1]$ defines the transmission of infection risk between two contacts. Specifically, contact between \twoindexed{i}{j}{individual} is represented by the factor \vertexName $\vFactor(\vVariable[i], \vVariable[j])$ = $\vFactor[ij]$, which is adjacent to the variable \verticesName $\vVariable[i], \vVariable[j]$. \Cref{fig:factor-graph} depicts a factor graph that reflects the domain constraints.
+Thus, $\pr{\vVariable[i]}[\vTime] = \vScore_\vTime$ is a risk score of \indexed{i}{individual} that was computed at time $\vTime$. A \define{factor \vertexName} $\vFactor: \vVariables \times \vVariables \rightarrow [0, 1]$ defines the transmission of infection risk between two contacts. Specifically, contact between \twoindexed{i}{j}{individual} is represented by the factor \vertexName $\vFactor(\vVariable[i], \vVariable[j])$ = $\vFactor[ij]$, which is adjacent to the variable \verticesName $\vVariable[i], \vVariable[j]$. \Cref{fig:factor-graph} depicts a factor graph that reflects the domain constraints.
 
 \begin{figure}[htbp]
 \centering
@@ -59,7 +59,7 @@ where $\dist(\vSourceVertex, \vTargetVertex)$ is the shortest-path distance betw
 \begin{enumerate}
   \item Contacts have a nondecreasing effect on an individual's exposure score.
   \item A risk score $\vScore_\vTime$ is \define{relevant} to the contact $(i, j, \vTime_{ij})$ if $\vTime < \vTime_{ij} +\pTimeBuffer$, where $\pTimeBuffer \in \naturals$ is a \define{time buffer} that accounts for the incubation period, along with the delayed reporting of symptom scores and contacts. The time buffer is also known as the \define{(contact) tracing window} \citep{Raymenants2022} and is similar to the \define{notification window} used by other contact tracing applications \citep{Leng2022}.
-  \item Risk transmission between contacts is incomplete. Thus, a risk score decays exponentially along its transmission path in $\vGraph$ at a rate of $\log \pTransmissionRate$, where $\pTransmissionRate \in (0, 1)$ is the \define{transmission rate}. \Cref{fig:decay} visualizes this decay, assuming a transmission rate of $\pTransmissionRate = 0.8$ \citep{Hamner2020}.\end{enumerate}
+  \item Risk transmission between contacts is incomplete. Thus, a risk score decays exponentially along its transmission path in $\vGraph$ according to the \define{transmission rate} $\pTransmissionRate \in (0, 1)$. \Cref{fig:decay} visualizes this decay, assuming a transmission rate of $\pTransmissionRate = 0.8$ \citep{Hamner2020}.\end{enumerate}
 
 \begin{figure}[htbp]
 \centering
@@ -70,16 +70,16 @@ where $\dist(\vSourceVertex, \vTargetVertex)$ is the shortest-path distance betw
   minor tick num=1,
   width=0.6\textwidth,
   smooth,
-  domain=1:5,
+  domain=0:10,
   y domain=0.01:1,
   samples=100,
   black,
   thick
 ]
-  \addplot[] {e^(-0.8 * x)};
-  \addplot[dashed] {0.75 * e^(-0.8 * x)};
-  \addplot[dashdotted] {0.5 * e^(-0.8 * x)};
-  \addplot[dotted] {0.25 * e^(-0.8 * x)};
+  \addplot[] {0.8 ^ x};
+  \addplot[dashed] {0.75 * (0.8 ^ x)};
+  \addplot[dashdotted] {0.5 * (0.8 ^ x)};
+  \addplot[dotted] {0.25 * (0.8 ^ x)};
   \legend{$1.00$, $0.50$, $0.75$, $0.25$};
 \end{axis}
 \end{tikzpicture}
@@ -87,7 +87,7 @@ where $\dist(\vSourceVertex, \vTargetVertex)$ is the shortest-path distance betw
 \label{fig:decay}
 \end{figure}
 
-To reiterate, a factor message $\vFactorMessage{i}{j}{n}$ is the maximum relevant risk score in the variable message $\vVariableMessage{i}{j}{n}$ (or 0) that is scaled by the transmission rate $\pTransmissionRate$.
+To reiterate, a factor message $\vFactorMessage{i}{j}{n}$ is the maximum relevant risk score in the variable message $\vVariableMessage{i}{j}{n}$ (or 0) that is scaled by the transmission rate $\pTransmissionRate$.\footnote{This model of risk transmission and exposure risk updating is arguably unrealistic. However, it is beyond the scope of this work to propose alternative approaches.}
 
 \citet{Ayday2021} assume that the contact set $\vContacts$ may contain (1) multiple contacts between the same two individuals and (2) invalid contacts, or those lasting less than $\pMinContactDuration$ time. However, these assumptions introduce unnecessary complexity. Regarding assumption 1, suppose \twoindexed{i}{j}{individual} come into contact $m$ times such that $\vTime_k < \vTime_\ell$ for $1 \leq k < \ell \leq m$. Let $\vFactorMessages_k$ be the set of relevant risk scores, according to the contact time $\vTime_k$, where
 \begin{equation*}
@@ -162,49 +162,25 @@ To address the limitations of \cRiskPropagation, \citet{Ayday2021} propose decen
 
 \subsection{Actor Behavior}
 
-An actor $\vActor$ in the ShareTrace actor system corresponds to an individual and is initialized by the \cCreateActor operation \citep{Agha1985} with the following attributes.
+An actor $\vActor$ in the ShareTrace actor system represents an individual and is initialized by the \cCreateActor operation \citep{Agha1985} with the following attributes.
 \begin{itemize}
-  \item $\aActorExposure$: the current exposure score of the individual. This attribute is either a symptom score, a risk score sent by another actor, or the null risk score (see \cNullRiskScore).
-  \item $\aActorContacts$: a \define{dictionary} (see \cref{ch:data-structures}) of contacts. In the context of an actor, a contact is a \define{proxy} \citep{Gamma1995} of the actor that represents an individual with which the individual represented by this actor was physically proximal. That is, if \indexed{i}{individual} interacted with \indexed{j}{individual}, then $\aContacts{\vActor_i}$ contains a contact $\vContact$ such that $\aContactKey = \aContactName$ is a name of \indexed{j}{actor} and $\aContactTime$ is the most recent time of contact. This attribute extends the concept of \define{actor acquaintances} \citep{Hewitt1977a, Hewitt1977b, Agha1985} to be time-varying.
-  \item $\aActorScores$: a dictionary of exposure scores such that $\aScoreKey$ for an exposure score $\vScore$ is the time interval during which $\aActorExposure = \vScore$. The null risk score is returned for queries in which the dictionary does not contain a risk score with a key that intersects the given query interval. \Cref{fig:exposure} depicts a hypothetical step function that $\aActorScores$ represents.
+  \item $\aActorExposure$: the current exposure score of the individual. This attribute is either a symptom score, a risk score received from actor, or the null risk score (see \cNullRiskScore).
+  \item $\aActorScores$: a dynamic multiset of received risk scores. The key $\aScoreKey$ of a risk score $\vScore$ in $\aActorScores$ is the time it was computed $\aScoreTime$. An actor may receive multiple risk scores that were computed at the same time, so a multiset provides a complete history of relevant risk scores. 
+  \item $\aActorContacts$: a dynamic set where each element is a \define{proxy} \citep{Gamma1995} of another actor. That is, if \indexed{i}{individual} was physically proximal with \indexed{j}{individual}, then $\aContacts{\vActor_i}$ contains an element $\vContact$ such that $\aContactKey $ is a name of \indexed{j}{actor} and $\aContactTime$ is their most recent time of contact.
 \end{itemize}
 
-\begin{function}[H]{\nNullRiskScore}
+\begin{function}{\nNullRiskScore}
   \State $\aScoreValue \assign 0$
   \State $\aScoreTime \assign 0$
   \State \Return $\vScore$
 \end{function}
 
-\begin{function}[H]{\nCreateActor}
-  \State $\aActorContacts \assign \emptyset$
-  \State $\aActorScores \assign \emptyset$
+\begin{function}{\nCreateActor}
   \State $\aActorExposure \assign \cNullRiskScore$
+  \State $\aActorScores \assign \emptyset$
+    \State $\aActorContacts \assign \emptyset$
   \State \Return $\vActor$
 \end{function}
-
-\begin{figure}[htbp]
-\centering
-\begin{tikzpicture}
-\begin{axis}[
-  xlabel={Time},
-  ylabel={Exposure score},
-  xtick=\empty,
-]
-  \addplot [const plot mark right] coordinates {
-    (0, 0)
-    (2, 0)
-    (3, 0.3)
-    (6, 0.7)
-    (9, 0.6)
-    (11, 0.9)
-    (15, 0.8)
-    (17, 0.4)
-  };
-\end{axis}
-\end{tikzpicture}
-\caption[Historical exposure scores of an actor]{Hypothetical history of an individual's exposure score.}
-\label{fig:exposure}
-\end{figure}
 
 The interface of an actor is primarily defined by two types of messages: contacts and risk scores. Based on \cref{sec:synchronous}, let the \define{time to live} (TTL) of a message be the remaining time of its relevance. The reference time $\vReferenceTime$ is assumed to be the current time.
 
@@ -216,12 +192,12 @@ The interface of an actor is primarily defined by two types of messages: contact
   \State \Return $\pContactExpiry - (\vReferenceTime - \aContactTime)$
 \end{function}
 
-The \cHandleRiskScore operation defines how an actor behaves upon receiving a risk score. The key $\aScoreKey$ initially associated with the risk score $\vScore$ is the time interval during which it is relevant. For the dictionary $\aActorScores$, \cMerge preserves the mapping invariant defined above such that risk scores are ordered first by value and then by time. Thus, $\aScoreKey \subseteq [\aScoreTime, \aScoreTime + \pScoreExpiry)$ for all exposure scores in $\aActorScores$. The \cUpdateExposureScore operation is the online equivalent of updating an individual's exposure score in \cRiskPropagation.
+The \cHandleRiskScore operation defines how an actor behaves upon receiving a risk score. The \cUpdateExposureScore operation is the online equivalent of updating an individual's exposure score in \cRiskPropagation. The \cMaxRiskScore operation returns the risk score with the maximum value. In the event of ties, the newer risk score is preferred. Expired risk scores are also deleted, which ensures the risk score returned is relevant and that $\aActorScores$ does not grow without bound.
 
-\begin{function}[H]{\nHandleRiskScore}[\vActor, \vScore]
+\begin{function}{\nHandleRiskScore}[\vActor, \vScore]
   \If{$\cRiskScoreTtl[\vScore] > 0$}
-    \State $\aScoreKey \assign [\aScoreTime, \aScoreTime + \pScoreExpiry)$
-    \State $\cMerge[\aActorScores, \vScore]$
+    \State $\aScoreKey \assign \aScoreTime$
+    \State $\cInsert[\aActorScores, \vScore]$
     \State $\cUpdateExposureScore[\vActor, \vScore]$
     \ForEach{$\vContact \in \aActorContacts$}
       \State $\cApplyRiskScore[\vActor, \vContact, \vScore]$
@@ -229,26 +205,40 @@ The \cHandleRiskScore operation defines how an actor behaves upon receiving a ri
   \EndIf
 \end{function}
 
-\begin{function}[H]{\nUpdateExposureScore}[\vActor, \vScore]
+\begin{function}{\nUpdateExposureScore}[\vActor, \vScore]
   \If{$\aActorExposureValue < \aScoreValue$}
     \State $\aActorExposure \assign \vScore$
   \ElsIf{$\cRiskScoreTtl[\aActorExposure] \leq 0$}
-    \State $\aActorExposure \assign \cMaximum[\aActorScores]$
+    \State $\aActorExposure \assign \cMaxRiskScore[\aActorScores, \infty]$
   \EndIf
+\end{function}
+
+\begin{function}{\nMaxRiskScore}[\vActor, \vTime]
+  \State $\vMaxScore \assign \cNullRiskScore$
+  \For{$\vScore \in \aActorScores$}
+    \If{$\cRiskScoreTtl[\vScore] \leq 0$}
+      \State $\cDelete[\aActorScores, \vScore]$
+    \ElsIf{$\aScoreTime < \vTime$}
+      \If{$\aScoreValue > \aMaxScoreValue$}
+        \State $\vMaxScore \assign \vScore$
+      \ElsIf{$\aScoreValue \equals \aMaxScoreValue \AND \aScoreTime > \aMaxScoreTime$}
+        \State $\vMaxScore \assign \vScore$
+      \EndIf
+    \EndIf
+  \EndFor
+  \State \Return $\vMaxScore$
 \end{function}
 
 For the moment, assume that \cApplyRiskScore is the online equivalent of computing a factor message (see \cref{sec:synchronous}). Line \ref{step:scale-by-transmission-rate} indicates that a copy $\vNewScore$ of the risk score $\vScore$ is updated using the transmission rate $\pTransmissionRate$. The \cSend operation enables actor communication \citep{Agha1985}.
 
-\begin{function}[H]{\nApplyRiskScore}[\vActor, \vContact, \vScore]
+\begin{function}{\nApplyRiskScore}[\vActor, \vContact, \vScore]
   \If{$\aContactTime + \pTimeBuffer > \aScoreTime$}
     \State $\aNewScoreValue \assign \pTransmissionRate \cdot \aScoreValue$\label{step:scale-by-transmission-rate}
     \State $\cSend[\aContactName, \vNewScore]$
   \EndIf
 \end{function}
 
-The problem with \cApplyRiskScore is that it causes risk scores to propagate \textit{ad infinitum}. Unlike \cRiskPropagation, a global convergence test is not available to terminate message passing, so it is necessary to define a local condition that determines if a risk score should be sent to another actor. Practically, ``self-terminating'' message-passing is necessary for asynchronous risk propagation to be scalable and cost-efficient.
-
-The intent of sending a risk score to an actor is to update its exposure score. According to \cHandleRiskScore, it is only necessary to send an actor risk scores with values that exceed its current exposure score. Thus, an actor can associate a \define{send threshold} with a contact such that the target actor only receives risk scores that exceed the threshold. To permit a trade-off between accuracy and efficiency, let the \define{send coefficient} $\pSendCoefficient \in \reals$ be a scaling factor that is applied to a risk score upon setting the send threshold.
+The problem with \cApplyRiskScore is that it causes risk scores to propagate \textit{ad infinitum}. Unlike \cRiskPropagation, a global convergence test is not available to terminate message passing, so it is necessary to define a local condition that determines if a risk score should be sent to another actor. Practically, ``self-terminating'' message-passing is necessary for asynchronous risk propagation to be scalable and cost-efficient. The intent of sending a risk score to an actor is to update its exposure score. According to \cHandleRiskScore, it is only necessary to send an actor risk scores with values that exceed its current exposure score. Thus, an actor can associate a \define{send threshold} with a contact such that the target actor only receives risk scores that exceed the threshold. To permit a trade-off between accuracy and efficiency, let the \define{send coefficient} $\pSendCoefficient \in \reals$ be a scaling factor that is applied to a risk score upon setting the send threshold.
 
 \begin{function}{\nSetSendThreshold}[\vContact, \vScore]
   \State $\aNewScoreValue \assign \pSendCoefficient \cdot \aScoreValue$
@@ -257,7 +247,7 @@ The intent of sending a risk score to an actor is to update its exposure score. 
 
 The \cApplyRiskScore operation that incorporates the concept of a send threshold is defined below. Assuming a finite number of actors, a positive send coefficient guarantees that a risk score has finite propagation.
 
-\begin{function}{\nApplyRiskScore}[\vActor, \vContact, \vScore]
+\begin{function}[H]{\nApplyRiskScore}[\vActor, \vContact, \vScore]
   \If{$\aContactThresholdValue < \aScoreValue \AND \aContactTime + \pTimeBuffer > \aScoreTime$}
     \State $\aNewScoreValue \assign \pTransmissionRate \cdot \aScoreValue$
     \State $\cSetSendThreshold[\vContact, \vNewScore]$
@@ -265,11 +255,11 @@ The \cApplyRiskScore operation that incorporates the concept of a send threshold
   \EndIf
 \end{function}
 
-The \cSetSendThreshold operation defines \emph{how} the send threshold is updated, but not \emph{when} it should be updated; the \cUpdateSendThreshold operation encapsulates the latter. The second predicate on Line \ref{step:should-update-threshold} stems from the fact that the send threshold is a risk score and thus subject to expiry. The first predicate, however, is more subtle and will be revisited shortly. The \cMaximumOlderThan operation is the same as \cMaximum, with the constraint that the key of the risk score intersects the interval $(-\infty, \aContactTime + \pTimeBuffer)$. Thus, the returned risk score is always relevant to the contact. Consistent with \cApplyRiskScore, the risk score retrieved from $\aActorScores$ is scaled by the transmission rate and set as the new send threshold.
+The \cSetSendThreshold operation defines \emph{how} the send threshold is updated, but not \emph{when} it should be updated; the \cUpdateSendThreshold operation encapsulates the latter. The second predicate on Line \ref{step:should-update-threshold} stems from the fact that the send threshold is a risk score and thus subject to expiry. The first predicate, however, is more subtle and will be revisited shortly. Consistent with \cApplyRiskScore, the risk score retrieved from $\aActorScores$ is scaled by the transmission rate and set as the new send threshold.
 
 \begin{function}{\nUpdateSendThreshold}[\vActor, \vContact]
   \If{$\aContactThresholdValue > 0 \AND \cRiskScoreTtl[\aContactThreshold] \leq 0$}\label{step:should-update-threshold}
-    \State $\vScore \assign \cMaximumOlderThan[\aActorScores, \aContactTime + \pTimeBuffer]$\label{step:get-max-older-than}
+    \State $\vScore \assign \cMaxRiskScore[\aActorScores, \aContactTime + \pTimeBuffer]$\label{step:get-max-older-than}
     \State $\aNewScoreValue \assign \pTransmissionRate \cdot \aScoreValue$
     \State $\cSetSendThreshold[\vContact, \vNewScore]$
   \EndIf
@@ -286,9 +276,9 @@ The send threshold should be current when evaluating Line \ref{step:should-updat
   \EndIf
 \end{function}
 
-Returning to the first predicate on Line \ref{step:should-update-threshold} of \cUpdateSendThreshold, the send threshold has a value of 0 when initially setting the send threshold as the null risk score and when no key in $\aActorScores$ intersects the query interval on (Line \ref{step:get-max-older-than}). Suppose the first predicate is omitted from Line \ref{step:should-update-threshold}. Given that \cUpdateSendThreshold is the first statement in \cApplyRiskScore, it is possible that the send threshold is set prior to sending the target actor a relevant risk score. In the worst case, this prevents \emph{all} risk scores from being sent to that actor. As a result, that individual would not receive risk scores that may impact their exposure score. Therefore, for correct message-passing behavior, the send threshold is updated only when its value is nonzero.
+Returning to the first predicate on Line \ref{step:should-update-threshold} of \cUpdateSendThreshold, the send threshold has a value of 0 when it is first set or when there is no unexpired risk score in $\aActorScores$ that was computed before the buffered contact time (Line \ref{step:get-max-older-than}). Suppose the first predicate is omitted from Line \ref{step:should-update-threshold}. Given that \cUpdateSendThreshold is the first statement in \cApplyRiskScore, it is possible that the send threshold is set prior to sending the target actor a relevant risk score. In the worst case, this prevents \emph{all} risk scores from being sent to that actor. As a result, that individual would not receive risk scores that may impact their exposure score. Therefore, for correct message-passing behavior, the send threshold is updated only when its value is nonzero.
 
-The aforementioned refinements to \cApplyRiskScore have focused on ensuring that message passing terminates and behaves correctly over time. To conclude the definition of \cApplyRiskScore, a message-passing optimization, called \define{sender-side aggregation} \citep{McCune2015}, is incorporated. Over a given period of time, an actor may receive several risk scores that are subsequently sent to multiple target actors. Rather than sending multiple risk scores, it would be more efficient to just send the final risk score. As a heuristic, \cApplyRiskScore can be modified so that a contact ``buffers'' a risk score that the target actor should receive.
+The aforementioned refinements to \cApplyRiskScore ensure message passing terminates and behaves correctly over time. To conclude the definition of \cApplyRiskScore, a message-passing optimization, called \define{sender-side aggregation} \citep{McCune2015}, is incorporated. Within a short period of time, an actor may receive several risk scores that are subsequently sent to multiple target actors. Rather than sending multiple risk scores, it would be more efficient to just send the final risk score. As a heuristic, \cApplyRiskScore can be modified so that a contact ``buffers'' a risk score that the target actor should receive.
 
 \begin{function}{\nApplyRiskScore}[\vActor, \vContact, \vScore]
   \State $\cUpdateSendThreshold[\vActor, \vContact]$
@@ -299,9 +289,9 @@ The aforementioned refinements to \cApplyRiskScore have focused on ensuring that
   \EndIf
 \end{function}
 
-When the actor receives a periodic \define{flush timeout} message, all contacts are ``flushed'' by sending the buffered risk scores to the target actors. For convenience, the \cHandleFlushTimeout operation also removes all expired contacts from $\aActorContacts$. 
+When the actor receives a periodic \define{flush timeout} message, all contacts are ``flushed'' by sending the buffered risk scores to the target actors. The \cHandleFlushTimeout operation also removes all expired contacts from $\aActorContacts$, which ensures $\aActorContacts$ does not grow without bound.
 
-\begin{function}[H]{\nHandleFlushTimeout}[\vActor]
+\begin{function}{\nHandleFlushTimeout}[\vActor]
   \ForEach{$\vContact \in \aActorContacts$}
     \If{$\aContactBuffered \notEquals \nil$}
       \State $\cSend[\aContactName, \aContactBuffered]$
@@ -313,17 +303,27 @@ When the actor receives a periodic \define{flush timeout} message, all contacts 
   \EndFor
 \end{function}
 
-The \cHandleContact operation concludes this section on actor behavior. Similar to \cHandleRiskScore, expired contacts are not processed. The \cMerge operation for $\aActorContacts$ differs from its usage with $\aActorScores$. That is, if a contact with the same key already exists, its contact time is updated to that of the newer contact; all other state of the previous contact is maintained. A risk score from $\aActorScores$ is also applied to the contact to ensure that, if the actor receives no other risk score before the contact expires, the target actor is sent at least one relevant risk score.
+The \cHandleContact operation concludes the definition of actor behavior. Similar to \cHandleRiskScore, expired contacts are not processed. The \cMergeContact operation adds the contact $\vContact$ to the set $\aActorContacts$ if a contact with the same name does not already exist. Otherwise, the contact time associated with the existing element is updated, if the received contact is has a newer contact time. For new contacts, a risk score from $\aActorScores$ is applied to ensure that, if the actor receives no other risk score before the contact expires, the target actor is sent at least one relevant risk score.
 
 \begin{function}{\nHandleContact}[\vActor, \vContact]
   \If{$\cContactTtl[\vContact] > 0$}
-    \State $\aContactThreshold \assign \cNullRiskScore$
-    \State $\aContactBuffered \assign \nil$
-    \State $\aContactKey \assign \aContactName$
-    \State $\cMerge[\aActorContacts, \vContact]$
-    \State $\vScore \assign \cMaximumOlderThan[\aActorScores, \aContactTime + \pTimeBuffer]$
-    \State $\cApplyRiskScore[\vActor, \vContact, \vScore]$
+    \If{$\cMergeContact[\aActorContacts, \vContact] \equals \nil$}
+      \State $\vScore \assign \cMaxRiskScore[\aActorScores, \aContactTime + \pTimeBuffer]$
+      \State $\cApplyRiskScore[\vActor, \vContact, \vScore]$
+    \EndIf
   \EndIf
+\end{function}
+
+\begin{function}{\nMergeContact}[\aActorContacts, \vContact]
+    \State $\vExistingContact \assign \cSearch[\aActorContacts, \aContactName]$
+    \If{$\vExistingContact \equals \nil$}
+      \State $\aContactKey \assign \aContactName$
+      \State $\aContactThreshold \assign \cNullRiskScore$
+      \State $\cInsert[\aActorContacts, \vContact]$
+    \ElsIf{$\aExistingContactTime < \aContactTime$}
+      \State $\aExistingContactTime \assign \aContactTime$
+    \EndIf
+    \State \Return $\vExistingContact$
 \end{function}
 
 \subsection{Message Reachability}\label{sec:reachability}
