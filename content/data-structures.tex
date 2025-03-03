@@ -1,14 +1,13 @@
 \chapter{Data Structures}\label{ch:data-structures}
 
-A \define{dynamic set} $\vSomeSet$ is a mutable collection of distinct elements such that $\vSomeElement$ is a pointer to an element in $\vSomeSet$ and $\aSomeElementKey$ uniquely identifies it. A dynamic set $\vSomeSet$ supports the following operations \citep{Cormen2022}.
+A \define{dynamic set} $\vSomeSet$ is a mutable collection of distinct elements such that $\vSomeElement$ is a pointer to an element in $\vSomeSet$. The value of the key attribute $\aSomeElementKey$ uniquely identifies $\vSomeElement$ within $\vSomeSet$. A dynamic set $\vSomeSet$ supports the following operations \citep{Cormen2022}.
 \begin{itemize}
   \item $\cInsert[\vSomeSet, \vSomeElement]$ adds the element pointed to by $\vSomeElement$ to $\vSomeSet$.
   \item $\cDelete[\vSomeSet, \vSomeElement]$ removes the element pointed to by $\vSomeElement$ from $\vSomeSet$.
   \item $\cSearch[\vSomeSet, \vKey]$ returns a pointer $\vSomeElement$ to an element in $\vSomeSet$ such that $\aSomeElementKey \equals \vKey$; or $\nil$, if no such element exists in $\vSomeSet$.
 \end{itemize}
-
 A \define{dynamic multiset} $\vSomeSet$ is a dynamic set that allows multiple elements to have the same key \citep{Cormen2022}. The definitions of \cDelete and \cSearch differ as follows.
 \begin{itemize}
-  \item $\cDelete[\vSomeSet, \vSomeElement]$ removes the elements pointed to by $\vSomeElement$ from $\vSomeSet$. Elements in $\vSomeSet$ with the key $\aSomeElementKey$ that are \emph{not} pointed to by $\vSomeElement$ are retained.
+  \item $\cDelete[\vSomeSet, \vSomeElement]$ removes the elements pointed to by $\vSomeElement$ from $\vSomeSet$. Elements in $\vSomeSet$ with the key value $\aSomeElementKey$ that are \emph{not} pointed to by $\vSomeElement$ are retained.
   \item $\cSearch[\vSomeSet, \vKey]$ returns a collection of pointers to the elements in $\vSomeSet$ such that $\aSomeElementKey \equals \vKey$, or $\nil$, if no such elements exists in $\vSomeSet$.
 \end{itemize}

@@ -164,7 +164,7 @@ To address the limitations of \cRiskPropagation, \citet{Ayday2021} propose decen
 
 An actor $\vActor$ in the ShareTrace actor system represents an individual and is initialized by the \cCreateActor operation \citep{Agha1985} with the following attributes.
 \begin{itemize}
-  \item $\aActorExposure$: the current exposure score of the individual. This attribute is either a symptom score, a risk score received from actor, or the null risk score (see \cNullRiskScore).
+  \item $\aActorExposure$: the current exposure score of the individual. This attribute is either a symptom score, a risk score received from another actor, or the null risk score (see \cNullRiskScore).
   \item $\aActorScores$: a dynamic multiset of received risk scores. The key $\aScoreKey$ of a risk score $\vScore$ in $\aActorScores$ is the time it was computed $\aScoreTime$. An actor may receive multiple risk scores that were computed at the same time, so a multiset provides a complete history of relevant risk scores. 
   \item $\aActorContacts$: a dynamic set where each element is a \define{proxy} \citep{Gamma1995} of another actor. That is, if \indexed{i}{individual} was physically proximal with \indexed{j}{individual}, then $\aContacts{\vActor_i}$ contains an element $\vContact$ such that $\aContactKey $ is a name of \indexed{j}{actor} and $\aContactTime$ is their most recent time of contact.
 \end{itemize}
@@ -303,7 +303,7 @@ When the actor receives a periodic \define{flush timeout} message, all contacts 
   \EndFor
 \end{function}
 
-The \cHandleContact operation concludes the definition of actor behavior. Similar to \cHandleRiskScore, expired contacts are not processed. The \cMergeContact operation adds the contact $\vContact$ to the set $\aActorContacts$ if a contact with the same name does not already exist. Otherwise, the contact time associated with the existing element is updated, if the received contact is has a newer contact time. For new contacts, a risk score from $\aActorScores$ is applied to ensure that, if the actor receives no other risk score before the contact expires, the target actor is sent at least one relevant risk score.
+The \cHandleContact operation concludes the definition of actor behavior. Similar to \cHandleRiskScore, expired contacts are not processed. The \cMergeContact operation adds the contact $\vContact$ to the set $\aActorContacts$ if a contact with the same name does not already exist. Otherwise, the contact time of the existing contact is conditionally updated. For new contacts, a risk score from $\aActorScores$ is applied to ensure that, if the actor receives no other risk score before the contact expires, the target actor is sent at least one relevant risk score.
 
 \begin{function}{\nHandleContact}[\vActor, \vContact]
   \If{$\cContactTtl[\vContact] > 0$}
@@ -359,7 +359,7 @@ Then \vertexName $\vTargetVertex$ is \define{message-reachable} from \vertexName
 
 \subsubsection*{Asynchronous Risk Propagation}
 
-Let $\vPath$ be the set of contact edges along the path from actor $\vSourceVertex$ to actor $\vTargetVertex$ such that the actors are enumerated $1, \ldots, \card{\vPath}$. Let $\vMessage = (\vScore_\vSourceVertex, \vTime_\vSourceVertex)$ be a symptom score of actor $\vSourceVertex$. Let $\vScore_{ij}$ be the value of the risk score that is associated with the send threshold of \indexed{i}{actor} for \indexed{j}{actor}. Finally, let $\vTime_{ij}$ be the most recent contact time between the \twoindexed{i}{j}{individual}. Then message reachability for asynchronous risk propagation is defined as
+Let $\vPath$ be the set of contact edges along the path from actor $\vSourceVertex$ to actor $\vTargetVertex$ such that the actors are enumerated $1, \ldots, \card{\vPath}$. Let $\vMessage = (\vScore_\vSourceVertex, \vTime_\vSourceVertex)$ be a symptom score of actor $\vSourceVertex$. Let $\vScore_{ij}$ be the value of the risk score that is associated with the send threshold of \indexed{i}{actor} for \indexed{j}{actor}. Finally, let $\vTime_{ij}$ be the most recent contact time between \twoindexed{i}{j}{individual}. Then message reachability for asynchronous risk propagation is defined as
 \begin{equation}\label{eq:message-reachability}
   \vReachability(\vPath, \vMessage) = \sum_{(i, j) \in \vPath} [\pTransmissionRate^i \vScore_\vSourceVertex > \pSendCoefficient \pTransmissionRate \vScore_{ij}] \cdot [\vTime_\vSourceVertex < \vTime_{ij} + \pTimeBuffer],
 \end{equation}

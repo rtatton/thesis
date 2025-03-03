@@ -58,13 +58,9 @@ Compared to \cref{sec:subgraph-actors}, this implementation provided a cleaner d
 
 \section{Projected Subgraph Actors}\label{sec:projected-subgraphs}
 
-The last alternative design of risk propagation is the subject of published work \citep{Tatton2022b} and preprint \citep{Tatton2022a} which were written during the coarse of my graduate studies.
+The last alternative design of risk propagation is the subject of published work \citep{Tatton2022b} and preprint \citep{Tatton2022a} which were written during the coarse of my graduate studies. This approach built upon the insights from \cref{sec:dmw-framework} and \cref{sec:subgraph-actors}. Notably, that achieving parallelization required partitioning the contact network, but doing so in a way that minimized the communication cost. Rather than computing over the factor graph directly, \citet{Tatton2022b} projected the factor graph onto the variable \verticesName to produce a network of stateful workers. While \citet{Tatton2022b} claims that this approach is a viable distributed extension of the risk propagation algorithm first proposed by \citet{Ayday2021}, it still assumes an initial condition.
 
-% Summary of approach
-
-% Comparison to proposed approach in this work
-
-% Summary of experimental results
+As with this work, \citet{Tatton2022b} found that increasing the send coefficient can provide improved message-passing efficiency. However, \citet{Tatton2022b} enforced a common send threshold across the contacts of an actor, so a lower send coefficient was found to be optimal. The performance benchmark that was conducted in \citet{Tatton2022b} encountered limitations with the Ray library, which was addressed in this work with the usage of Akka.
 
 %Like all previous designs, risk propagation is an offline algorithm. Let $\vGraph_i$ be \indexed{i}{subgraph of contacts} that is associated with \indexed{i}{actor}. It is assumed that actor communication is expensive, so a partitioning algorithm \citep{Buluc2016} that minimizes communication complexity between actors is key to maximizing performance. Each actor is associated with a \define{remote mailbox} and a \define{local mailbox}. The former is designated for messages sent by other actors, while the latter is designated for messages associated with individuals within the same subgraph. For an actor to send a message to another actor, it must know the address of the target actor's remote mailbox and an identifier of the individual within the target actor's subgraph. The \cRiskPropagationMain operation describes the main steps.
 
