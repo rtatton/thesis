@@ -10,7 +10,7 @@ A reference implementation of \cref{sec:asynchronous} is available on GitHub\foo
 \end{itemize}
 
 \Cref{fig:arrow-diagram} shows the dependencies among the application components. Contextualizing this implementation with prior implementations of the driver-monitor-worker (DMW) framework (see \cref{sec:dmw-framework}), \class{RiskPropagation} is the driver, \class{Monitor} is the monitor, and \class{User} is the worker. The key difference between this implementation and previous implementations of the DMW framework is that workers are stateful, which is necessary for decentralization.
-\begin{figure}[htbp]
+\begin{figure}[h]
 \begin{equation*}
   \class{Main} \rightarrow \class{Runner} \rightarrow \class{RiskPropagation} \rightarrow \class{Monitor} \rightarrow \class{User} \rightarrow \class{Contact}
 \end{equation*}
@@ -79,7 +79,7 @@ The following describes the parametrization of each type of contact network. Bar
 \end{argmini}
 Erd\H{o}s-R\'{e}nyi graphs are parametrized by the order $n$ and the size $m$. Random regular graphs are parametrized by the order $n$ and, using the degree sum formula, the degree $d = \lfloor 2m / n \rfloor$. \Cref{tab:default-parameters} specifies the default parameter values and seed for pseudorandom number generation. \Cref{tab:experiments} specifies the experiment configurations. All experiments used fixed user time. The following sampling process was used to generate risk scores and contact times. Given the probability density function $f_X$ and the cumulative distribution function $F_X$ of a random variable $X$, sample a value $x \sim f_X$ and evaluate $c \cdot F_X(x)$ for some scalar $c \in \reals$. Risk scores are composite data types, so risk score values and risk score times were sampled independently. Because risk scores are probabilities, $c = 1$ was used to scale the values. When sampling the times of risk scores and contacts, $c = \pScoreExpiry$ and $c = \pContactExpiry$ were used, respectively.
 
-\begin{table}[htbp]
+\begin{table}[tbp]
   \centering
   \begin{tabular}{ll}
     \toprule
@@ -99,7 +99,7 @@ Erd\H{o}s-R\'{e}nyi graphs are parametrized by the order $n$ and the size $m$. R
   \label{tab:default-parameters}
 \end{table}
 
-\begin{sidewaystable}[htbp]
+\begin{sidewaystable}[tbp]
 \centering
 \renewcommand{\arraystretch}{2}
 \begin{tabular}{lccc}
@@ -117,7 +117,7 @@ Erd\H{o}s-R\'{e}nyi graphs are parametrized by the order $n$ and the size $m$. R
 \label{tab:experiments}
 \end{sidewaystable}
 
-\begin{sidewaystable}[htbp]
+\begin{sidewaystable}[tbp]
 \centering
 \sisetup{table-alignment-mode = none}
 \begin{tabular}{SSSSSSSSSSS}
@@ -126,23 +126,23 @@ Erd\H{o}s-R\'{e}nyi graphs are parametrized by the order $n$ and the size $m$. R
   \cmidrule{2-11}
   {Order $n$} & 1e6 & 2e6 & 3e6 & 4e6 & 5e6 & 6e6 & 7e6 & 8e6 & 9e6 & 10e6 \\
   \midrule
-  1 & 201 & 401 & 601 & 801 & 1001 & 1201 & 1401 & 1601 & 1801 & 2001 \\
-  2 & 101 & 201 & 301 & 401 & 501 & 601 & 701 & 801 & 901 & 1001 \\
-  3 & 882 & 1161 & 201 & 1023 & 597 & 401 & 1042 & 2036 & 601 & 4000 \\
-  4 & 51 & 101 & 151 & 201 & 251 & 301 & 351 & 401 & 451 & 501 \\
-  5 & 41 & 81 & 121 & 161 & 201 & 241 & 281 & 321 & 361 & 401 \\
-  6 & 836 & 829 & 101 & 357 & 2270 & 201 & 3443 & 2103 & 301 & 3125 \\
-  7 & 215 & 733 & 1471 & 606 & 2439 & 3225 & 201 & 2615 & 3116 & 1875 \\
-  8 & 643 & 51 & 1196 & 101 & 1623 & 151 & 2853 & 201 & 1206 & 251 \\
-  9 & 626 & 491 & 1880 & 1406 & 1913 & 617 & 2747 & 1416 & 201 & 2411 \\
-  10 & 21 & 41 & 61 & 81 & 101 & 121 & 141 & 161 & 181 & 201 \\
+  1e4 & 201 & 401 & 601 & 801 & 1001 & 1201 & 1401 & 1601 & 1801 & 2001 \\
+  2e4 & 101 & 201 & 301 & 401 & 501 & 601 & 701 & 801 & 901 & 1001 \\
+  3e4 & 882 & 1161 & 201 & 1023 & 597 & 401 & 1042 & 2036 & 601 & 4000 \\
+  4e4 & 51 & 101 & 151 & 201 & 251 & 301 & 351 & 401 & 451 & 501 \\
+  5e4 & 41 & 81 & 121 & 161 & 201 & 241 & 281 & 321 & 361 & 401 \\
+  6e4 & 836 & 829 & 101 & 357 & 2270 & 201 & 3443 & 2103 & 301 & 3125 \\
+  7e4 & 215 & 733 & 1471 & 606 & 2439 & 3225 & 201 & 2615 & 3116 & 1875 \\
+  8e4 & 643 & 51 & 1196 & 101 & 1623 & 151 & 2853 & 201 & 1206 & 251 \\
+  9e4 & 626 & 491 & 1880 & 1406 & 1913 & 617 & 2747 & 1416 & 201 & 2411 \\
+  10e4 & 21 & 41 & 61 & 81 & 101 & 121 & 141 & 161 & 181 & 201 \\
   \bottomrule
 \end{tabular}
 \caption[Barabasi-Albert $n_0$ values for \labelcref{item:topology}]{Barabasi-Albert $n_0$ values for \labelcref{item:topology}.}
 \label{tab:barabasi-albert-n0-values}
 \end{sidewaystable}
 
-\begin{sidewaystable}[htbp]
+\begin{sidewaystable}[tbp]
 \centering
 \sisetup{table-alignment-mode = none}
 \begin{tabular}{SSSSSSSSSSS}
@@ -151,23 +151,23 @@ Erd\H{o}s-R\'{e}nyi graphs are parametrized by the order $n$ and the size $m$. R
   \cmidrule{2-11}
   {Order $n$} & 1e6 & 2e6 & 3e6 & 4e6 & 5e6 & 6e6 & 7e6 & 8e6 & 9e6 & 10e6 \\
   \midrule
-  1 & 100 & 200 & 300 & 400 & 500 & 600 & 700 & 800 & 900 & 1000 \\
-  2 & 50 & 100 & 150 & 200 & 250 & 300 & 350 & 400 & 450 & 500 \\
-  3 & 21 & 46 & 100 & 120 & 164 & 200 & 223 & 212 & 300 & 77 \\
-  4 & 25 & 50 & 75 & 100 & 125 & 150 & 175 & 200 & 225 & 250 \\
-  5 & 20 & 40 & 60 & 80 & 100 & 120 & 140 & 160 & 180 & 200 \\
-  6 & 11 & 28 & 50 & 66 & 42 & 100 & 19 & 100 & 150 & 90 \\
-  7 & 14 & 25 & 28 & 55 & 30 & 12 & 100 & 68 & 62 & 121 \\
-  8 & 10 & 25 & 29 & 50 & 47 & 75 & 38 & 100 & 105 & 125 \\
-  9 & 9 & 21 & 14 & 34 & 36 & 65 & 37 & 79 & 100 & 81 \\
-  10 & 10 & 20 & 30 & 40 & 50 & 60 & 70 & 80 & 90 & 100 \\
+  1e4 & 100 & 200 & 300 & 400 & 500 & 600 & 700 & 800 & 900 & 1000 \\
+  2e4 & 50 & 100 & 150 & 200 & 250 & 300 & 350 & 400 & 450 & 500 \\
+  3e4 & 21 & 46 & 100 & 120 & 164 & 200 & 223 & 212 & 300 & 77 \\
+  4e4 & 25 & 50 & 75 & 100 & 125 & 150 & 175 & 200 & 225 & 250 \\
+  5e4 & 20 & 40 & 60 & 80 & 100 & 120 & 140 & 160 & 180 & 200 \\
+  6e4 & 11 & 28 & 50 & 66 & 42 & 100 & 19 & 100 & 150 & 90 \\
+  7e4 & 14 & 25 & 28 & 55 & 30 & 12 & 100 & 68 & 62 & 121 \\
+  8e4 & 10 & 25 & 29 & 50 & 47 & 75 & 38 & 100 & 105 & 125 \\
+  9e4 & 9 & 21 & 14 & 34 & 36 & 65 & 37 & 79 & 100 & 81 \\
+  10e4 & 10 & 20 & 30 & 40 & 50 & 60 & 70 & 80 & 90 & 100 \\
   \bottomrule
 \end{tabular}
 \caption[Barabasi-Albert $m_0$ values for \labelcref{item:topology}]{Barabasi-Albert $m_0$ values for \labelcref{item:topology}.}
 \label{tab:barabasi-albert-m0-values}
 \end{sidewaystable}
 
-\begin{sidewaystable}[htbp]
+\begin{sidewaystable}[tbp]
 \centering
 \sisetup{table-alignment-mode = none}
 \begin{tabular}{SSSSSSSSSSS}
@@ -176,23 +176,23 @@ Erd\H{o}s-R\'{e}nyi graphs are parametrized by the order $n$ and the size $m$. R
   \cmidrule{2-11}
   {Order $n$} & 1e6 & 2e6 & 3e6 & 4e6 & 5e6 & 6e6 & 7e6 & 8e6 & 9e6 & 10e6 \\
   \midrule
-  1 & 200 & 400 & 600 & 800 & 1000 & 1200 & 1400 & 1600 & 1800 & 2000 \\
-  2 & 100 & 200 & 300 & 400 & 500 & 600 & 700 & 800 & 900 & 1000 \\
-  3 & 66 & 133 & 200 & 266 & 333 & 400 & 466 & 533 & 600 & 666 \\
-  4 & 50 & 100 & 150 & 200 & 250 & 300 & 350 & 400 & 450 & 500 \\
-  5 & 40 & 80 & 120 & 160 & 200 & 240 & 280 & 320 & 360 & 400 \\
-  6 & 33 & 66 & 100 & 133 & 166 & 200 & 233 & 266 & 300 & 333 \\
-  7 & 28 & 57 & 85 & 114 & 142 & 171 & 200 & 228 & 257 & 285 \\
-  8 & 25 & 50 & 75 & 100 & 125 & 150 & 175 & 200 & 225 & 250 \\
-  9 & 22 & 44 & 66 & 88 & 111 & 133 & 155 & 177 & 200 & 222 \\
-  10 & 20 & 40 & 60 & 80 & 100 & 120 & 140 & 160 & 180 & 200 \\
+  1e4 & 200 & 400 & 600 & 800 & 1000 & 1200 & 1400 & 1600 & 1800 & 2000 \\
+  2e4 & 100 & 200 & 300 & 400 & 500 & 600 & 700 & 800 & 900 & 1000 \\
+  3e4 & 66 & 133 & 200 & 266 & 333 & 400 & 466 & 533 & 600 & 666 \\
+  4e4 & 50 & 100 & 150 & 200 & 250 & 300 & 350 & 400 & 450 & 500 \\
+  5e4 & 40 & 80 & 120 & 160 & 200 & 240 & 280 & 320 & 360 & 400 \\
+  6e4 & 33 & 66 & 100 & 133 & 166 & 200 & 233 & 266 & 300 & 333 \\
+  7e4 & 28 & 57 & 85 & 114 & 142 & 171 & 200 & 228 & 257 & 285 \\
+  8e4 & 25 & 50 & 75 & 100 & 125 & 150 & 175 & 200 & 225 & 250 \\
+  9e4 & 22 & 44 & 66 & 88 & 111 & 133 & 155 & 177 & 200 & 222 \\
+  10e4 & 20 & 40 & 60 & 80 & 100 & 120 & 140 & 160 & 180 & 200 \\
   \bottomrule
 \end{tabular}
 \caption[Random regular $d$ values for \labelcref{item:topology}]{Random regular $d$ values for \labelcref{item:topology}.}
 \label{tab:random-regular-d-values}
 \end{sidewaystable}
 
-\begin{sidewaystable}[htbp]
+\begin{sidewaystable}[tbp]
 \centering
 \sisetup{table-alignment-mode = none}
 \begin{tabular}{SSSSSSSSSSS}
@@ -231,14 +231,14 @@ where $D_i(\pSendCoefficient)$ is the difference associated with $\pSendCoeffici
 
 As noted in \cref{tab:accuracy-percentiles}, it is expected that $\pSendCoefficient < 1$ also provides perfect accuracy, given sufficient time for message passing to complete. Because the executions associated with $\pSendCoefficient < 1$ were suspected to be incomplete, the associated data was omitted from the remainder of this analysis.
 
-\begin{figure}[htbp]
+\begin{figure}[tbp]
   \centering
   \includegraphics[width=\textwidth]{accuracy-percentiles}
   \caption[Cumulative accuracy distributions]{Cumulative accuracy distributions.}
   \label{fig:accuracy-percentiles}
 \end{figure}
 
-\begin{sidewaystable}[htbp]
+\begin{sidewaystable}[tbp]
 \centering
 \begin{tabular}{
   S
@@ -283,14 +283,14 @@ Let $\pSendCoefficient_i^*$ be the maximum send coefficient for \indexed{i}{indi
 \end{equation*}
 \Cref{fig:send-coefficient-optimality} and \cref{tab:send-coefficient-optimality} describe the proportion of individuals of each repetition that had a nonzero difference between their exposure score and symptom score, for which a given send coefficient was optimal. In other words, \cref{fig:send-coefficient-optimality} and \cref{tab:send-coefficient-optimality} describe the empirical upper bound distribution of network-wide accuracy for each send coefficient.
 
-\begin{sidewaysfigure}[htbp]
+\begin{sidewaysfigure}[tbp]
   \centering
   \includegraphics[width=\textwidth]{accuracy-proportions}
   \caption[Send coefficient optimality distributions]{Send coefficient optimality distributions. The dashed line inside each violin marks the median. The upper and lower dotted lines inside each violin mark the upper and lower quartiles, respectively.}
   \label{fig:send-coefficient-optimality}
 \end{sidewaysfigure}
 
-\begin{table}[htbp]
+\begin{table}[tbp]
 \centering
 \begin{tabular}{
   S
@@ -324,14 +324,14 @@ Let $\pSendCoefficient_i^*$ be the maximum send coefficient for \indexed{i}{indi
 
 With respect to efficiency, \cref{fig:message-passing-efficiency} and \cref{tab:message-passing-efficiency} indicate that even modest increases above $\pSendCoefficient = 1$ can reduce the total number of messages received by \qtyrange{10}{20}{\percent} in a contact network. Larger increases above $\pSendCoefficient = 1$ can reduce the total number of messages received by up to \qty{30}{\percent}; however, accuracy should also be considered. \Cref{fig:message-reachability} indicates that message reachability is distributed consistently across network types. Though the proportion of individuals with a message reachability of 0 is inversely correlated with the send coefficient, the remainder of the cumulative distribution is nearly identical across send coefficients. \Cref{tab:message-reachability} describes several percentiles of the message reachability cumulative distribution, aggregating across send coefficients.
 
-\begin{figure}[htbp]
+\begin{figure}[tbp]
   \centering
   \includegraphics[width=\textwidth]{relative-receives}
   \caption[Message-passing efficiency]{Message-passing efficiency. The send coefficient $\pSendCoefficient = 1$ was used as a baseline for message-passing efficiency since it was found to be the maximum send coefficient that achieves perfect accuracy.}
   \label{fig:message-passing-efficiency}
 \end{figure}
 
-\begin{table}[htbp]
+\begin{table}[tbp]
 \centering
 \begin{tabular}{
   S
@@ -363,14 +363,14 @@ With respect to efficiency, \cref{fig:message-passing-efficiency} and \cref{tab:
 \label{tab:message-passing-efficiency}
 \end{table}
 
-\begin{figure}[htbp]
+\begin{figure}[tbp]
   \centering
   \includegraphics[width=\textwidth]{message-reachability}
   \caption[Message reachability cumulative distributions]{Message reachability cumulative distributions.}
   \label{fig:message-reachability}
 \end{figure}
 
-\begin{table}[htbp]
+\begin{table}[tbp]
 \centering
 \begin{tabular}{SSSSSSSSS}
   \toprule
@@ -385,14 +385,14 @@ With respect to efficiency, \cref{fig:message-passing-efficiency} and \cref{tab:
 
 A brief exploratory analysis is provided to conclude this section. \Cref{tab:network-degree-percentiles} and \cref{fig:network-degree-distributions} and  describe the degree distributions of the contact networks that were used for this experiment. While other degree distributions are centered around 20, the Barabasi-Albert distribution is characterized by a power law that arises from the mechanism of preferential attachment. \Cref{fig:correlation-matrix} is the correlation matrix of the dataset attributes.
 
-\begin{figure}[htbp]
+\begin{figure}[tbp]
   \centering
   \includegraphics[width=\textwidth]{network-degree-distributions}
   \caption[Contact network degree distributions]{Contact network degree distributions. All \verticesName in random regular contact networks had a degree of 20, so the distribution was omitted to provide more visual space for the distributions of other contact networks.}
   \label{fig:network-degree-distributions}
 \end{figure}
 
-\begin{table}[htbp]
+\begin{table}[tbp]
 \centering
 \begin{tabular}{lSSSSSSS}
   \toprule
@@ -408,7 +408,7 @@ A brief exploratory analysis is provided to conclude this section. \Cref{tab:net
 \label{tab:network-degree-percentiles}
 \end{table}
 
-\begin{figure}[htbp]
+\begin{figure}[tbp]
   \centering
   \includegraphics[width=\textwidth]{correlation}
   \caption[Correlation matrix of \labelcref{item:parameters} dataset attributes]{Correlation matrix of \labelcref{item:parameters} dataset attributes. Each cell is the Spearman rank partial correlation coefficient \citep{Spearman1904}, controlling for the effect of the send coefficient. All coefficients are significant ($p < 0.01$), adjusting for multiple comparisons via the Holm–Bonferroni method \citep{Holm1979}.}
@@ -419,7 +419,7 @@ A brief exploratory analysis is provided to conclude this section. \Cref{tab:net
 
 A one-way analysis of variance (ANOVA) was considered for determining if the mean message-passing runtimes associated with different data distributions are statistically different. ANOVA assumes the observations are independently sampled, normally distributed, and homoscedastic within groups. The message-passing runtimes were indeed independently sampled. To test the latter two assumptions, the Shapiro-Wilk test \citep{Shapiro1965} and the Fligner-Killeen test \citep{Fligner1976} were applied, respectively. While the runtimes were found to be homoscedastic ($p > \num{0.01}$), they were not normally distributed ($p < \num{0.01}$). As such, the Kruskal-Wallis test was applied instead of a one-way ANOVA. The test indicated that there is insufficient evidence to reject the null hypothesis that the median message-passing runtimes are the same across data distributions. See \cref{tab:runtime-hypothesis-tests} for the test statistics and associated $p$-values. Note, this experiment assumes this statistical nonsignificance holds for other data distributions and network topologies.
 
-\begin{sidewaystable}[htbp]
+\begin{sidewaystable}[tbp]
 \centering
 \begin{tabular}{lSSSSSS}
   \toprule
@@ -445,7 +445,7 @@ A one-way analysis of variance (ANOVA) was considered for determining if the mea
   f_q(x) = \beta_{0} + \beta_{1} x.
 \end{equation}
 
-\begin{sidewaysfigure}[htbp]
+\begin{sidewaysfigure}[tbp]
   \centering
   \includegraphics[width=\textwidth]{runtimes}
   \caption[Message-passing runtimes]{Message-passing runtimes.}
@@ -471,7 +471,7 @@ where $\hat{\mathbf{y}}_0 = Q(\mathbf{y}, q) \cdot \mathbf{1}$ is the null model
 
 \Cref{tab:runtime-regression} specifies the optimal models and evaluation metrics. \Cref{fig:runtime-regression} overlays the observed message-passing runtimes with the predicted runtime quantiles.
 
-\begin{table}[htbp]
+\begin{table}[tbp]
 \centering
   \begin{tabular}{
     S[table-format=1.3]
@@ -498,7 +498,7 @@ where $\hat{\mathbf{y}}_0 = Q(\mathbf{y}, q) \cdot \mathbf{1}$ is the null model
   \label{tab:runtime-regression}
 \end{table}
 
-\begin{figure}[htbp]
+\begin{figure}[tbp]
   \centering
   \includegraphics[width=\textwidth]{runtime-regression}
   \caption[Message-passing runtimes with regression lines]{Message-passing runtimes with regression lines. The equation and parameters of each quantile regression line are specified in \cref{eq:runtime-model} and \cref{tab:runtime-regression}, respectively.}
