@@ -106,7 +106,7 @@ Erd\H{o}s-R\'{e}nyi graphs are parametrized by the order $n$ and the size $m$. R
   \toprule
   Aspect & \labelcref{item:parameters} & \labelcref{item:distributions} & \labelcref{item:topology} \\
   \midrule
-  Network parameters & $\begin{aligned} n &= 5 \cdot 10^3 \\ m &= 5 \cdot 10^4 \\ n_0 &= 21 \\ m_0 &= 10 \\ d &= 20 \\ k &= 20 \end{aligned}$ & $\begin{aligned} n &= 5 \cdot 10^3 \\ m &= 5 \cdot 10^4 \\ n_0 &= 21 \\ m_0 &= 10 \\ d &= 20 \\ k &= 20 \end{aligned}$ & $\begin{matrix} n \in \setBuilder{10^4x}{x \in \intInterval{1}{10}} \\ \times \\ m \in \setBuilder{10^6x}{x \in \intInterval{1}{10}} \\ \text{\Crefrange{tab:barabasi-albert-n0-values}{tab:watts-strogatz-k-values} for } n_0, m_0, d, k \end{matrix}$ \\
+  Network parameters & $\begin{aligned} n &= 5 \cdot 10^3 \\ m &= 5 \cdot 10^4 \\ n_0 &= 21 \\ m_0 &= 10 \\ d &= 20 \\ k &= 20 \end{aligned}$ & $\begin{aligned} n &= 10^4 \\ m &= 10^5 \\ n_0 &= 21 \\ m_0 &= 10 \\ d &= 20 \\ k &= 20 \end{aligned}$ & $\begin{matrix} n \in \setBuilder{10^4x}{x \in \intInterval{1}{10}} \\ \times \\ m \in \setBuilder{10^6x}{x \in \intInterval{1}{10}} \\ \text{\Crefrange{tab:barabasi-albert-n0-values}{tab:watts-strogatz-k-values} for } n_0, m_0, d, k \end{matrix}$ \\
   Parameters & $\begin{matrix} \pSendCoefficient \in \setBuilder{10^{-1}x}{x \in \intInterval{8}{20}} \\ \text{\Cref{tab:default-parameters} for remaining} \end{matrix}$ & \Cref{tab:default-parameters} & \Cref{tab:default-parameters} \\
   Distributions & $\{\text{Uniform}, \text{Standard normal}\}^3$ & $\{\text{Uniform}, \text{Standard normal}\}^3$ & Uniform \\
   Repetitions & 5 & 1 burn-in + 5 & 1 burn-in + 5 \\
