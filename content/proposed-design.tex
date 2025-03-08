@@ -209,7 +209,7 @@ The \cHandleRiskScore operation defines how an actor behaves upon receiving a ri
   \If{$\aActorExposureValue < \aScoreValue$}
     \State $\aActorExposure \assign \vScore$
   \ElsIf{$\cRiskScoreTtl[\aActorExposure] \leq 0$}
-    \State $\aActorExposure \assign \cMaxRiskScore[\aActorScores, \infty]$
+    \State $\aActorExposure \assign \cMaxRiskScore[\vActor, \infty]$
   \EndIf
 \end{function}
 
@@ -259,7 +259,7 @@ The \cSetSendThreshold operation defines \emph{how} the send threshold is update
 
 \begin{function}{\nUpdateSendThreshold}[\vActor, \vContact]
   \If{$\aContactThresholdValue > 0 \AND \cRiskScoreTtl[\aContactThreshold] \leq 0$}\label{step:should-update-threshold}
-    \State $\vScore \assign \cMaxRiskScore[\aActorScores, \aContactTime + \pTimeBuffer]$\label{step:get-max-older-than}
+    \State $\vScore \assign \cMaxRiskScore[\vActor, \aContactTime + \pTimeBuffer]$\label{step:get-max-older-than}
     \State $\aNewScoreValue \assign \pTransmissionRate \cdot \aScoreValue$
     \State $\cSetSendThreshold[\vContact, \vNewScore]$
   \EndIf
@@ -307,14 +307,14 @@ The \cHandleContact operation concludes the definition of actor behavior. Simila
 
 \begin{function}{\nHandleContact}[\vActor, \vContact]
   \If{$\cContactTtl[\vContact] > 0$}
-    \If{$\cMergeContact[\aActorContacts, \vContact] \equals \nil$}
-      \State $\vScore \assign \cMaxRiskScore[\aActorScores, \aContactTime + \pTimeBuffer]$
+    \If{$\cMergeContact[\vActor, \vContact] \equals \nil$}
+      \State $\vScore \assign \cMaxRiskScore[\vActor, \aContactTime + \pTimeBuffer]$
       \State $\cApplyRiskScore[\vActor, \vContact, \vScore]$
     \EndIf
   \EndIf
 \end{function}
 
-\begin{function}{\nMergeContact}[\aActorContacts, \vContact]
+\begin{function}{\nMergeContact}[\vActor, \vContact]
     \State $\vExistingContact \assign \cSearch[\aActorContacts, \aContactName]$
     \If{$\vExistingContact \equals \nil$}
       \State $\aContactKey \assign \aContactName$
